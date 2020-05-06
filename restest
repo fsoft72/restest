@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+
+VERSION = "1.04"
+
+import argparse, sys
+
+from lib.parser import RESTestParser
+
+parser = argparse.ArgumentParser ( description = "RESTest v%s the easy REST test manager" % VERSION )
+
+parser.add_argument ( "file", nargs = '+', help="Files containing the tests" )
+parser.add_argument ( "--base-url", type=str, help = "Base URL. This string overrides the 'system' parameter in JSON file" )
+parser.add_argument ( "--dont-stop-on-error", action="store_true", help = "Flag to stop RESTest on error. This flag overrides the 'system' parameter in JSON file" )
+parser.add_argument ( "--log-file", type=str, help = "Custom log file overriding the one in 'system'" )
+parser.add_argument ( "--key", type=str, nargs='+', help="One or more keys to be added to the globals dict use key:value format" )
+parser.add_argument ( "--quiet", action="store_true", help = "If set, no output on console" )
+parser.add_argument ( "--version", action="version", version=VERSION )
+
+
+args = parser.parse_args ()
+
+rt = RESTestParser ( quiet = args.quiet, base_url = args.base_url, stop_on_error = not args.dont_stop_on_error, log_file = args.log_file )
+
+if args.key:
+	for c in args.key:
+		k, v = c.split ( ":" )
+		rt.rt.globals [ k ] = v
+
+for f in args.file:
+	rt.open ( f )
+
+print ( "\n\n===== FINISHED. Total Errors: %s / %s" % ( rt.rt._errors, rt.rt._tests ) )

@@ -1,0 +1,374 @@
+#!/usr/bin/env python3
+
+import requests, json, sys, copy
+
+class RESTest:
+	def __init__ ( self, base_url = '', output_file_name = '', stop_on_error = True, quiet = False ):
+		self.quiet = quiet
+		self.base_url = base_url
+		self.output_file_name = output_file_name
+
+		self.globals = {}		# Global var / values for requests
+
+		self.authorization_header = "Authorization"
+		self.authorization_template = "Token %(token)s"
+
+		# This is a number used to generate counts
+		self._inner_count = 0
+
+		self.stop_on_error = stop_on_error
+		self.sections = []
+	
+		self._tests  = 0
+		self._errors = 0
+
+	def _tabs ( self ):
+		return "\t" * len ( self.sections )
+
+	def _log_write ( self, txt ):
+		if not self.output_file_name: return
+
+		fout = open ( self.output_file_name, "a" )
+		fout.write ( txt )
+
+	def _log_start ( self, method, endpoint, data ):
+		self._tests += 1
+		if not self.output_file_name: return
+
+		self._log_write ( "=" * 70 )
+		self._log_write ( """
+Endpoint:     %s %s
+Data:         %s
+""" % ( method, endpoint, json.dumps ( data, default = str ) ) )
+
+	def _log_resp ( self, headers, resp ):
+		if not self.output_file_name: return
+
+		self._log_write ( """Headers:      %s
+Status Code:  %s
+Raw Response: %s
+""" % ( headers, resp.status_code, resp.text ) )
+
+	def _log_curl ( self, req ):
+		command = "curl -X {method} -H {headers} -d '{data}' '{uri}'"
+
+		method = req.method
+		uri = req.url
+		data = str ( req.body ) [ 2 : -1 ]   # quick and dirty way to remove b'...' from string
+		headers = [ '"{0}: {1}"'.format ( k, v ) for k, v in req.headers.items() ]
+		headers = " -H ".join ( headers )
+
+		curl = command.format ( method = method, headers = headers, data = data, uri = uri )
+		self._log_write ( "\nCURL:         %s\n\n" % curl )
+
+	def _mk_headers ( self, authenticated ):
+		headers = {}
+		if authenticated:
+			hv = ""
+			try:
+				#hv = self.authorization_template % self.globals
+				hv = self._expand_var ( self.authorization_template )
+			except:
+				sys.stderr.write ( "ERROR: could not create Authorization template: %s" % self.authorization_template )
+				raise
+
+			if hv:
+				headers [ self.authorization_header ] = hv
+
+		return headers
+
+	def _resolve_url ( self, endpoint ):
+		if endpoint.lower ().find ( "http:" ) != -1:  return endpoint
+		if endpoint.lower ().find ( "https:" ) != -1: return endpoint
+		if endpoint.startswith ( "/" ):
+			return self.base_url + endpoint
+
+		return self.base_url + "/" + endpoint
+
+	def _get_v ( self, x ):
+		if isinstance ( x, dict ):
+			return x #json.dumps ( x )
+
+		if isinstance ( x, bool ):
+			if x == True: x = 1
+			if x == False: x = 0
+
+		return str ( x ) % self.globals
+
+
+	def _expand_var ( self, v ):
+		globs = copy.copy ( self.globals )
+		globs [ "inner_count" ] = self._inner_count
+
+		try:
+			if isinstance ( v, list ):
+				res = []
+				for x in v: 
+					res.append ( self._get_v ( x ) )
+			else:
+				v = self._get_v ( v )
+		except:
+			sys.stderr.write ( "ERROR: could not expand: %s (%s)" % ( v, self.globals ) )
+		
+
+		return v
+
+	def _expand_data ( self, data ):
+		res = {}
+
+		self._inner_count += 1
+
+		for k, v in data.items ():
+			k = self._expand_var ( k )
+			v = self._expand_var ( v )
+			res [ k ] = v
+
+		return res
+
+	def _object_compare ( self, v1, v2 ):
+		o1 = eval ( v1 )
+		o2 = eval ( v2 )
+
+		k1 = list ( o1.keys () )
+		k2 = list ( o2.keys () )
+		k1.sort ()
+		k2.sort ()
+		if k1 != k2: return False
+
+		for k in k1:
+			if o1 [ k ] != o2 [ k ]: return False
+
+
+		return True
+		pass
+
+	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False ):
+		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
+
+		url = self._resolve_url ( endpoint )
+		headers = self._mk_headers ( authenticated = authenticated )
+
+		data = self._expand_data ( data )
+
+		if mode == "GET":
+			m = requests.get
+		elif mode == "POST":
+			m = requests.post
+		else:
+			m = requests.post
+
+		r = m ( url, json = data, headers = headers )
+
+		self._log_start ( mode, url, data )
+		self._log_resp ( headers, r )
+		self._log_curl ( r.request )
+
+		# If skip_error is set, we don't have to check for the status code
+		if skip_error: return r
+
+		if r.status_code != status_code and self.stop_on_error:
+			sys.stderr.write ( """%s\nREQUEST ERROR\n%s\n""" % ( "*" * 70, "*" * 70 ) )
+			sys.exit ( 1 )
+
+		return r
+	
+	def do_POST ( self, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False ):
+		return self._req ( "POST", endpoint, data, authenticated, status_code, skip_error = skip_error )
+
+	def do_GET ( self, endpoint, params = {}, authenticated = True, status_code = 200, skip_error = False ):
+		return self._req ( "GET", endpoint, params, authenticated, status_code, skip_error = skip_error )
+
+	def save ( self, resp, fields ):
+		j = resp.json ()
+
+		for k in fields:
+			if isinstance ( k, list ) or isinstance ( k, tuple ):
+				glob_key = k [ 1 ]
+				json_key = k [ 0 ]
+			else:
+				glob_key = k
+				json_key = k
+
+			self.globals [ glob_key ] = self._expand_value ( j, json_key )
+
+	def dumps ( self, resp, fields ):
+		j = resp.json ()
+
+		for k in fields:
+			if isinstance ( k, list ) or isinstance ( k, tuple ):
+				glob_key = k [ 1 ]
+				json_key = k [ 0 ]
+			elif isinstance ( k, dict ):
+				json_key = k [ 'field' ]
+				glob_key = json_key
+			else:
+				glob_key = k
+				json_key = k
+
+			v = self._expand_value ( j, json_key )
+
+			print ( "==== %s: %s\n" % ( glob_key, json.dumps ( v, indent = 4, default=str ) ) )
+
+	def _error ( self, txt ):
+		sys.stderr.write ( "*** ERROR: %s\n" % txt )
+		self._log_write ( "\n\n*** ERROR: %s\n" % txt )
+		if self.stop_on_error: sys.exit ( 1 )
+		self._errors += 1
+		return None
+
+	def _expand_value ( self, dct, key ):
+		base = []
+		for k in key.split ( "." ):
+			base.append ( k )
+			if k.startswith ( "[" ):
+				k = int ( k.replace ( "[", "" ).replace ( "]", "" ) )
+				dct = dct [ k ]
+			elif k in dct:
+				dct = dct [ k ]
+			else:
+				self._error ( "*** ERROR. Key not found '%s'\n" % ".".join ( base ) )
+				return "__NOT_FOUND__"
+
+		return dct
+
+	def copy_val ( self, _from, _to ):
+		_from = self._expand_var ( _from )
+		_to   = self._expand_var ( _to )
+
+		self.globals [ _to ] = self.globals [ _from ]
+
+	def set_val ( self, _key, _val ):
+		_key = self._expand_var ( _key )
+		_val = self._expand_var ( _val )
+
+		self.globals [ _key ] = _val
+
+	def check ( self, resp, checks ):
+		j = resp.json ()
+
+		for chk in checks:
+			if 'title' in chk: print ( chk [ 'title' ] )
+
+			self._tests += 1
+
+			v = self._expand_value ( j, chk [ 'field' ] )
+			current_val = self._expand_var ( v ) 
+			expected_val = self._expand_var ( chk.get ( 'value' ) )
+			if v == "__NOT_FOUND__":
+				self._error ( "FIELD: %s missing %s" % ( chk [ 'field' ], json.dumps ( j, default = str ) ) )
+				return
+
+			mode = chk.get ( 'mode', 'EQUALS' )
+
+			if mode in ( 'EXISTS', "!!" ):
+				if len ( str ( v ) ) == 0:
+					self._error ( "FIELD: %s is EMPTY" % ( chk [ 'field' ] ) )
+					return
+			elif mode in ( 'EQUALS', "==" ):
+				if current_val != expected_val:
+					self._error ( "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % ( chk [ 'field' ], expected_val, current_val ) )
+			elif mode in ( 'CONTAINS', '->' ):
+				if expected_val  not in current_val:
+					self._error ( "FIELD: %s DOES NOT contains %s. List: %s" % ( chk [ 'field' ], expected_val, current_val ) )
+			elif mode in ( 'SIZE', 'LEN', 'LENGTH' ):
+				if len ( current_val ) != int ( expected_val ):
+					self._error ( "FIELD: %s SIZE mismatch. Expected: %s - got: %s (%s)" % ( chk [ 'field' ], expected_val, len ( current_val ), current_val ) )
+			elif mode in ( 'GT', '>' ):
+				if current_val  <= expected_val:
+					self._error ( "FIELD: %s is SMALLER. Expected: %s got: %s" % ( chk [ 'field' ], expected_val, current_val ) )
+			elif mode in ( 'GTE', '>=' ):
+				if current_val  < expected_val:
+					self._error ( "FIELD: %s is SMALLER. Expected: %s got: %s" % ( chk [ 'field' ], expected_val, current_val ) )
+			elif mode in ( 'LT', '<' ):
+				if current_val  >= expected_val:
+					self._error ( "FIELD: %s is BIGGER. Expected: %s got: %s" % ( chk [ 'field' ], expected_val, current_val ) )
+			elif mode in ( 'LTE', '<=' ):
+				if current_val  <= expected_val:
+					self._error ( "FIELD: %s is BIGGER. Expected: %s got: %s" % ( chk [ 'field' ], expected_val, current_val ) )
+			elif mode in ( 'SIZE-GT', '()>' ):
+				if len ( current_val ) <= int ( expected_val ):
+					self._error ( "FIELD: %s is SMALLER. Expected: %s got: %s" % ( chk [ 'field' ], expected_val, current_val ) )
+			elif mode in ( 'SIZE-GTE', '()>=' ):
+				if len ( current_val ) < int ( expected_val ):
+					self._error ( "FIELD: %s is SMALLER. Expected: %s got: %s" % ( chk [ 'field' ], expected_val, current_val ) )
+			elif mode in ( 'SIZE-LT', '()<' ):
+				if len ( current_val ) >= int ( expected_val ):
+					self._error ( "FIELD: %s is BIGGER. Expected: %s got: %s" % ( chk [ 'field' ], expected_val, current_val ) )
+			elif mode in ( 'SIZE-LTE', '()<=' ):
+				if len ( current_val ) <= int ( expected_val ):
+					self._error ( "FIELD: %s is BIGGER. Expected: %s got: %s" % ( chk [ 'field' ], expected_val, current_val ) )
+			elif mode in ( "OBJ", "OBJECT" ):
+				if not self._object_compare ( current_val, expected_val ):
+					self._error ( "FIELD: %s object values mismatch" % ( chk [ 'field' ] ) )
+
+
+			if 'save' in chk:
+				self.globals [ chk [ 'save' ] ] = v
+
+	def dump ( self, fields ):
+		for f in fields:
+			f = self._expand_var ( f ) 
+			v = self.globals [ f ]
+
+			self._log_write ( "==== %s: %s\n" % ( f, json.dumps ( v, indent = 4, default=str ) ) )
+
+	def section_start ( self, name ):
+		self.sections.append ( name )
+
+		self._log_write ( """
+%s
+START  ---->  %s
+%s
+""" % ( "*" * 70, name, "*" * 70 ) )
+
+	def section_end ( self ):
+		name = self.sections.pop ()
+		self._log_write ( ( "=" * 70 ) + "\n\n" )
+		self._log_write ( """%s
+END  ----  %s
+%s
+
+""" % ( "*" * 70, name, "*" * 70 ) )
+
+"""
+if __name__ == '__main__':
+	rt = RESTest ( 'http://localhost:8000', output_file_name = "/ramdisk/req.log" )
+
+	rt.save ( 
+		rt.do_POST ( "/api/auth/login", { "email": "info@example.com", "password": "ciao" }, authenticated = False ),
+		[ "otl", "token", "id_user" ] 
+	)
+
+	rt.section_start ( "USER CREATION" )
+
+	rt.save (
+		rt.do_POST ( "/api/auth/register", { "email": "test%(inner_count)s@example.com", "password": "hello123" }, authenticated=False ),
+		[ ( "user", "test_user" ) ]
+	)
+
+	rt.check (
+		rt.do_GET ( "/api/user/%(test_user)s/debug" ),
+		[
+			{
+				"field" : "user.auth_code",
+				"mode": "EXISTS",
+				"save": "auth_code"
+			}
+		]
+	)
+
+	rt.check ( 
+		rt.do_POST ( "/api/user/activate", { "auth_code" : "%(auth_code)s", "password": "hello%(inner_count)s" } ),
+		[
+			{
+				"field": "ok",
+				"mode": "EQUALS",
+				"value": 1
+			}
+		]
+	)
+
+	rt.section_end ()
+
+	rt.do_POST ( "/api/user/del", { "id_user" : "%(test_user)s" } )
+"""
