@@ -16,10 +16,14 @@ class RESTestParser:
 		self.forced_base_url = base_url
 		self.quiet = quiet
 
+		self._paths = []
+
 	def open ( self, fname ):
 		self.script = json.loads ( open ( fname ).read () )
 
 		self._abs_script_path = os.path.dirname ( os.path.abspath ( fname ) )
+
+		self._paths.append ( self._abs_script_path )
 
 		self._parse_system ()
 
@@ -125,11 +129,16 @@ class RESTestParser:
 		print ( "FNAME: ", fname, self._abs_script_path )
 
 		if not fname.startswith ( "/" ):
-			fname = os.path.abspath ( os.path.join ( self._abs_script_path, fname ) )
+			path = self._paths [ -1 ]
+			fname = os.path.abspath ( os.path.join ( path, fname ) )
+			#fname = os.path.abspath ( os.path.join ( self._abs_script_path, fname ) )
+
 
 		if not os.path.exists ( fname ):
 			sys.stderr.write ( "ERROR: could not open file: %s\n" % fname )
 			sys.exit ( 1 )
+
+		self._paths.append ( os.path.dirname ( fname ) )
 
 		script = json.loads ( open ( fname ).read () )
 		if "name" in act:
@@ -138,6 +147,8 @@ class RESTestParser:
 
 		if "exec" in act and act [ 'exec' ] == True:
 			self._actions ( script [ 'actions' ] )
+
+		self._paths.pop ()
 
 	def _method_batch_set ( self, act ):
 		name = act [ 'name' ].lower ()
@@ -159,8 +170,3 @@ class RESTestParser:
 
 		for k, v in system.items ():
 			setattr ( self.rt, k, v )
-
-if __name__ == '__main__':
-	p = RESTestParser ()
-
-	p.open ( "../examples/user.test.json" )
