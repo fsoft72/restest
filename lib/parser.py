@@ -50,11 +50,11 @@ class RESTestParser:
 			f = getattr ( self.rt, "do_POST" )
 
 		# Support both 'authentication' and 'auth' flags
-		if 'auth' in act:
-			auth = act.get ( 'auth', False )
-		else:
+		if 'authentication' in act:
 			sys.stderr.write ( "%s use 'authentication' is deprecated use 'auth' in actions\n" % ( colored ( "WARNING",  'yellow' ) ) )
 			auth = act.get ( 'authentication', False )
+		else:
+			auth = act.get ( 'auth', False )
 
 		if not self.quiet:
 			sys.stdout.write (
