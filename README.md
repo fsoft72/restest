@@ -3,6 +3,8 @@ Scriptable REST calls test software written in Python
 
 `restest` actions are defined inside a JSON file.
 
+With `restest` you can control return responses and test values against an expected result / behaviour.
+
 ## JSON file structure
 
 This is the smaller JSON file for `restest` you can write
@@ -64,3 +66,35 @@ Here there is an example:
 	}
 }
 ```
+
+### `fields`
+
+The `fields` section allows you to collect values from the response and to *save* them inside `restest` to future use.
+It is a list of field names that can be also "mapped" to a new name in memory while saving. You can specify both *string* (to save the key / value in memory *as is* without name modification) or a *list* with two fields `[ orig_name, new_name ]`.
+
+**NOTE**: Field extraction supports dotted notation for nested objects.
+
+Here there is a code snippet. Suppose the response is a JSON object like this one:
+
+```
+{
+	"auth_token": "jajsj3ijssisiej",
+	"user": {
+		"id": "abc123",
+		"username": "johndoe"
+	}
+}
+```
+
+You could save `auth_token` as is and remap `user.id` into `user_id` in this way:
+
+```
+"fields": [
+	"auth_token",
+	[ "user.id", "user_id" ]
+]
+```
+
+### `test`
+
+The `test` section allows you to run tests against the request response.
