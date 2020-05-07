@@ -18,7 +18,7 @@ class RESTest:
 
 		self.stop_on_error = stop_on_error
 		self.sections = []
-	
+
 		self._tests  = 0
 		self._errors = 0
 
@@ -93,7 +93,10 @@ Raw Response: %s
 			if x == True: x = 1
 			if x == False: x = 0
 
-		return str ( x ) % self.globals
+		x = str ( x )
+		if x.find ( "%(" ) == -1: return x
+
+		return  x % self.globals
 
 
 	def _expand_var ( self, v ):
@@ -103,13 +106,13 @@ Raw Response: %s
 		try:
 			if isinstance ( v, list ):
 				res = []
-				for x in v: 
+				for x in v:
 					res.append ( self._get_v ( x ) )
 			else:
 				v = self._get_v ( v )
 		except:
 			sys.stderr.write ( "ERROR: could not expand: %s (%s)" % ( v, self.globals ) )
-		
+
 
 		return v
 
@@ -171,7 +174,7 @@ Raw Response: %s
 			sys.exit ( 1 )
 
 		return r
-	
+
 	def do_POST ( self, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False ):
 		return self._req ( "POST", endpoint, data, authenticated, status_code, skip_error = skip_error )
 
@@ -252,7 +255,7 @@ Raw Response: %s
 			self._tests += 1
 
 			v = self._expand_value ( j, chk [ 'field' ] )
-			current_val = self._expand_var ( v ) 
+			current_val = self._expand_var ( v )
 			expected_val = self._expand_var ( chk.get ( 'value' ) )
 			if v == "__NOT_FOUND__":
 				self._error ( "FIELD: %s missing %s" % ( chk [ 'field' ], json.dumps ( j, default = str ) ) )
@@ -307,7 +310,7 @@ Raw Response: %s
 
 	def dump ( self, fields ):
 		for f in fields:
-			f = self._expand_var ( f ) 
+			f = self._expand_var ( f )
 			v = self.globals [ f ]
 
 			self._log_write ( "==== %s: %s\n" % ( f, json.dumps ( v, indent = 4, default=str ) ) )
@@ -334,9 +337,9 @@ END  ----  %s
 if __name__ == '__main__':
 	rt = RESTest ( 'http://localhost:8000', output_file_name = "/ramdisk/req.log" )
 
-	rt.save ( 
+	rt.save (
 		rt.do_POST ( "/api/auth/login", { "email": "info@example.com", "password": "ciao" }, authenticated = False ),
-		[ "otl", "token", "id_user" ] 
+		[ "otl", "token", "id_user" ]
 	)
 
 	rt.section_start ( "USER CREATION" )
@@ -357,7 +360,7 @@ if __name__ == '__main__':
 		]
 	)
 
-	rt.check ( 
+	rt.check (
 		rt.do_POST ( "/api/user/activate", { "auth_code" : "%(auth_code)s", "password": "hello%(inner_count)s" } ),
 		[
 			{
