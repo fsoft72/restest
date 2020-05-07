@@ -39,6 +39,10 @@ If the `action` key is present, then the action is a *script* command.
 
 ## ACTION description for HTTP requests
 
+### `title`
+
+Every action can have a *title* field. The text included in this field will be shown on console. Useful to tell the user what's going on.
+
 ### `method`
 
 Supported `method` modes:
@@ -120,3 +124,14 @@ You could save `auth_token` as is and remap `user.id` into `user_id` in this way
 ### `test`
 
 The `test` section allows you to run tests against the request response.
+
+
+
+# Contributions wanted
+
+Contributors are more than welcome. As you can see, at the moment the project source code is quite small so it is a great time to join :-)
+
+These are some fields you could help me:
+
+- create a PIP package to be able to install `restest` with just `pip install restest`
+- better console output: there are great examples of console output out there, but I am not very into console stilying ;-)
