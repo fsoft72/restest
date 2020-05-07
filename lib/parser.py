@@ -56,7 +56,7 @@ class RESTestParser:
 
 		# Support both 'authentication' and 'auth' flags
 		if 'authentication' in act:
-			sys.stderr.write ( "%s use 'authentication' is deprecated use 'auth' in actions\n" % ( colored ( "WARNING",  'yellow' ) ) )
+			sys.stderr.write ( "%s 'authentication' is deprecated use 'auth' in actions\n" % ( colored ( "WARNING",  'yellow' ) ) )
 			auth = act.get ( 'authentication', False )
 		else:
 			auth = act.get ( 'auth', False )
@@ -72,7 +72,14 @@ class RESTestParser:
 				)
 			)
 
-		return f ( act [ 'url' ], act.get ( 'params', {} ), auth, status_code = act.get ( 'status_code', 200 ), skip_error = act.get ( "skip_error", False ) )
+		ignore = False
+		if "ignore_error" in act:
+			ignore = act [ 'ignore_error' ]
+		elif "skip_error" in act:
+			sys.stderr.write ( "%s 'skip_error' is deprecated use 'ignore_error' in actions\n" % ( colored ( "WARNING",  'yellow' ) ) )
+			ignore = act [ 'skip_error' ]
+
+		return f ( act [ 'url' ], act.get ( 'params', {} ), auth, status_code = act.get ( 'status_code', 200 ), skip_error = ignore  )
 
 	def _method_exec ( self, act ):
 		res = self._send_req ( act )
