@@ -52,6 +52,28 @@ Currently, other `HTTP` methods are not supported, but planned in the future.
 
 The partial URL to call. As you have seen before, you can specify the base URL with the `--base-url` command line argument.
 
+### `auth`
+
+This is a `true` / `false` flag which determines if the current call is authenticated. Default is **`false`**
+
+### `ignore_error`
+
+This is a `true` / `false` flag which determines if `restest` should ignore an error occurring on this request.
+Default is **`false`**
+
+### `return_code`
+
+With `return_code` key you can specify the `HTTP Return Code` you expect the call to return.
+For example, if you make an unauthorized call to a specific endpoint, it should return a `403 Unauthorized` return code.
+If you do *not* specify `return_code` key and your request returns a `403`, then `restest` will return an error, but if you know *for sure* that
+your request is going to fail with a `403` return code, then you can specify it with:
+```
+"return_code": 403
+```
+And the `restest` action will succeed.
+
+Default value for `return_code` is **`200`**
+
 ### `params`
 
 If the action is a `post` request, you can specify `POST` parameters with this keyword and passing an array.
