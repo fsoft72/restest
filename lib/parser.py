@@ -17,6 +17,7 @@ class RESTestParser:
 		self.quiet = quiet
 
 		self._paths = []
+		self._included = {}
 
 	def open ( self, fname ):
 		self.script = json.loads ( open ( fname ).read () )
@@ -80,9 +81,6 @@ class RESTestParser:
 		if 'tests'  in act: self.rt.check ( res, act [ 'tests' ] )
 		if 'dumps'  in act: self.rt.dumps ( res, act [ 'dumps' ] )
 
-	#def _method_check ( self, act ): self._method_exec ( act )
-	#def _method_save  ( self, act ): self._method_exec ( act )
-
 	def _method_get ( self, act ):
 		if 'method' not in act: act [ 'method' ] = 'get'
 		self._method_exec ( act )
@@ -126,13 +124,10 @@ class RESTestParser:
 
 	def _method_include ( self, act ):
 		fname = act [ 'filename' ]
-		print ( "FNAME: ", fname, self._abs_script_path )
 
 		if not fname.startswith ( "/" ):
 			path = self._paths [ -1 ]
 			fname = os.path.abspath ( os.path.join ( path, fname ) )
-			#fname = os.path.abspath ( os.path.join ( self._abs_script_path, fname ) )
-
 
 		if not os.path.exists ( fname ):
 			sys.stderr.write ( "ERROR: could not open file: %s\n" % fname )
@@ -141,12 +136,19 @@ class RESTestParser:
 		self._paths.append ( os.path.dirname ( fname ) )
 
 		script = json.loads ( open ( fname ).read () )
-		if "name" in act:
-			name = act [ 'name' ].lower ()
-			self._batches [ act [ 'name' ] ] = script [ 'actions' ]
 
-		if "exec" in act and act [ 'exec' ] == True:
-			self._actions ( script [ 'actions' ] )
+		skip_include = False
+		if script.get ( "run-once", False ):
+			if fname in self._included: skip_include = True
+
+		if not skip_include:
+			self._included [ fname ] = 1
+			if "name" in act:
+				name = act [ 'name' ].lower ()
+				self._batches [ act [ 'name' ] ] = script [ 'actions' ]
+
+			if "exec" in act and act [ 'exec' ] == True:
+				self._actions ( script [ 'actions' ] )
 
 		self._paths.pop ()
 
