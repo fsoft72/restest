@@ -96,10 +96,6 @@ class RESTestParser:
 		if 'method' not in act: act [ 'method' ] = 'post'
 		self._method_exec ( act )
 
-	def _method_section_start ( self, act ):
-		sys.stderr.write ( "DEPRECATION WARNING: use 'section' instead of 'section_start'\n" )
-		return self._method_section ( act )
-
 	def _method_section ( self, act ):
 		if not self.quiet:
 			print (
