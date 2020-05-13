@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-VERSION = "1.10"
+VERSION = "1.11"
 
 import argparse, sys
 
 from lib.parser import RESTestParser
 
-parser = argparse.ArgumentParser ( description = "RESTest v%s the easy REST test manager" % VERSION )
+parser = argparse.ArgumentParser ( description = "RESTest v%s the easy REST test manager - by Fabio Rotondo (fabio.rotondo@gmail.com)" % VERSION )
 
 parser.add_argument ( "file", nargs = '+', help="Files containing the tests" )
 parser.add_argument ( "--base-url", type=str, help = "Base URL. This string overrides the 'system' parameter in JSON file" )
