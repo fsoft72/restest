@@ -97,15 +97,16 @@ class RESTestParser:
 		self._method_exec ( act )
 
 	def _method_section ( self, act ):
+		title = act.get ( 'title', act.get ( 'name', 'SECTION TITLE MISSING' ) )
 		if not self.quiet:
 			print (
 				"\n%s ====== %s" % (
 					self.rt._tabs (),
-					colored ( act [ 'name' ], 'green' )
+					colored ( title  , 'green' )
 				)
 			)
 
-		self.rt.section_start ( act [ 'name' ] )
+		self.rt.section_start ( title )
 		self._actions ( act [ 'actions' ] )
 		self.rt.section_end ()
 
