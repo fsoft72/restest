@@ -47,9 +47,8 @@ class RESTestParser:
 	def _actions ( self, actions ):
 		for act in actions:
 			action = act.get ( 'method', act.get ( 'action', '' ) ).lower ()
-			#action = act [ 'action' ].lower ()
 			meth = getattr ( self, "_method_" + action )
-			if 'title' in act: print ( act [ 'title' ] )
+			if 'title' in act and ( act.get ( 'action' ) != 'section' ): print ( act [ 'title' ] )
 			meth ( act )
 
 	def _send_req ( self, act ):
@@ -84,11 +83,18 @@ class RESTestParser:
 			sys.stderr.write ( "%s 'skip_error' is deprecated use 'ignore_error' in actions\n" % ( colored ( "WARNING",  'yellow' ) ) )
 			ignore = act [ 'skip_error' ]
 
-		return f ( act [ 'url' ], act.get ( 'params', {} ), auth, status_code = act.get ( 'status_code', 200 ), skip_error = ignore  )
+		return f ( 	act [ 'url' ],
+					act.get ( 'params', {} ),
+					auth,
+					status_code = act.get ( 'status_code', 200 ),
+					skip_error = ignore,
+					no_cookies = act.get ( "no_cookies", False )
+				)
 
 	def _method_exec ( self, act ):
 		res = self._send_req ( act )
 
+		#if 'save_cookies' in act: self.rt.save_cookies ( res, act [ 'save_cookies' ] )
 		if 'fields' in act: self.rt.fields ( res, act [ 'fields' ] )
 		if 'tests'  in act: self.rt.check ( res, act [ 'tests' ] )
 		if 'dumps'  in act: self.rt.dumps ( res, act [ 'dumps' ] )
@@ -105,7 +111,7 @@ class RESTestParser:
 		title = act.get ( 'title', act.get ( 'name', 'SECTION TITLE MISSING' ) )
 		if not self.quiet:
 			print (
-				"\n%s ====== %s" % (
+				"\n%s====== %s" % (
 					self.rt._tabs (),
 					colored ( title  , 'green' )
 				)
@@ -117,7 +123,7 @@ class RESTestParser:
 
 		if not self.quiet:
 			print (
-				"%s =========================================== \n" % (
+				"%s=========================================== \n" % (
 					self.rt._tabs (),
 				)
 			)
