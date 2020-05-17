@@ -27,8 +27,18 @@ class RESTest:
 		self._tests  = 0
 		self._errors = 0
 
-	def _tabs ( self ):
-		return "\t" * len ( self.sections )
+		self.session = requests.Session ()
+
+	def _tabs ( self, indent = 0 ):
+		return "\t" * ( len ( self.sections ) + indent )
+
+	def _parse_headers ( self, r ):
+		heads = {}
+		for k, v in r.headers.items ():
+			hk = k.lower ()
+			heads [ hk ] = r.headers [ k ]
+
+		r._headers = heads
 
 	def _log_write ( self, txt ):
 		if not self.log_file: return
@@ -59,7 +69,8 @@ Raw Response: %s
 
 		method = req.method
 		uri = req.url
-		data = str ( req.body ) [ 2 : -1 ]   # quick and dirty way to remove b'...' from string
+		#data = str ( req.body ) [ 2 : -1 ]   # quick and dirty way to remove b'...' from string
+		data = req.body.decode ( 'utf-8' )
 		headers = [ '"{0}: {1}"'.format ( k, v ) for k, v in req.headers.items() ]
 		headers = " -H ".join ( headers )
 
@@ -150,7 +161,7 @@ Raw Response: %s
 		return True
 		pass
 
-	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False ):
+	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False ):
 		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
 
 		url = self._resolve_url ( endpoint )
@@ -158,14 +169,22 @@ Raw Response: %s
 
 		data = self._expand_data ( data )
 
-		if mode == "GET":
-			m = requests.get
-		elif mode == "POST":
-			m = requests.post
+		if no_cookies:
+			obj = requests
 		else:
-			m = requests.post
+
+			obj = self.session
+
+		if mode == "GET":
+			m = obj.get
+		elif mode == "POST":
+			m = obj.post
+		else:
+			m = obj.post
 
 		r = m ( url, json = data, headers = headers )
+
+		self._parse_headers ( r )
 
 		self._log_start ( mode, url, data )
 		self._log_resp ( headers, r )
@@ -180,11 +199,24 @@ Raw Response: %s
 
 		return r
 
-	def do_POST ( self, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False ):
-		return self._req ( "POST", endpoint, data, authenticated, status_code, skip_error = skip_error )
+	def do_POST ( self, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False ):
+		return self._req ( "POST", endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies )
 
-	def do_GET ( self, endpoint, params = {}, authenticated = True, status_code = 200, skip_error = False ):
-		return self._req ( "GET", endpoint, params, authenticated, status_code, skip_error = skip_error )
+	def do_GET ( self, endpoint, params = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False  ):
+		return self._req ( "GET", endpoint, params, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies )
+
+	"""
+	def save_cookies ( self, resp, cookies ):
+		if isinstance ( cookies, str ):
+			cookies = [ cookies ]
+
+		req_cookies = resp._headers [ 'set-cookie' ]
+
+		for k in cookies:
+			if k == '*':
+				self.rt.cookies = req_cookies
+				break
+	"""
 
 	def fields ( self, resp, fields ):
 		j = resp.json ()
@@ -260,7 +292,7 @@ Raw Response: %s
 		j = resp.json ()
 
 		for chk in checks:
-			if 'title' in chk: print ( chk [ 'title' ] )
+			if 'title' in chk: print ( "%s%s" % ( self._tabs ( 1 ), chk [ 'title' ] ) )
 
 			self._tests += 1
 
