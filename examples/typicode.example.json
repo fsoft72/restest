@@ -1,0 +1,33 @@
+{
+	"system": {
+		"base_url": "https://jsonplaceholder.typicode.com",
+		"log_file": "/ramdisk/example.log",
+		"stop_on_error": true
+	},
+	"actions": [
+		{
+			"title": "List users",
+			"method": "get",
+			"url": "/users",
+			"auth": false,
+			"fields": [
+				[
+					"*",
+					"users"
+				]
+			],
+			"checks": [
+				{
+					"title": "Checking for id=1 on first user",
+					"field": "users[0].id",
+					"value": 1
+				},
+				{
+					"title": "Checking for right name on second user",
+					"field": "users[1].username",
+					"value": "Antonette"
+				}
+			]
+		}
+	]
+}
