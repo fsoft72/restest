@@ -135,3 +135,7 @@ These are some fields you could help me:
 
 - create a PIP package to be able to install `restest` with just `pip install restest`
 - better console output: there are great examples of console output out there, but I am not very into console stilying ;-)
+
+# Changelog
+
+Full changelog can be seen [here](CHANGELOG.md)
