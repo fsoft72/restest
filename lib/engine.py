@@ -309,7 +309,7 @@ Raw Response: %s
 				if len ( str ( v ) ) == 0:
 					self._error ( "FIELD: %s is EMPTY" % ( chk [ 'field' ] ) )
 					return
-			elif mode in ( 'EQUALS', "==" ):
+			elif mode in ( 'EQUALS', "==", "=", "EQUAL" ):
 				if current_val != expected_val:
 					self._error ( "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % ( chk [ 'field' ], expected_val, current_val ) )
 			elif mode in ( 'CONTAINS', '->' ):

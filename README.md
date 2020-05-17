@@ -121,9 +121,38 @@ You could save `auth_token` as is and remap `user.id` into `user_id` in this way
 ]
 ```
 
-### `test`
+### `tests`
 
-The `test` section allows you to run tests against the request response.
+The `tests` section allows you to run tests against the request response.
+It contains an array of tests structured in this way:
+
+- `title` (optional) a title of the running test
+- `field` is the name of the field to run the test against
+- `value` is the expected value
+- `mode` is how to test the `field` value against the provided `value`. You can use one of those conditions (if omitted, default is `EQUALS`):
+	- `EQUALS` or `=` or `==`:  the `value` must be exactly the same as the value contained in `field`
+	- `EXISTS` or `!!`: the `field` is present in the returned object
+	- `CONTAINS` or `->`: the `value` must be present *inside* the `field` value
+	- `SIZE` or `LEN` or `LENGTH`: the `field` object (eg. array or string) must be of the size defined in `value`
+	- `GT` or `>`: the `field` value must be greater than `value`
+	- `GTE` or `>=`: the `field` value must be greater than or equal to `value`
+	- `LT` or `<`: the `field` value must be lesser than `value`
+	- `LTE` or `<=`: the `field` value must be lesser than or equal to `value`
+	- `SIZE-GT` or `()>`: the `field` value is an array or string with a size greater than `value`
+	- `SIZE-GTE` or `()>=`: the `field` value is an array or string with a size greater than or equal to `value`
+	- `SIZE-LT` or `()<`: the `field` value is an array or string with a size lesser than `value`
+	- `SIZE-LTE` or `()<=`: the `field` value is an array or string with a size lesser than or equal to `value`
+	- `OBJ` or `OBJECT`: the `field` value is an object that must match the object specified in `value`
+
+```
+"tests": [
+	{
+		"field": "name of the field to test",
+		"value": "value to test against",
+		"mode": "how to test"
+	}
+]
+```
 
 
 
