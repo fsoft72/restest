@@ -127,7 +127,12 @@ The `tests` section allows you to run tests against the request response.
 It contains an array of tests structured in this way:
 
 - `title` (optional) a title of the running test
-- `field` is the name of the field to run the test against
+- `field` is the name of the field to run the test against. Field can be one of the following:
+    - an attribute name of the returned object (eg. `email`)
+	- if the field is a list of values (eg, `tags: [ 'hello', 'world' ]`) you can instruct to check against a specific value using the `[]` square notation. For example: `tags[0]` will be `hello` and `tags[1]` will be `world`.
+	Square notations also work when the returned object is just an array. In this case, omit the field name (since there isn't any) and just go for `[0]` or `[1]` and so on.
+	- the field name can use dotted notation to access an inner field. There is no limit to the nested field notation. Examples: `user.email` or `user.address.location.lat`
+
 - `value` is the expected value
 - `mode` is how to test the `field` value against the provided `value`. You can use one of those conditions (if omitted, default is `EQUALS`):
 	- `EQUALS` or `=` or `==`:  the `value` must be exactly the same as the value contained in `field`
@@ -144,12 +149,19 @@ It contains an array of tests structured in this way:
 	- `SIZE-LTE` or `()<=`: the `field` value is an array or string with a size lesser than or equal to `value`
 	- `OBJ` or `OBJECT`: the `field` value is an object that must match the object specified in `value`
 
+Here there is an example of two tests, the first one is checking if the first element in array has `id` equal to 1.
+The second checks if the second user in the array has the username `Antonette`.
 ```
 "tests": [
 	{
-		"field": "name of the field to test",
-		"value": "value to test against",
-		"mode": "how to test"
+		"title": "Checking for id=1 on first user",
+		"field": "[0].id",
+		"value": 1
+	},
+	{
+		"title": "Checking for right name on second user",
+		"field": "[1].username",
+		"value": "Antonette"
 	}
 ]
 ```
