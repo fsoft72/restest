@@ -10,22 +10,50 @@
 			"method": "get",
 			"url": "/users",
 			"auth": false,
-			"fields": [
-				[
-					"*",
-					"users"
-				]
-			],
-			"checks": [
+			"tests": [
 				{
 					"title": "Checking for id=1 on first user",
-					"field": "users[0].id",
+					"field": "[0].id",
 					"value": 1
 				},
 				{
 					"title": "Checking for right name on second user",
-					"field": "users[1].username",
+					"field": "[1].username",
 					"value": "Antonette"
+				}
+			]
+		},
+		{
+			"action": "section",
+			"title": "POST tests",
+			"actions": [
+				{
+					"title": "Create a new post",
+					"method": "POST",
+					"url": "/posts",
+					"params": {
+						"title": "restest post",
+						"body": "This post has been created by restest",
+						"userId": 1
+					},
+					"status_code": 201,
+					"tests": [
+						{
+							"field": "id",
+							"value": 101
+						}
+					]
+				},
+				{
+					"title": "Retrieve post 10",
+					"method": "get",
+					"url": "/posts/10",
+					"tests": [
+						{
+							"field": "id",
+							"value": 10
+						}
+					]
 				}
 			]
 		}
