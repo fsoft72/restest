@@ -84,7 +84,7 @@ class RESTestParser:
 	def _method_exec ( self, act ):
 		res = self._send_req ( act )
 
-		if 'fields' in act: self.rt.save  ( res, act [ 'fields' ] )
+		if 'fields' in act: self.rt.fields ( res, act [ 'fields' ] )
 		if 'tests'  in act: self.rt.check ( res, act [ 'tests' ] )
 		if 'dumps'  in act: self.rt.dumps ( res, act [ 'dumps' ] )
 
