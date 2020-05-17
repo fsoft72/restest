@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#
+# restest parser
+#
+# written by Fabio Rotondo <fabio.rotondo@gmail.com>
+#
 
 import sys, json, os
 from termcolor import colored, cprint

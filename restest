@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
+#
+# restest
+#
+# written by Fabio Rotondo <fabio.rotondo@gmail.com>
+#
 
-VERSION = "1.11"
+VERSION = "1.12"
 
 import argparse, sys
 
