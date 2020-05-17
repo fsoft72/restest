@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
+#
+# restest engine
+#
+# written by Fabio Rotondo (fabio.rotondo@gmail.com)
+#
 
 import requests, json, sys, copy
 
 class RESTest:
-	def __init__ ( self, base_url = '', output_file_name = '', stop_on_error = True, quiet = False ):
+	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False ):
 		self.quiet = quiet
 		self.base_url = base_url
-		self.output_file_name = output_file_name
+		self.log_file = log_file
 
 		self.globals = {}		# Global var / values for requests
 
@@ -26,14 +31,14 @@ class RESTest:
 		return "\t" * len ( self.sections )
 
 	def _log_write ( self, txt ):
-		if not self.output_file_name: return
+		if not self.log_file: return
 
-		fout = open ( self.output_file_name, "a" )
+		fout = open ( self.log_file, "a" )
 		fout.write ( txt )
 
 	def _log_start ( self, method, endpoint, data ):
 		self._tests += 1
-		if not self.output_file_name: return
+		if not self.log_file: return
 
 		self._log_write ( "=" * 70 )
 		self._log_write ( """
@@ -42,7 +47,7 @@ Data:         %s
 """ % ( method, endpoint, json.dumps ( data, default = str ) ) )
 
 	def _log_resp ( self, headers, resp ):
-		if not self.output_file_name: return
+		if not self.log_file: return
 
 		self._log_write ( """Headers:      %s
 Status Code:  %s
@@ -181,16 +186,21 @@ Raw Response: %s
 	def do_GET ( self, endpoint, params = {}, authenticated = True, status_code = 200, skip_error = False ):
 		return self._req ( "GET", endpoint, params, authenticated, status_code, skip_error = skip_error )
 
-	def save ( self, resp, fields ):
+	def fields ( self, resp, fields ):
 		j = resp.json ()
 
 		for k in fields:
 			if isinstance ( k, list ) or isinstance ( k, tuple ):
-				glob_key = k [ 1 ]
 				json_key = k [ 0 ]
+				glob_key = k [ 1 ]
 			else:
 				glob_key = k
 				json_key = k
+
+			# ADD: support for '*' field name (all JSON)
+			if json_key == '*':
+				self.globals [ glob_key ] = j
+				continue
 
 			self.globals [ glob_key ] = self._expand_value ( j, json_key )
 
@@ -335,7 +345,7 @@ END  ----  %s
 
 """
 if __name__ == '__main__':
-	rt = RESTest ( 'http://localhost:8000', output_file_name = "/ramdisk/req.log" )
+	rt = RESTest ( 'http://localhost:8000', log_file = "/ramdisk/req.log" )
 
 	rt.save (
 		rt.do_POST ( "/api/auth/login", { "email": "info@example.com", "password": "ciao" }, authenticated = False ),
