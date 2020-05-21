@@ -12,7 +12,7 @@ from .engine import RESTest
 
 class RESTestParser:
 	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False ):
-		self.rt = RESTest ( quiet = quiet )
+		self.rt = RESTest ( quiet = quiet, log_file = log_file )
 
 		self._batches = {}
 
@@ -40,7 +40,7 @@ class RESTestParser:
 			self.rt.stop_on_error = self.forced_stop_on_error
 
 		if self.forced_log_file != None:
-			self.rt.output_file_name = self.forced_log_file
+			self.rt.log_file = self.forced_log_file
 
 		self._actions ( self.script [ "actions" ] )
 
