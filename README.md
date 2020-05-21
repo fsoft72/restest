@@ -17,6 +17,7 @@ Main features of `restest` are:
 - Support values storing and reusing during the script
 - Uses Python string formatting rules to create custom strings and values
 - A script can include other scripts
+- Tests can be grouped in "sections" to logically and visually gather them in a single place.
 - Batch operations
 - Clean debug output
 
