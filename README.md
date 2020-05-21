@@ -5,6 +5,54 @@ Scriptable REST calls test software written in Python
 
 With `restest` you can control return responses and test values against an expected result / behaviour.
 
+
+## Main Features
+
+Main features of `restest` are:
+
+- Support session based request
+- Output containing a working CURL string of every test
+- Dump of all headers and fields
+- Supports Token authentication
+- Support values storing and reusing during the script
+- Uses Python string formatting rules to create custom strings and values
+- A script can include other scripts
+- Batch operations
+- Clean debug output
+
+## How to run it
+
+Typically you run `restest` from a command line with some parameters and one or more JSON files with the tests to be performed.
+
+```bash
+~/src/restest$ restest --help
+usage: restest [-h] [--base-url BASE_URL] [--dont-stop-on-error] [--log LOG] [--key KEY [KEY ...]] [--quiet] [--version] file [file ...]
+
+RESTest the easy REST test manager - by Fabio Rotondo (fabio.rotondo@gmail.com)
+
+positional arguments:
+  file                  Files containing the tests
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --base-url BASE_URL   Base URL. This string overrides the 'system' parameter in JSON file
+  --dont-stop-on-error  Flag to stop RESTest on error. This flag overrides the 'system' parameter in JSON file
+  --log LOG             Custom log file overriding the one in 'system'
+  --key KEY [KEY ...]   One or more keys to be added to the globals dict use key:value format
+  --quiet               If set, no output on console
+  --version             show program's version number and exit
+```
+
+If the first JSON file you load has a `system` section with at least `base_url` configuration you can just run `restest` with:
+
+```bash
+restest ./tests.json
+```
+
+
+
+
+
 ## JSON file structure
 
 This is the smaller JSON file for `restest` you can write
@@ -166,9 +214,15 @@ The second checks if the second user in the array has the username `Antonette`.
 ]
 ```
 
+# See examples
+
+You can see a fully working example in `examples` directory.
+I'll add more examples during time.
+
+[To see the Typicode example, click here](examples/typicode.example.json)
 
 
-# Contributions wanted
+# Contributors wanted
 
 Contributors are more than welcome. As you can see, at the moment the project source code is quite small so it is a great time to join :-)
 
