@@ -61,8 +61,9 @@ Data:         %s
 
 		self._log_write ( """Headers:      %s
 Status Code:  %s
+Request Time: %s
 Raw Response: %s
-""" % ( headers, resp.status_code, resp.text ) )
+""" % ( headers, resp.status_code, resp.elapsed.microseconds / 1000, resp.text ) )
 
 	def _log_curl ( self, req ):
 		command = "curl -X {method} -H {headers} -d '{data}' '{uri}'"

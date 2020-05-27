@@ -4,8 +4,9 @@
 
 - add: support for new `no_cookies` param
 - add: support for `max_time` to check if a request takes too long
-- add: request time is shown in output log
-- add: dupport for `PUT`, `DELETE` and `PATCH` requests
+- add: request time is shown in the output log
+- add: request time is shown in the console output
+- add: support for `PUT`, `DELETE` and `PATCH` requests
 - enh: code cleanup
 
 ## v1.13
