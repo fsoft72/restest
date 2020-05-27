@@ -161,7 +161,7 @@ Raw Response: %s
 		return True
 		pass
 
-	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False ):
+	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0 ):
 		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
 
 		url = self._resolve_url ( endpoint )
@@ -172,13 +172,18 @@ Raw Response: %s
 		if no_cookies:
 			obj = requests
 		else:
-
 			obj = self.session
 
 		if mode == "GET":
 			m = obj.get
 		elif mode == "POST":
 			m = obj.post
+		elif mode == "DELETE":
+			m = obj.delete
+		elif mode == "PUT":
+			m = obj.put
+		elif mode == "PATCH":
+			m = obj.patch
 		else:
 			m = obj.post
 
@@ -197,26 +202,15 @@ Raw Response: %s
 			sys.stderr.write ( """%s\nREQUEST ERROR\n%s\n""" % ( "*" * 70, "*" * 70 ) )
 			sys.exit ( 1 )
 
+		ms = r.elapsed.microseconds / 1000
+		if max_exec_time and ms > max_exec_time:
+			sys.stderr.write ( """%s\nTOO MUCH TIME ERROR (res: %s - exprected: %s)\n%s\n""" % ( "*" * 70, ms, max_exec_time,  "*" * 70 ) )
+			sys.exit ( 1 )
+
 		return r
 
-	def do_POST ( self, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False ):
-		return self._req ( "POST", endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies )
-
-	def do_GET ( self, endpoint, params = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False  ):
-		return self._req ( "GET", endpoint, params, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies )
-
-	"""
-	def save_cookies ( self, resp, cookies ):
-		if isinstance ( cookies, str ):
-			cookies = [ cookies ]
-
-		req_cookies = resp._headers [ 'set-cookie' ]
-
-		for k in cookies:
-			if k == '*':
-				self.rt.cookies = req_cookies
-				break
-	"""
+	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0 ):
+		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time )
 
 	def fields ( self, resp, fields ):
 		j = resp.json ()

@@ -98,6 +98,9 @@ Supported `method` modes:
 
 - **GET** the `HTTP GET` method
 - **POST** the `HTTP POST` method
+- **PUT** the `HTTP PUT` method
+- **PATCH** the `HTTP PATCH` method
+- **DELETE** the `HTTP DELETE` method
 
 Currently, other `HTTP` methods are not supported, but planned in the future.
 
@@ -114,9 +117,9 @@ This is a `true` / `false` flag which determines if the current call is authenti
 This is a `true` / `false` flag which determines if `restest` should ignore an error occurring on this request.
 Default is **`false`**
 
-### `return_code`
+### `status_code`
 
-With `return_code` key you can specify the `HTTP Return Code` you expect the call to return.
+With `status_code` key you can specify the `HTTP Status Code` you expect the call to return.
 For example, if you make an unauthorized call to a specific endpoint, it should return a `403 Unauthorized` return code.
 If you do *not* specify `return_code` key and your request returns a `403`, then `restest` will return an error, but if you know *for sure* that
 your request is going to fail with a `403` return code, then you can specify it with:
@@ -141,6 +144,18 @@ Here there is an example:
 	}
 }
 ```
+
+### `no_cookies`
+
+This is a `true` or `false` flag. If set to `true` the cookies will not be sent or read during this single request.
+
+
+### `max_time`
+
+You can have a test failing when the request exceedes a certain amount of time defined by `max_time`.
+`max_time` is set in milliseconds, so if you want to fail after one second, set it to `1000`.
+
+
 
 ### `fields`
 

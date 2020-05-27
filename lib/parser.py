@@ -52,22 +52,13 @@ class RESTestParser:
 			meth ( act )
 
 	def _send_req ( self, act ):
-		m = act [ 'method' ].lower ()
-		if m == "get":
-			f = getattr ( self.rt, "do_GET" )
-		else:
-			f = getattr ( self.rt, "do_POST" )
+		m = act [ 'method' ].upper ()
 
-		# Support both 'authentication' and 'auth' flags
-		if 'authentication' in act:
-			sys.stderr.write ( "%s 'authentication' is deprecated use 'auth' in actions\n" % ( colored ( "WARNING",  'yellow' ) ) )
-			auth = act.get ( 'authentication', False )
-		else:
-			auth = act.get ( 'auth', False )
+		auth = act.get ( 'auth', False )
 
 		if not self.quiet:
 			sys.stdout.write (
-				"%s %s %s %s %s %s\n" % (
+				"%s %s %s %s %s %s" % (
 				self.rt._tabs (),
 				colored ( "%-4s" % m.upper (), 'red' ),
 				colored ( "%-35s" % act.get ( "url", "" ), 'yellow' ),
@@ -83,13 +74,19 @@ class RESTestParser:
 			sys.stderr.write ( "%s 'skip_error' is deprecated use 'ignore_error' in actions\n" % ( colored ( "WARNING",  'yellow' ) ) )
 			ignore = act [ 'skip_error' ]
 
-		return f ( 	act [ 'url' ],
+		res = self.rt.do_EXEC ( m, act [ 'url' ],
 					act.get ( 'params', {} ),
 					auth,
 					status_code = act.get ( 'status_code', 200 ),
 					skip_error = ignore,
-					no_cookies = act.get ( "no_cookies", False )
+					no_cookies = act.get ( "no_cookies", False ),
+					max_exec_time= act.get ( "max_time", 0 )
 				)
+
+		if not self.quiet:
+			sys.stdout.write ( " t: %s ms\n" % ( res.elapsed.microseconds / 1000 ) )
+
+		return res
 
 	def _method_exec ( self, act ):
 		res = self._send_req ( act )
