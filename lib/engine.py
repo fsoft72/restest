@@ -162,7 +162,7 @@ Raw Response: %s
 		return True
 		pass
 
-	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0 ):
+	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None ):
 		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
 
 		url = self._resolve_url ( endpoint )
@@ -188,7 +188,7 @@ Raw Response: %s
 		else:
 			m = obj.post
 
-		r = m ( url, json = data, headers = headers )
+		r = m ( url, json = data, headers = headers, files = files )
 
 		self._parse_headers ( r )
 
@@ -210,8 +210,8 @@ Raw Response: %s
 
 		return r
 
-	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0 ):
-		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time )
+	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None ):
+		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time, files = files )
 
 	def fields ( self, resp, fields ):
 		j = resp.json ()
