@@ -51,10 +51,21 @@ class RESTestParser:
 			if 'title' in act and ( act.get ( 'action' ) != 'section' ): print ( act [ 'title' ] )
 			meth ( act )
 
+	def _parse_files ( self, dct ):
+		files = {}
+
+		for k, v in dct.items ():
+			v = self._resolve_fname ( v )
+			files [ k ] = open ( v, 'rb' )
+
+		return files
+
 	def _send_req ( self, act ):
 		m = act [ 'method' ].upper ()
 
 		auth = act.get ( 'auth', False )
+
+		files = self._parse_files ( act.get ( 'files', {} ) )
 
 		if not self.quiet:
 			sys.stdout.write (
@@ -81,7 +92,8 @@ class RESTestParser:
 					skip_error = ignore,
 					no_cookies = act.get ( "no_cookies", False ),
 					max_exec_time= act.get ( "max_time", 0 ),
-					title = act.get ( 'title', 'No title provided' )
+					title = act.get ( 'title', 'No title provided' ),
+					files = files
 				)
 
 		if not self.quiet:
@@ -135,9 +147,7 @@ class RESTestParser:
 	def _method_set ( self, act ):
 		self.rt.set_val ( act [ 'key' ], act [ 'value' ] )
 
-	def _method_include ( self, act ):
-		fname = act [ 'filename' ]
-
+	def _resolve_fname ( self, fname ):
 		if not fname.startswith ( "/" ):
 			path = self._paths [ -1 ]
 			fname = os.path.abspath ( os.path.join ( path, fname ) )
@@ -145,6 +155,11 @@ class RESTestParser:
 		if not os.path.exists ( fname ):
 			sys.stderr.write ( "ERROR: could not open file: %s\n" % fname )
 			sys.exit ( 1 )
+
+		return fname
+
+	def _method_include ( self, act ):
+		fname = self._resolve_fname ( act [ 'filename' ] )
 
 		self._paths.append ( os.path.dirname ( fname ) )
 

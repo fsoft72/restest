@@ -1,0 +1,14 @@
+{
+	"system": {
+		"base_url": "https://jsonplaceholder.typicode.com",
+		"log_file": "./restest-files.log",
+		"stop_on_error": true
+	},
+	"actions": [ {
+		"url": "/posts",
+		"method": "POST",
+		"files": {
+			"test": "./files.example.json"
+		}
+	} ]
+}

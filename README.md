@@ -145,6 +145,21 @@ Here there is an example:
 }
 ```
 
+### `files`
+
+If the action is a `post` request, you can specify `files` keyword, passing an array of files to be posted.
+Here there is an example:
+```
+{
+	"method": "post",
+	"url": "/api/site/files",
+	"files": {
+		"file1": "relative/path/to/file.txt",
+		"file2": "/absolute/path/to/file.jpg"
+	}
+}
+```
+
 ### `no_cookies`
 
 This is a `true` or `false` flag. If set to `true` the cookies will not be sent or read during this single request.

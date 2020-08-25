@@ -1,5 +1,10 @@
 # restest  changelog
 
+## v1.20
+
+ - add: support for `files` array to post files in requests
+ - add: new internal method _resolve_fname() to support file name resolution
+
 ## v1.15
 
 - add: support for new `no_cookies` param
