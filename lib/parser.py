@@ -11,8 +11,8 @@ from termcolor import colored, cprint
 from .engine import RESTest
 
 class RESTestParser:
-	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False ):
-		self.rt = RESTest ( quiet = quiet, log_file = log_file )
+	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False, postman = None ):
+		self.rt = RESTest ( quiet = quiet, log_file = log_file, postman = postman )
 
 		self._batches = {}
 
@@ -80,7 +80,8 @@ class RESTestParser:
 					status_code = act.get ( 'status_code', 200 ),
 					skip_error = ignore,
 					no_cookies = act.get ( "no_cookies", False ),
-					max_exec_time= act.get ( "max_time", 0 )
+					max_exec_time= act.get ( "max_time", 0 ),
+					title = act.get ( 'title', 'No title provided' )
 				)
 
 		if not self.quiet:

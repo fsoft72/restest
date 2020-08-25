@@ -8,10 +8,11 @@
 import requests, json, sys, copy
 
 class RESTest:
-	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False ):
+	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None ):
 		self.quiet = quiet
 		self.base_url = base_url
 		self.log_file = log_file
+		self.postman = postman
 
 		self.globals = {}		# Global var / values for requests
 
@@ -162,7 +163,7 @@ Raw Response: %s
 		return True
 		pass
 
-	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0 ):
+	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, title = "" ):
 		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
 
 		url = self._resolve_url ( endpoint )
@@ -192,6 +193,9 @@ Raw Response: %s
 
 		self._parse_headers ( r )
 
+		if self.postman:
+			self.postman.add ( title, mode, url, data, headers, r )
+
 		self._log_start ( mode, url, data )
 		self._log_resp ( headers, r )
 		self._log_curl ( r.request )
@@ -210,8 +214,8 @@ Raw Response: %s
 
 		return r
 
-	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0 ):
-		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time )
+	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, title = "" ):
+		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time, title = title )
 
 	def fields ( self, resp, fields ):
 		j = resp.json ()
