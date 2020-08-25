@@ -20,6 +20,8 @@ parser.add_argument ( "--dont-stop-on-error", action="store_true", help = "Flag 
 parser.add_argument ( "--postman", type=str, help="Export activity to a Postman JSON file" )
 parser.add_argument ( "--postman-name", type=str, help="The Postman Collection name" )
 parser.add_argument ( "--postman-base-url", type=str, help="The base url to use in Postman instead of the real host" )
+parser.add_argument ( "--postman-auth-name", type=str, help="Name of the authorization header name" )
+parser.add_argument ( "--postman-auth-value", type=str, help="Value to use for authorization header" )
 parser.add_argument ( "--log", type=str, help = "Custom log file overriding the one in 'system'" )
 parser.add_argument ( "--key", type=str, nargs='+', help="One or more keys to be added to the globals dict use key:value format" )
 parser.add_argument ( "--quiet", action="store_true", help = "If set, no output on console" )
@@ -30,7 +32,7 @@ args = parser.parse_args ()
 
 postman = None
 if args.postman:
-	postman = PostmanExporter ( args.postman, args.postman_name, args.postman_base_url )
+	postman = PostmanExporter ( args.postman, args.postman_name, args.postman_base_url, args.postman_auth_name, args.postman_auth_value )
 
 rt = RESTestParser ( quiet = args.quiet, base_url = args.base_url, stop_on_error = not args.dont_stop_on_error, log_file = args.log, postman = postman )
 
