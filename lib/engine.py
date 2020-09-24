@@ -72,7 +72,11 @@ Raw Response: %s
 		method = req.method
 		uri = req.url
 		#data = str ( req.body ) [ 2 : -1 ]   # quick and dirty way to remove b'...' from string
-		data = req.body.decode ( 'utf-8' )
+		try:
+			data = req.body.decode ( 'utf-8' )
+		except:
+			data = ""
+
 		headers = [ '"{0}: {1}"'.format ( k, v ) for k, v in req.headers.items() ]
 		headers = " -H ".join ( headers )
 
