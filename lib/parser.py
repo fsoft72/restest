@@ -117,6 +117,18 @@ class RESTestParser:
 		if 'method' not in act: act [ 'method' ] = 'post'
 		self._method_exec ( act )
 
+	def _method_delete ( self, act ):
+		if 'method' not in act: act [ 'method' ] = 'delete'
+		self._method_exec ( act )
+
+	def _method_patch ( self, act ):
+		if 'method' not in act: act [ 'method' ] = 'patch'
+		self._method_exec ( act )
+
+	def _method_put ( self, act ):
+		if 'method' not in act: act [ 'method' ] = 'put'
+		self._method_exec ( act )
+
 	def _method_section ( self, act ):
 		title = act.get ( 'title', act.get ( 'name', 'SECTION TITLE MISSING' ) )
 		if not self.quiet:

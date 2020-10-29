@@ -54,6 +54,11 @@
 							"value": 10
 						}
 					]
+				},
+				{
+					"title": "Delete post 1",
+					"method": "delete",
+					"url": "/posts/1"
 				}
 			]
 		}
