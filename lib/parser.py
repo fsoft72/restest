@@ -64,6 +64,7 @@ class RESTestParser:
 		m = act [ 'method' ].upper ()
 
 		auth = act.get ( 'auth', False )
+		content = act.get ( 'content', 'json' )
 
 		files = self._parse_files ( act.get ( 'files', {} ) )
 
@@ -93,7 +94,8 @@ class RESTestParser:
 					no_cookies = act.get ( "no_cookies", False ),
 					max_exec_time= act.get ( "max_time", 0 ),
 					title = act.get ( 'title', 'No title provided' ),
-					files = files
+					files = files,
+					content=content,
 				)
 
 		if not self.quiet:

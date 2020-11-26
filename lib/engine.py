@@ -167,7 +167,7 @@ Raw Response: %s
 		return True
 		pass
 
-	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "" ):
+	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json" ):
 		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
 
 		url = self._resolve_url ( endpoint )
@@ -193,7 +193,11 @@ Raw Response: %s
 		else:
 			m = obj.post
 
-		r = m ( url, json = data, headers = headers, files = files )
+		if content == 'json':
+			r = m ( url, json = data, headers = headers, files = files )
+		elif content == 'form':
+			r = m ( url, data = data, headers = headers, files = files )
+
 
 		self._parse_headers ( r )
 
@@ -218,8 +222,8 @@ Raw Response: %s
 
 		return r
 
-	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "" ):
-		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time, files = files, title = title )
+	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json" ):
+		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time, files = files, title = title, content=content )
 
 	def fields ( self, resp, fields ):
 		j = resp.json ()
