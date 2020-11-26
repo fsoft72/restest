@@ -112,6 +112,12 @@ The partial URL to call. As you have seen before, you can specify the base URL w
 
 This is a `true` / `false` flag which determines if the current call is authenticated. Default is **`false`**
 
+### `content`
+
+Defines the request content-type and mode. Possible values are:
+- **json**  the request is a `application/json`  (*default*)
+- **form**  the request is a `application/x-www-form-urlencoded`
+
 ### `ignore_error`
 
 This is a `true` / `false` flag which determines if `restest` should ignore an error occurring on this request.

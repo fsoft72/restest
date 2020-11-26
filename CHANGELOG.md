@@ -1,5 +1,15 @@
 # restest  changelog
 
+## v1.60
+
+  - add: new `content` attribute on requests
+
+## v1.50
+
+  - add: postman output support
+
+  - fix: body decoding error
+
 ## v1.20
 
  - add: support for `files` array to post files in requests
