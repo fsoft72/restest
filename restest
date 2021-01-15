@@ -5,7 +5,7 @@
 # written by Fabio Rotondo <fabio.rotondo@gmail.com>
 #
 
-VERSION = "1.60"
+VERSION = "1.61"
 
 import argparse, sys
 

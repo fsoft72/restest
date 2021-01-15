@@ -313,9 +313,12 @@ Raw Response: %s
 			mode = chk.get ( 'mode', 'EQUALS' )
 
 			if mode in ( 'EXISTS', "!!" ):
-				if len ( str ( v ) ) == 0:
+				if ( str ( v ) == "None" ) or ( len ( str ( v ) ) == 0 ):
 					self._error ( "FIELD: %s is EMPTY" % ( chk [ 'field' ] ) )
 					return
+			elif mode in ( "EMPTY", "IS_EMPTY", "IS_NULL", "NULL", "@" ):
+				if ( str ( v ) != "None" ):
+					self._error ( "FIELD: %s VALUE mismatch. Expected: Null - got: %s" % ( chk [ 'field' ], current_val ) )
 			elif mode in ( 'EQUALS', "==", "=", "EQUAL" ):
 				if current_val != expected_val:
 					self._error ( "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % ( chk [ 'field' ], expected_val, current_val ) )

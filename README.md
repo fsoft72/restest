@@ -221,6 +221,7 @@ It contains an array of tests structured in this way:
 - `value` is the expected value
 - `mode` is how to test the `field` value against the provided `value`. You can use one of those conditions (if omitted, default is `EQUALS`):
 	- `EQUALS` or `=` or `==`:  the `value` must be exactly the same as the value contained in `field`
+	- `EMPTY` or `IS_EMPTY` or `IS_NULL` or `NULL`: the `value` must not exists
 	- `EXISTS` or `!!`: the `field` is present in the returned object
 	- `CONTAINS` or `->`: the `value` must be present *inside* the `field` value
 	- `SIZE` or `LEN` or `LENGTH`: the `field` object (eg. array or string) must be of the size defined in `value`

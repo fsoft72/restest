@@ -1,5 +1,8 @@
 # restest  changelog
 
+## v1.61
+
+  - add: new `EMPTY` value check mode
 ## v1.60
 
   - add: new `content` attribute on requests
