@@ -7,6 +7,8 @@
 
 import requests, json, sys, copy
 
+from .path_parser import expand_value
+
 class RESTest:
 	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None ):
 		self.quiet = quiet
@@ -269,19 +271,13 @@ Raw Response: %s
 		return None
 
 	def _expand_value ( self, dct, key ):
-		base = []
-		for k in key.split ( "." ):
-			base.append ( k )
-			if k.startswith ( "[" ):
-				k = int ( k.replace ( "[", "" ).replace ( "]", "" ) )
-				dct = dct [ k ]
-			elif k in dct:
-				dct = dct [ k ]
-			else:
-				self._error ( "*** ERROR. Key not found '%s'\n" % ".".join ( base ) )
-				return "__NOT_FOUND__"
+		res, err = expand_value ( key, dct )
 
-		return dct
+		if err:
+			print ( "PATH: %s - Error: %s" % ( key, err ) )
+			return "__NOT_FOUND__"
+
+		return res
 
 	def copy_val ( self, _from, _to ):
 		_from = self._expand_var ( _from )
