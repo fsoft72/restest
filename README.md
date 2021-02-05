@@ -11,6 +11,7 @@ With `restest` you can control return responses and test values against an expec
 Main features of `restest` are:
 
 - Support session based request
+- Powerful path parser to extract keys in nested JSON structures
 - Output containing a working CURL string of every test
 - Dump of all headers and fields
 - Supports Token authentication
@@ -58,7 +59,7 @@ restest ./tests.json
 
 This is the smaller JSON file for `restest` you can write
 (note: name it `simple-example.test.json`):
-```
+```json
 {
 	"actions": [
 		{
@@ -75,7 +76,7 @@ Specifying using the command line allows you to run the same tests on different 
 
 Here is the shortest command line to execute the script above:
 
-```
+```bash
 restest --base-url http://example.com simple-example.test.json
 ```
 
@@ -129,7 +130,7 @@ With `status_code` key you can specify the `HTTP Status Code` you expect the cal
 For example, if you make an unauthorized call to a specific endpoint, it should return a `403 Unauthorized` return code.
 If you do *not* specify `return_code` key and your request returns a `403`, then `restest` will return an error, but if you know *for sure* that
 your request is going to fail with a `403` return code, then you can specify it with:
-```
+```json
 "return_code": 403
 ```
 And the `restest` action will succeed.
@@ -140,7 +141,7 @@ Default value for `return_code` is **`200`**
 
 If the action is a `post` request, you can specify `POST` parameters with this keyword and passing an array.
 Here there is an example:
-```
+```json
 {
 	"method": "post",
 	"url": "/api/site/login",
@@ -155,7 +156,7 @@ Here there is an example:
 
 If the action is a `post` request, you can specify `files` keyword, passing an array of files to be posted.
 Here there is an example:
-```
+```json
 {
 	"method": "post",
 	"url": "/api/site/files",
@@ -187,7 +188,7 @@ It is a list of field names that can be also "mapped" to a new name in memory wh
 
 Here there is a code snippet. Suppose the response is a JSON object like this one:
 
-```
+```json
 {
 	"auth_token": "jajsj3ijssisiej",
 	"user": {
@@ -199,7 +200,7 @@ Here there is a code snippet. Suppose the response is a JSON object like this on
 
 You could save `auth_token` as is and remap `user.id` into `user_id` in this way:
 
-```
+```json
 "fields": [
 	"auth_token",
 	[ "user.id", "user_id" ]
@@ -237,7 +238,7 @@ It contains an array of tests structured in this way:
 
 Here there is an example of two tests, the first one is checking if the first element in array has `id` equal to 1.
 The second checks if the second user in the array has the username `Antonette`.
-```
+```json
 "tests": [
 	{
 		"title": "Checking for id=1 on first user",
@@ -251,6 +252,57 @@ The second checks if the second user in the array has the username `Antonette`.
 	}
 ]
 ```
+
+# Path declarations
+
+During tests or variable extraction, sometimes it is important to be able to access a nested value in the returning JSON object.
+
+`restest` offers a very powerful path parser, that will help you reaching the node you want inside your structure. Let's see some examples.
+First of all, suppose that the JSON returning is similar to this one:
+
+```json
+{
+	"user": {
+		"email": "user@example.com",
+		"id": 123,
+		"perms": [
+			"admin",
+			"superuser"
+		]
+	},
+	"preferences": [
+		{
+			"name": "color",
+			"value": "blue"
+		},
+		{
+			"name": "avatar",
+			"value": 1204
+		},
+		{
+			"name": "children",
+			"value": [
+				{
+					"name": "child01",
+					"value": 1
+				},
+				{
+					"name": "child02",
+					"value": 2
+				}
+			]
+		}
+	]
+}
+```
+
+Here there are some path examples:
+
+- `"user.email"`	- returns the value of the field `email` (`user@example.com` in this example)
+- `"user.perms.[0]"` - returns the first element of the perms array (`admin` in this example)
+- `"preferences.[name=avatar]"` - returns the object that has `avatar` in `name` field inside `preferences`
+- `"preferences.[name=children].value[value!=2]"` - returns the first child of object with `name` == `children` that hasn't a `value` of `2`.
+
 
 # See examples
 

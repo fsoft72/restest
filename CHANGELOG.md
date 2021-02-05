@@ -1,5 +1,9 @@
 # restest  changelog
 
+## v1.70
+
+  - brand new path parser that enanches the search of keys inside nested structures
+
 ## v1.61
 
   - add: new `EMPTY` value check mode
