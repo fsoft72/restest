@@ -36,13 +36,19 @@ positional arguments:
   file                  Files containing the tests
 
 optional arguments:
-  -h, --help            show this help message and exit
-  --base-url BASE_URL   Base URL. This string overrides the 'system' parameter in JSON file
-  --dont-stop-on-error  Flag to stop RESTest on error. This flag overrides the 'system' parameter in JSON file
-  --log LOG             Custom log file overriding the one in 'system'
-  --key KEY [KEY ...]   One or more keys to be added to the globals dict use key:value format
-  --quiet               If set, no output on console
-  --version             show program's version number and exit
+  -h, --help                                show this help message and exit
+  --base-url BASE_URL                       Base URL. This string overrides the 'system' parameter in JSON file
+  --curl                                    Dumps CURL also on console (defaults on log only
+  --dont-stop-on-error                      Flag to stop RESTest on error. This flag overrides the 'system' parameter in JSON file
+  --postman POSTMAN                         Export activity to a Postman JSON file
+  --postman-name POSTMAN_NAME               The Postman Collection name
+  --postman-base-url POSTMAN_BASE_URL       The base url to use in Postman instead of the real host
+  --postman-auth-name POSTMAN_AUTH_NAME     Name of the authorization header name
+  --postman-auth-value POSTMAN_AUTH_VALUE   Value to use for authorization header
+  --log LOG                                 Custom log file overriding the one in 'system'
+  --key KEY [KEY ...]                       One or more keys to be added to the globals dict use key:value format
+  --quiet                                   If set, no output on console
+  --version                                 show program's version number and exit
 ```
 
 If the first JSON file you load has a `system` section with at least `base_url` configuration you can just run `restest` with:

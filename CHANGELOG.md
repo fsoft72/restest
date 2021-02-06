@@ -3,6 +3,9 @@
 ## v1.71
 
   - Now GET requests can have url parameters defined in "params" instead of the URL path.
+  - New option to dump curl directly on console (on stderr)
+  - Better CURL formatting for easier debug
+  - Updated documentation
 ## v1.70
 
   - brand new path parser that enanches the search of keys inside nested structures

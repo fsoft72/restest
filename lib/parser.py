@@ -11,8 +11,8 @@ from termcolor import colored, cprint
 from .engine import RESTest
 
 class RESTestParser:
-	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False, postman = None ):
-		self.rt = RESTest ( quiet = quiet, log_file = log_file, postman = postman )
+	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False, postman = None, curl = False ):
+		self.rt = RESTest ( quiet = quiet, log_file = log_file, postman = postman, curl = curl )
 
 		self._batches = {}
 
