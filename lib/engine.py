@@ -206,6 +206,7 @@ Raw Response: %s
 		else:
 			m = obj.post
 
+
 		if mode == "GET" and data:
 			url_params = self._data_to_url ( data )
 			if url.find ( "?" ) == -1:
