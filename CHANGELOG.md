@@ -1,5 +1,8 @@
 # restest  changelog
 
+## v1.71
+
+  - Now GET requests can have url parameters defined in "params" instead of the URL path.
 ## v1.70
 
   - brand new path parser that enanches the search of keys inside nested structures
