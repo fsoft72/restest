@@ -6,6 +6,7 @@
 #
 
 import requests, json, sys, copy
+import urllib
 
 from .path_parser import expand_value
 
@@ -169,6 +170,16 @@ Raw Response: %s
 		return True
 		pass
 
+	def _data_to_url ( self, dct ):
+		elems = []
+		for k, v in dct.items ():
+			elems.append ( f"{k}={urllib.parse.quote(v)}" )
+
+		if not elems: return ""
+
+		return "&".join ( elems )
+
+
 	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json" ):
 		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
 
@@ -194,6 +205,13 @@ Raw Response: %s
 			m = obj.patch
 		else:
 			m = obj.post
+
+		if mode == "GET" and data:
+			url_params = self._data_to_url ( data )
+			if url.find ( "?" ) == -1:
+				url += "?" + url_params
+			else:
+				url += "&" + url_params
 
 		if content == 'json':
 			r = m ( url, json = data, headers = headers, files = files )
