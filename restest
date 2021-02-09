@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser ( description = "RESTest v%s the easy REST test
 
 parser.add_argument ( "file", nargs = '+', help="Files containing the tests" )
 parser.add_argument ( "--base-url", type=str, help = "Base URL. This string overrides the 'system' parameter in JSON file" )
+parser.add_argument ( "--curl", action="store_true", help = "Dumps CURL also on console (defaults on log only" )
 parser.add_argument ( "--dont-stop-on-error", action="store_true", help = "Flag to stop RESTest on error. This flag overrides the 'system' parameter in JSON file" )
 parser.add_argument ( "--postman", type=str, help="Export activity to a Postman JSON file" )
 parser.add_argument ( "--postman-name", type=str, help="The Postman Collection name" )
@@ -34,7 +35,7 @@ postman = None
 if args.postman:
 	postman = PostmanExporter ( args.postman, args.postman_name, args.postman_base_url, args.postman_auth_name, args.postman_auth_value )
 
-rt = RESTestParser ( quiet = args.quiet, base_url = args.base_url, stop_on_error = not args.dont_stop_on_error, log_file = args.log, postman = postman )
+rt = RESTestParser ( quiet = args.quiet, base_url = args.base_url, stop_on_error = not args.dont_stop_on_error, log_file = args.log, postman = postman, curl = args.curl )
 
 if args.key:
 	for c in args.key:

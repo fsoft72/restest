@@ -2,11 +2,12 @@
 
 ## v1.71
 
-  - ADD: new --curl option to see curls on command line
+  - ADD: new --curl option to see curls on console (on stderr)
   - ENH: Now GET requests can have url parameters defined in "params" instead of the URL path.
+  - ENH: Better CURL formatting for easier debug
+  - ENH: Updated documentation
   - FIX: error accessing not existing tokens in tests
   - FIX: better error handling for out of bounds list index
-
 ## v1.70
 
   - brand new path parser that enanches the search of keys inside nested structures

@@ -11,11 +11,12 @@ import urllib
 from .path_parser import expand_value
 
 class RESTest:
-	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None ):
+	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False ):
 		self.quiet = quiet
 		self.base_url = base_url
 		self.log_file = log_file
 		self.postman = postman
+		self.dump_curl_on_console = curl
 
 		self.globals = {}		# Global var / values for requests
 
@@ -70,7 +71,7 @@ Raw Response: %s
 """ % ( headers, resp.status_code, resp.elapsed.microseconds / 1000, resp.text ) )
 
 	def _log_curl ( self, req ):
-		command = "curl -X {method} -H {headers} -d '{data}' '{uri}'"
+		command = "curl -X {method} \\\n -H {headers} \\\n -d '{data}' \\\n '{uri}'"
 
 		method = req.method
 		uri = req.url
@@ -81,10 +82,14 @@ Raw Response: %s
 			data = ""
 
 		headers = [ '"{0}: {1}"'.format ( k, v ) for k, v in req.headers.items() ]
-		headers = " -H ".join ( headers )
+		headers = " \\\n -H ".join ( headers )
 
 		curl = command.format ( method = method, headers = headers, data = data, uri = uri )
 		self._log_write ( "\nCURL:         %s\n\n" % curl )
+
+		if self.dump_curl_on_console:
+			sys.stderr.write ( "\n\n%s\n\n" % curl )
+			sys.stderr.flush ()
 
 	def _mk_headers ( self, authenticated ):
 		headers = {}
