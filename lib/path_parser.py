@@ -102,7 +102,11 @@ def _expand ( parsed_path, pos, dct ):
 		if isinstance ( tok, list ):
 			elem, err = _expand ( tok, 0, elem )
 		elif tok [ 'mode' ] == 'label':
-			elem = elem [ tok [ 'value' ] ]
+			n = tok [ 'value' ]
+			if n in elem:
+				elem = elem [ n ] #tok [ 'value' ] ]
+			else:
+				err = "Could not find key: '%s'" % n
 		elif tok [ 'mode' ] == 'pos':
 			elem = elem [ tok [ 'value' ] ]
 		elif tok [ 'mode' ] == 'pattern':
