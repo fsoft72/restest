@@ -55,8 +55,16 @@ class RESTestParser:
 		files = {}
 
 		for k, v in dct.items ():
-			v = self._resolve_fname ( v )
-			files [ k ] = open ( v, 'rb' )
+			if isinstance ( v, list ):
+				_v = []
+				for f in v:
+					n = self._resolve_fname ( f )
+					_v.append ( open ( n, 'rb' ) )
+
+				files [ k ] = _v
+			else:
+				v = self._resolve_fname ( v )
+				files [ k ] = open ( v, 'rb' )
 
 		return files
 
