@@ -1,5 +1,9 @@
 # restest  changelog
 
+## v1.72
+
+  - ADD: is now possible to upload multiple files with the same field name
+
 ## v1.71
 
   - ADD: new --curl option to see curls on console (on stderr)
@@ -8,6 +12,7 @@
   - ENH: Updated documentation
   - FIX: error accessing not existing tokens in tests
   - FIX: better error handling for out of bounds list index
+
 ## v1.70
 
   - brand new path parser that enanches the search of keys inside nested structures
