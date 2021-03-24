@@ -9,6 +9,9 @@
   - ADD: now the variables inside inner structures are expanded recursively
 
   - ENH: now action `dump` can write to console, if you pass `"print": true` attribute
+## v1.72
+
+  - ADD: is now possible to upload multiple files with the same field name
 
 ## v1.71
 
@@ -18,6 +21,7 @@
   - ENH: Updated documentation
   - FIX: error accessing not existing tokens in tests
   - FIX: better error handling for out of bounds list index
+
 ## v1.70
 
   - brand new path parser that enanches the search of keys inside nested structures

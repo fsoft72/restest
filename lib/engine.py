@@ -195,6 +195,25 @@ Raw Response: %s
 
 		return "&".join ( elems )
 
+	def _reorder_files ( self, files ):
+		has_multi = False
+		for k, v in files.items ():
+			if isinstance ( v, list ):
+				has_multi = True
+				break
+
+		if not has_multi: return files
+
+		res = []
+		for k, v in files.items ():
+			if isinstance ( v, list ):
+				for el in v:
+					res.append ( ( k, el ) )
+			else:
+				res.append ( ( k, v ) )
+
+		return res
+
 
 	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json" ):
 		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
@@ -229,6 +248,8 @@ Raw Response: %s
 				url += "?" + url_params
 			else:
 				url += "&" + url_params
+
+		files = self._reorder_files ( files )
 
 		if content == 'json':
 			r = m ( url, json = data, headers = headers, files = files )
