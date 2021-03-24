@@ -6,6 +6,7 @@
 	},
 	"actions": [
 		{
+			"rem": "This is a comment",
 			"title": "List users",
 			"method": "get",
 			"url": "/users",

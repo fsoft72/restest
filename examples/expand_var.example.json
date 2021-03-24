@@ -1,0 +1,35 @@
+{
+	"actions": [
+		{
+			"action": "set",
+			"key": "hello",
+			"value": "world"
+		},
+		{
+			"action": "set",
+			"key": "inner1",
+			"value": {
+				"level1": "Inner 1",
+				"level2": "Inner 2"
+			}
+		},
+		{
+			"action": "set",
+			"key": "inner2",
+			"value": {
+				"nest": {
+					"hello": "%(hello)s"
+				}
+			}
+		},
+		{
+			"action": "dump",
+			"fields": [
+				"hello",
+				"inner1",
+				"inner2"
+			],
+			"print": true
+		}
+	]
+}

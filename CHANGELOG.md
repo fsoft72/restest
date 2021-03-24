@@ -1,5 +1,15 @@
 # restest  changelog
 
+## v1.80
+
+  - ADD: support for comments. You can add a comment using the "rem" command, or
+         by putting an `#` sign at the beginning of a line (**note**: using `#` makes the
+         JSON invalid)
+
+  - ADD: now the variables inside inner structures are expanded recursively
+
+  - ENH: now action `dump` can write to console, if you pass `"print": true` attribute
+
 ## v1.71
 
   - ADD: new --curl option to see curls on console (on stderr)

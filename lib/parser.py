@@ -25,7 +25,7 @@ class RESTestParser:
 		self._included = {}
 
 	def open ( self, fname ):
-		self.script = json.loads ( open ( fname ).read () )
+		self.script = self._json_load ( fname )
 
 		self._abs_script_path = os.path.dirname ( os.path.abspath ( fname ) )
 
@@ -156,7 +156,7 @@ class RESTestParser:
 		self.rt.copy_val ( act [ 'from' ], act [ 'to' ] )
 
 	def _method_dump ( self, act ):
-		self.rt.dump ( act [ 'fields' ] )
+		self.rt.dump ( act [ 'fields' ], act.get ( 'print' ) )
 
 	def _method_set ( self, act ):
 		self.rt.set_val ( act [ 'key' ], act [ 'value' ] )
@@ -177,7 +177,7 @@ class RESTestParser:
 
 		self._paths.append ( os.path.dirname ( fname ) )
 
-		script = json.loads ( open ( fname ).read () )
+		script = self._json_load ( fname )
 
 		skip_include = False
 		if script.get ( "run-once", False ):
@@ -204,6 +204,9 @@ class RESTestParser:
 		actions = self._batches [ name ]
 		self._actions ( actions )
 
+	def _method_rem ( self, act ):
+		pass
+
 
 	def _parse_system ( self ):
 		self.rt.sections = []
@@ -214,3 +217,8 @@ class RESTestParser:
 
 		for k, v in system.items ():
 			setattr ( self.rt, k, v )
+
+	def _json_load ( self, fname ):
+		data = open ( fname ).readlines ()
+		txt = '\n'.join ( [ n.strip () for n in data if not n.strip ().startswith ( "#" ) ] )
+		return json.loads ( txt )

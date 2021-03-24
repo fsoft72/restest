@@ -96,7 +96,6 @@ Raw Response: %s
 		if authenticated:
 			hv = ""
 			try:
-				#hv = self.authorization_template % self.globals
 				hv = self._expand_var ( self.authorization_template )
 			except:
 				sys.stderr.write ( "ERROR: could not create Authorization template: %s" % self.authorization_template )
@@ -115,9 +114,21 @@ Raw Response: %s
 
 		return self.base_url + "/" + endpoint
 
+	def _expand_dict ( self, dct ):
+		for k, v in dct.items ():
+			print ( "---- ", k, v )
+			if isinstance ( v, str ) and v.find ( "%(") != -1:
+				v = self._get_v ( v )
+			elif isinstance ( v, dict ):
+				v = self._expand_dict ( v )
+
+			dct [ k ] = v
+
+		return dct
+
 	def _get_v ( self, x ):
 		if isinstance ( x, dict ):
-			return x #json.dumps ( x )
+			return self._expand_dict ( x )
 
 		if isinstance ( x, bool ):
 			if x == True: x = 1
@@ -380,12 +391,15 @@ Raw Response: %s
 			if 'save' in chk:
 				self.globals [ chk [ 'save' ] ] = v
 
-	def dump ( self, fields ):
+	def dump ( self, fields, do_print = False ):
 		for f in fields:
 			f = self._expand_var ( f )
 			v = self.globals [ f ]
 
-			self._log_write ( "==== %s: %s\n" % ( f, json.dumps ( v, indent = 4, default=str ) ) )
+			s = "==== %s: %s\n" % ( f, json.dumps ( v, indent = 4, default=str ) )
+			self._log_write ( s )
+
+			if do_print: print ( s )
 
 	def section_start ( self, name ):
 		self.sections.append ( name )
