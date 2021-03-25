@@ -116,7 +116,6 @@ Raw Response: %s
 
 	def _expand_dict ( self, dct ):
 		for k, v in dct.items ():
-			print ( "---- ", k, v )
 			if isinstance ( v, str ) and v.find ( "%(") != -1:
 				v = self._get_v ( v )
 			elif isinstance ( v, dict ):
