@@ -86,6 +86,7 @@ class RESTestParser:
 				'auth:', colored ( auth, 'blue' )
 				)
 			)
+			sys.stdout.flush ()
 
 		ignore = False
 		if "ignore_error" in act:
