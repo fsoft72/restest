@@ -363,7 +363,7 @@ Raw Response: %s
 
 			mode = chk.get ( 'mode', 'EQUALS' )
 
-			if mode in ( 'EXISTS', "!!" ):
+			if mode in ( 'EXISTS', 'EXIST', "!!", "NOT_NULL", "IS_NOT_NULL" ):
 				if ( str ( v ) == "None" ) or ( len ( str ( v ) ) == 0 ):
 					self._error ( "FIELD: %s is EMPTY" % ( chk [ 'field' ] ) )
 					return
@@ -406,6 +406,8 @@ Raw Response: %s
 			elif mode in ( "OBJ", "OBJECT" ):
 				if not self._object_compare ( current_val, expected_val ):
 					self._error ( "FIELD: %s object values mismatch" % ( chk [ 'field' ] ) )
+			else:
+				self._error ( "ERROR: unsupported test mode: %s " % mode )
 
 
 			if 'save' in chk:
