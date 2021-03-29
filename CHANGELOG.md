@@ -1,5 +1,10 @@
 # restest  changelog
 
+## v1.81
+  - ADD: `NOT_NULL` and `IS_NOT_NULL` test modes (same as `EXIST`, `EXISTS` and `!!` )
+  - ENH: now restest throws an error if a test mode is mispelled or not existent.
+  - ENH: now restest shows the operation request even if it is not able to show results.
+
 ## v1.80
 
   - ADD: support for comments. You can add a comment using the "rem" command, or
