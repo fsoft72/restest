@@ -1,5 +1,10 @@
 # restest  changelog
 
+## v1.83
+
+  - ENH: better error reporting when expanding fields
+  - FIX: wrong parameters expansion in path_parser
+
 ## v1.82
   - ENH: now path parser expands key values using _expand_var before starting the search
 ## v1.81

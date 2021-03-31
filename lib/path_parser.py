@@ -88,7 +88,7 @@ def _find_in_list ( field_name, tok, elem: list ):
 
 		pos += 1
 
-	if not found: return None
+	if not found: return None, None
 	return el, None
 
 def _expand ( parsed_path, pos, dct ):
