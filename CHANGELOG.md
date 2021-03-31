@@ -1,5 +1,7 @@
 # restest  changelog
 
+## v1.82
+  - ENH: now path parser expands key values using _expand_var before starting the search
 ## v1.81
   - ADD: `NOT_NULL` and `IS_NOT_NULL` test modes (same as `EXIST`, `EXISTS` and `!!` )
   - ENH: now restest throws an error if a test mode is mispelled or not existent.

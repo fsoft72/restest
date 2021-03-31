@@ -326,6 +326,7 @@ Raw Response: %s
 		return None
 
 	def _expand_value ( self, dct, key ):
+		key = self._expand_var ( key )
 		res, err = expand_value ( key, dct )
 
 		if err:
