@@ -214,7 +214,7 @@ Raw Response: %s
 		return res
 
 
-	def _req ( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json" ):
+	def _req( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json" ):
 		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
 
 		url = self._resolve_url ( endpoint )
@@ -222,32 +222,22 @@ Raw Response: %s
 
 		data = self._expand_data ( data )
 
-		if no_cookies:
-			obj = requests
-		else:
-			obj = self.session
-
-		if mode == "GET":
-			m = obj.get
-		elif mode == "POST":
-			m = obj.post
-		elif mode == "DELETE":
+		obj = requests if no_cookies else self.session
+		if mode == "DELETE":
 			m = obj.delete
-		elif mode == "PUT":
-			m = obj.put
+		elif mode == "GET":
+			m = obj.get
 		elif mode == "PATCH":
 			m = obj.patch
+		elif mode == "PUT":
+			m = obj.put
 		else:
 			m = obj.post
 
 
 		if mode == "GET" and data:
 			url_params = self._data_to_url ( data )
-			if url.find ( "?" ) == -1:
-				url += "?" + url_params
-			else:
-				url += "&" + url_params
-
+			url += "?" + url_params if url.find ( "?" ) == -1 else "&" + url_params
 		files = self._reorder_files ( files )
 
 		if content == 'json':
@@ -282,11 +272,11 @@ Raw Response: %s
 	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json" ):
 		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time, files = files, title = title, content=content )
 
-	def fields ( self, resp, fields ):
+	def fields( self, resp, fields ):
 		j = resp.json ()
 
 		for k in fields:
-			if isinstance ( k, list ) or isinstance ( k, tuple ):
+			if isinstance(k, (list, tuple)):
 				json_key = k [ 0 ]
 				glob_key = k [ 1 ]
 			else:
@@ -300,11 +290,11 @@ Raw Response: %s
 
 			self.globals [ glob_key ] = self._expand_value ( j, json_key )
 
-	def dumps ( self, resp, fields ):
+	def dumps( self, resp, fields ):
 		j = resp.json ()
 
 		for k in fields:
-			if isinstance ( k, list ) or isinstance ( k, tuple ):
+			if isinstance(k, (list, tuple)):
 				glob_key = k [ 1 ]
 				json_key = k [ 0 ]
 			elif isinstance ( k, dict ):

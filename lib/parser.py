@@ -181,7 +181,7 @@ class RESTestParser:
 
 		return fname
 
-	def _method_include ( self, act ):
+	def _method_include( self, act ):
 		fname = self._resolve_fname ( act [ 'filename' ] )
 
 		self._paths.append ( os.path.dirname ( fname ) )
@@ -189,9 +189,7 @@ class RESTestParser:
 		script = self._json_load ( fname )
 
 		skip_include = False
-		if script.get ( "run-once", False ):
-			if fname in self._included: skip_include = True
-
+		if script.get("run-once", False) and fname in self._included: skip_include = True
 		if not skip_include:
 			self._included [ fname ] = 1
 			if "name" in act:
@@ -227,7 +225,7 @@ class RESTestParser:
 		for k, v in system.items ():
 			setattr ( self.rt, k, v )
 
-	def _json_load ( self, fname ):
+	def _json_load( self, fname ):
 		data = open ( fname ).readlines ()
-		txt = '\n'.join ( [ n.strip () for n in data if not n.strip ().startswith ( "#" ) ] )
+		txt = '\n'.join(n.strip () for n in data if not n.strip ().startswith ( "#" ))
 		return json.loads ( txt )
