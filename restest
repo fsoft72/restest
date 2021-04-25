@@ -5,9 +5,9 @@
 # written by Fabio Rotondo <fabio.rotondo@gmail.com>
 #
 
-VERSION = "1.83"
+VERSION = "1.84"
 
-import argparse, sys
+import argparse, sys, time
 
 from lib.parser import RESTestParser
 from lib.postman_exp import PostmanExporter
@@ -42,9 +42,13 @@ if args.key:
 		k, v = c.split ( ":" )
 		rt.rt.globals [ k ] = v
 
+start_time = time.time ()
 for f in args.file:
 	rt.open ( f )
 
+end_time = time.time ()
+total_time = int ( ( end_time - start_time ) * 1000 ) / 1000.0
+
 if postman: postman.save ()
 
-print ( "\n\n===== FINISHED. Total Errors: %s / %s" % ( rt.rt._errors, rt.rt._tests ) )
+print ( "\n\n===== FINISHED. Total Errors: %s / %s [Total time: %f]" % ( rt.rt._errors, rt.rt._tests, total_time ) )

@@ -1,5 +1,8 @@
 # restest  changelog
 
+## v1.84
+
+  - ADD: total execution time in seconds/millis
 ## v1.83
 
   - ENH: better error reporting when expanding fields
