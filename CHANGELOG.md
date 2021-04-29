@@ -1,5 +1,8 @@
 # restest  changelog
 
+## v1.85
+
+  - ENH: now requests are with `auth: true` by default.
 ## v1.84
 
   - ADD: total execution time in seconds/millis

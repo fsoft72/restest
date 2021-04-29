@@ -71,7 +71,7 @@ class RESTestParser:
 	def _send_req ( self, act ):
 		m = act [ 'method' ].upper ()
 
-		auth = act.get ( 'auth', False )
+		auth = act.get ( 'auth', True )
 		content = act.get ( 'content', 'json' )
 
 		files = self._parse_files ( act.get ( 'files', {} ) )
