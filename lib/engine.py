@@ -366,6 +366,9 @@ Raw Response: %s
 			elif mode in ( 'EQUALS', "==", "=", "EQUAL" ):
 				if current_val != expected_val:
 					self._error ( "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % ( field, expected_val, current_val ) )
+			elif mode in ( 'NOT_EQUAL', "!=", "<>" ):
+				if current_val == expected_val:
+					self._error ( "FIELD: %s VALUE mismatch. Expected difference: %s - got: %s" % ( field, expected_val, current_val ) )
 			elif mode in ( 'CONTAINS', '->' ):
 				if expected_val  not in current_val:
 					self._error ( "FIELD: %s DOES NOT contains %s. List: %s" % ( field, expected_val, current_val ) )

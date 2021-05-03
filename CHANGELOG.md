@@ -2,6 +2,7 @@
 
 ## v1.85
 
+  - ADD: NOT_EQUAL, !=, <> mode
   - ENH: now requests are with `auth: true` by default.
 ## v1.84
 
