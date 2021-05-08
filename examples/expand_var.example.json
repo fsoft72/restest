@@ -18,7 +18,8 @@
 			"key": "inner2",
 			"value": {
 				"nest": {
-					"hello": "%(hello)s"
+					"hello": "%(hello)s",
+					"home": "%(home)s"
 				}
 			}
 		},

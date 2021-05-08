@@ -7,7 +7,10 @@
 
 VERSION = "1.85"
 
-import argparse, sys, time
+import argparse
+import os
+import sys
+import time
 
 from lib.parser import RESTestParser
 from lib.postman_exp import PostmanExporter
@@ -18,6 +21,7 @@ parser.add_argument ( "file", nargs = '+', help="Files containing the tests" )
 parser.add_argument ( "--base-url", type=str, help = "Base URL. This string overrides the 'system' parameter in JSON file" )
 parser.add_argument ( "--curl", action="store_true", help = "Dumps CURL also on console (defaults on log only" )
 parser.add_argument ( "--dont-stop-on-error", action="store_true", help = "Flag to stop RESTest on error. This flag overrides the 'system' parameter in JSON file" )
+parser.add_argument ( "--env", action="store_true", help = "If set, global vars will contain also environment variables" )
 parser.add_argument ( "--postman", type=str, help="Export activity to a Postman JSON file" )
 parser.add_argument ( "--postman-name", type=str, help="The Postman Collection name" )
 parser.add_argument ( "--postman-base-url", type=str, help="The base url to use in Postman instead of the real host" )
@@ -41,6 +45,10 @@ if args.key:
 	for c in args.key:
 		k, v = c.split ( ":" )
 		rt.rt.globals [ k ] = v
+
+if args.env:
+	for k, v in os.environ.items ():
+		rt.rt.globals [ k.lower () ] = v
 
 start_time = time.time ()
 for f in args.file:

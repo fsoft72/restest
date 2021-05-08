@@ -5,10 +5,15 @@
 # written by Fabio Rotondo (fabio.rotondo@gmail.com)
 #
 
-import requests, json, sys, copy
+import copy
+import json
+import sys
 import urllib
 
+import requests
+
 from .path_parser import expand_value
+
 
 class RESTest:
 	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False ):
@@ -181,9 +186,7 @@ Raw Response: %s
 		for k in k1:
 			if o1 [ k ] != o2 [ k ]: return False
 
-
 		return True
-		pass
 
 	def _data_to_url ( self, dct ):
 		elems = []
