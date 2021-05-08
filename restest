@@ -41,14 +41,15 @@ if args.postman:
 
 rt = RESTestParser ( quiet = args.quiet, base_url = args.base_url, stop_on_error = not args.dont_stop_on_error, log_file = args.log, postman = postman, curl = args.curl )
 
+if args.env:
+	for k, v in os.environ.items ():
+		rt.rt.globals [ k.lower () ] = v
+
 if args.key:
 	for c in args.key:
 		k, v = c.split ( ":" )
 		rt.rt.globals [ k ] = v
 
-if args.env:
-	for k, v in os.environ.items ():
-		rt.rt.globals [ k.lower () ] = v
 
 start_time = time.time ()
 for f in args.file:

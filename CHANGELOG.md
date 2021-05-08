@@ -2,8 +2,8 @@
 
 ## v1.85
 
-  - ADD: --env flag, that copies all environment variables so they can be accessed by the scripts
-  - ADD: NOT_EQUAL, !=, <> mode
+  - ADD: `--env` flag, that copies all environment variables so they can be accessed by the scripts
+  - ADD: `NOT_EQUAL`, `!=`, `<>` mode
   - ENH: now requests are with `auth: true` by default.
 ## v1.84
 

@@ -40,6 +40,7 @@ optional arguments:
   --base-url BASE_URL                       Base URL. This string overrides the 'system' parameter in JSON file
   --curl                                    Dumps CURL also on console (defaults on log only
   --dont-stop-on-error                      Flag to stop RESTest on error. This flag overrides the 'system' parameter in JSON file
+  --env                                     Makes environment variables available before starting
   --postman POSTMAN                         Export activity to a Postman JSON file
   --postman-name POSTMAN_NAME               The Postman Collection name
   --postman-base-url POSTMAN_BASE_URL       The base url to use in Postman instead of the real host
@@ -236,6 +237,8 @@ It contains an array of tests structured in this way:
 	- `GTE` or `>=`: the `field` value must be greater than or equal to `value`
 	- `LT` or `<`: the `field` value must be lesser than `value`
 	- `LTE` or `<=`: the `field` value must be lesser than or equal to `value`
+	- `NOT_NULL` or `IS_NOT_NULL`: the `field` value must exist
+	- `NOT_EQUAL` or `!=` or `<>`: the `field` value must be different to `value`
 	- `SIZE-GT` or `()>`: the `field` value is an array or string with a size greater than `value`
 	- `SIZE-GTE` or `()>=`: the `field` value is an array or string with a size greater than or equal to `value`
 	- `SIZE-LT` or `()<`: the `field` value is an array or string with a size lesser than `value`
