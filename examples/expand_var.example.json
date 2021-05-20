@@ -18,17 +18,24 @@
 			"key": "inner2",
 			"value": {
 				"nest": {
-					"hello": "%(hello)s",
-					"home": "%(home)s"
+					"hello": "%(hello)s"
 				}
 			}
+		},
+		{
+			"action": "set",
+			"key": "inner3",
+			"value": [
+				"%(hello)s"
+			]
 		},
 		{
 			"action": "dump",
 			"fields": [
 				"hello",
 				"inner1",
-				"inner2"
+				"inner2",
+				"inner3"
 			],
 			"print": true
 		}
