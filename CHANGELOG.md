@@ -1,7 +1,7 @@
 # restest  changelog
 
 ## v1.86
-
+  - ADD: the very first experimental support for custom 'code' blocks
   - FIX: a bug that prevented inner list to be expanded correctly
   - FIX: an out of bounds error in path parser
 

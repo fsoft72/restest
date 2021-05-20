@@ -1,0 +1,15 @@
+{
+	"actions": [
+		{
+			"action": "set",
+			"key": "hello",
+			"value": "world"
+		},
+		{
+			"action": "code",
+			"code": [
+				"print ( 'Hello %(hello)s' )"
+			]
+		}
+	]
+}

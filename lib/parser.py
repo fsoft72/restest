@@ -214,6 +214,11 @@ class RESTestParser:
 	def _method_rem ( self, act ):
 		pass
 
+	def _method_code ( self, act ):
+		code = ( '\n'.join ( act [ 'code' ] ) ) % self.rt.globals
+		print ( "---- CODE: ", code )
+		exec ( code )
+
 
 	def _parse_system ( self ):
 		self.rt.sections = []
