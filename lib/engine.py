@@ -153,11 +153,12 @@ Raw Response: %s
 				res = []
 				for x in v:
 					res.append ( self._get_v ( x ) )
+
+				v = res
 			else:
 				v = self._get_v ( v )
 		except:
 			sys.stderr.write ( "ERROR: could not expand: %s (%s)" % ( v, self.globals ) )
-
 
 		return v
 

@@ -1,5 +1,10 @@
 # restest  changelog
 
+## v1.86
+
+  - FIX: a bug that prevented inner list to be expanded correctly
+  - FIX: an out of bounds error in path parser
+
 ## v1.85
 
   - ADD: `--env` flag, that copies all environment variables so they can be accessed by the scripts
