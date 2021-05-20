@@ -119,12 +119,21 @@ Raw Response: %s
 
 		return self.base_url + "/" + endpoint
 
+	def _expand_list ( self, lst ):
+		res = []
+		for x in lst:
+			res.append ( self._get_v ( x ) )
+
+		return res
+
 	def _expand_dict ( self, dct ):
 		for k, v in dct.items ():
 			if isinstance ( v, str ) and v.find ( "%(") != -1:
 				v = self._get_v ( v )
 			elif isinstance ( v, dict ):
 				v = self._expand_dict ( v )
+			elif isinstance ( v, list ):
+				v = self._expand_list ( v )
 
 			dct [ k ] = v
 
@@ -150,15 +159,11 @@ Raw Response: %s
 
 		try:
 			if isinstance ( v, list ):
-				res = []
-				for x in v:
-					res.append ( self._get_v ( x ) )
-
-				v = res
+				v = self._expand_list ( v )
 			else:
 				v = self._get_v ( v )
 		except:
-			sys.stderr.write ( "ERROR: could not expand: %s (%s)" % ( v, self.globals ) )
+			sys.stderr.write ( "\nERROR: could not expand: %s (%s)" % ( v, self.globals ) )
 
 		return v
 

@@ -18,7 +18,11 @@
 			"key": "inner2",
 			"value": {
 				"nest": {
-					"hello": "%(hello)s"
+					"hello": "%(hello)s",
+					"data": [
+						"%(hello)s",
+						"ciao"
+					]
 				}
 			}
 		},
@@ -26,7 +30,11 @@
 			"action": "set",
 			"key": "inner3",
 			"value": [
-				"%(hello)s"
+				"%(hello)s",
+				[
+					"ciao",
+					"%(hello)s"
+				]
 			]
 		},
 		{
