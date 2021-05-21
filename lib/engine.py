@@ -346,6 +346,66 @@ Raw Response: %s
 
 		self.globals [ _key ] = _val
 
+	def _check ( self, chk, field, v ):
+		current_val = self._expand_var ( v )
+		expected_val = self._expand_var ( chk.get ( 'value' ) )
+
+		mode = chk.get ( 'mode', 'EQUALS' )
+
+		print ( "---- FIELD: ", field, v, mode, current_val, expected_val )
+
+		if mode in ( 'EXISTS', 'EXIST', "!!", "NOT_NULL", "IS_NOT_NULL" ):
+			if ( str ( v ) == "None" ) or ( len ( str ( v ) ) == 0 ):
+				return "FIELD: %s is EMPTY" % ( field )
+		elif mode in ( "EMPTY", "IS_EMPTY", "IS_NULL", "NULL", "@" ):
+			if ( str ( v ) != "None" ):
+				return "FIELD: %s VALUE mismatch. Expected: Null - got: %s" % ( field, current_val )
+		elif mode in ( 'EQUALS', "==", "=", "EQUAL" ):
+			if current_val != expected_val:
+				return "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % ( field, expected_val, current_val )
+		elif mode in ( 'NOT_EQUAL', "!=", "<>" ):
+			if current_val == expected_val:
+				return "FIELD: %s VALUE mismatch. Expected difference: %s - got: %s" % ( field, expected_val, current_val )
+		elif mode in ( 'CONTAINS', '->' ):
+			if expected_val  not in current_val:
+				return "FIELD: %s DOES NOT contains %s. List: %s" % ( field, expected_val, current_val )
+		elif mode in ( 'SIZE', 'LEN', 'LENGTH' ):
+			if len ( current_val ) != int ( expected_val ):
+				return "FIELD: %s SIZE mismatch. Expected: %s - got: %s (%s)" % ( field, expected_val, len ( current_val ), current_val )
+		elif mode in ( 'GT', '>' ):
+			if current_val  <= expected_val:
+				return "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val )
+		elif mode in ( 'GTE', '>=' ):
+			if current_val  < expected_val:
+				return "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val )
+		elif mode in ( 'LT', '<' ):
+			if current_val  >= expected_val:
+				return "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val )
+		elif mode in ( 'LTE', '<=' ):
+			if current_val  <= expected_val:
+				return "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val )
+		elif mode in ( 'SIZE-GT', '()>' ):
+			if len ( current_val ) <= int ( expected_val ):
+				return "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val )
+		elif mode in ( 'SIZE-GTE', '()>=' ):
+			if len ( current_val ) < int ( expected_val ):
+				return "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val )
+		elif mode in ( 'SIZE-LT', '()<' ):
+			if len ( current_val ) >= int ( expected_val ):
+				return "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val )
+		elif mode in ( 'SIZE-LTE', '()<=' ):
+			if len ( current_val ) <= int ( expected_val ):
+				return "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val )
+		elif mode in ( "OBJ", "OBJECT" ):
+			if not self._object_compare ( current_val, expected_val ):
+				return "FIELD: %s object values mismatch" % ( field )
+		else:
+			return "ERROR: unsupported test mode: %s " % mode
+
+
+		if 'save' in chk:
+			self.globals [ chk [ 'save' ] ] = v
+
 	def check ( self, resp, checks ):
 		j = resp.json ()
 
@@ -355,68 +415,15 @@ Raw Response: %s
 			self._tests += 1
 
 			field = self._expand_var ( chk [ 'field' ] )
+			v = self._expand_value ( j, field )
+			err = self._check ( chk, field, v )
 
-			v = self._expand_value ( j, field ) #chk [ 'field' ] )
-			current_val = self._expand_var ( v )
-			expected_val = self._expand_var ( chk.get ( 'value' ) )
 			if v == "__NOT_FOUND__":
-				self._error ( "FIELD: %s missing %s" % ( field, json.dumps ( j, default = str ) ) )
-				return
+				return self._error ( "FIELD: %s missing %s" % ( field, json.dumps ( j, default = str ) ) )
 
-			mode = chk.get ( 'mode', 'EQUALS' )
+			if err:
+				return self._error ( err )
 
-			if mode in ( 'EXISTS', 'EXIST', "!!", "NOT_NULL", "IS_NOT_NULL" ):
-				if ( str ( v ) == "None" ) or ( len ( str ( v ) ) == 0 ):
-					self._error ( "FIELD: %s is EMPTY" % ( field ) )
-					return
-			elif mode in ( "EMPTY", "IS_EMPTY", "IS_NULL", "NULL", "@" ):
-				if ( str ( v ) != "None" ):
-					self._error ( "FIELD: %s VALUE mismatch. Expected: Null - got: %s" % ( field, current_val ) )
-			elif mode in ( 'EQUALS', "==", "=", "EQUAL" ):
-				if current_val != expected_val:
-					self._error ( "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( 'NOT_EQUAL', "!=", "<>" ):
-				if current_val == expected_val:
-					self._error ( "FIELD: %s VALUE mismatch. Expected difference: %s - got: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( 'CONTAINS', '->' ):
-				if expected_val  not in current_val:
-					self._error ( "FIELD: %s DOES NOT contains %s. List: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( 'SIZE', 'LEN', 'LENGTH' ):
-				if len ( current_val ) != int ( expected_val ):
-					self._error ( "FIELD: %s SIZE mismatch. Expected: %s - got: %s (%s)" % ( field, expected_val, len ( current_val ), current_val ) )
-			elif mode in ( 'GT', '>' ):
-				if current_val  <= expected_val:
-					self._error ( "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( 'GTE', '>=' ):
-				if current_val  < expected_val:
-					self._error ( "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( 'LT', '<' ):
-				if current_val  >= expected_val:
-					self._error ( "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( 'LTE', '<=' ):
-				if current_val  <= expected_val:
-					self._error ( "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( 'SIZE-GT', '()>' ):
-				if len ( current_val ) <= int ( expected_val ):
-					self._error ( "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( 'SIZE-GTE', '()>=' ):
-				if len ( current_val ) < int ( expected_val ):
-					self._error ( "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( 'SIZE-LT', '()<' ):
-				if len ( current_val ) >= int ( expected_val ):
-					self._error ( "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( 'SIZE-LTE', '()<=' ):
-				if len ( current_val ) <= int ( expected_val ):
-					self._error ( "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val ) )
-			elif mode in ( "OBJ", "OBJECT" ):
-				if not self._object_compare ( current_val, expected_val ):
-					self._error ( "FIELD: %s object values mismatch" % ( field ) )
-			else:
-				self._error ( "ERROR: unsupported test mode: %s " % mode )
-
-
-			if 'save' in chk:
-				self.globals [ chk [ 'save' ] ] = v
 
 	def dump ( self, fields, do_print = False ):
 		for f in fields:

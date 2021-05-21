@@ -219,6 +219,13 @@ class RESTestParser:
 		print ( "---- CODE: ", code )
 		exec ( code )
 
+	def _method_if ( self, act ):
+		err = self.rt._check ( act, act [ 'field' ], act.get ( "value", 0 ) )
+
+		print ( "---- IF RES: ", err, act )
+
+		self._actions ( act [ 'actions' ] )
+
 
 	def _parse_system ( self ):
 		self.rt.sections = []

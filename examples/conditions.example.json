@@ -1,0 +1,23 @@
+{
+	"actions": [
+		{
+			"action": "set",
+			"key": "hello",
+			"value": "2"
+		},
+		{
+			"action": "if",
+			"field": "hello",
+			"mode": "EQUAL",
+			"value": 1,
+			"actions": [
+				{
+					"action": "code",
+					"code": [
+						"print ( 'Hello %(hello)s' )"
+					]
+				}
+			]
+		}
+	]
+}
