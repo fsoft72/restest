@@ -10,6 +10,8 @@ import json
 import sys
 import urllib
 
+from termcolor import colored
+
 import requests
 
 from .path_parser import expand_value
@@ -26,7 +28,7 @@ class RESTest:
 		self.globals = {}		# Global var / values for requests
 
 		self.authorization_header = "Authorization"
-		self.authorization_template = "Token %(token)s"
+		self.authorization_template = "Bearer %(token)s"
 
 		# This is a number used to generate counts
 		self._inner_count = 0
@@ -103,7 +105,7 @@ Raw Response: %s
 			try:
 				hv = self._expand_var ( self.authorization_template )
 			except:
-				sys.stderr.write ( "ERROR: could not create Authorization template: %s" % self.authorization_template )
+				sys.stderr.write ( colored ( "ERROR", "red" ) + " could not create Authorization template: %s" % self.authorization_template )
 				raise
 
 			if hv:
@@ -163,7 +165,7 @@ Raw Response: %s
 			else:
 				v = self._get_v ( v )
 		except:
-			sys.stderr.write ( "\nERROR: could not expand: %s (%s)" % ( v, self.globals ) )
+			sys.stderr.write ( colored ( "\nERROR:", "red" ) + " could not expand: %s (%s)" % ( v, self.globals ) )
 
 		return v
 
@@ -268,7 +270,7 @@ Raw Response: %s
 		if skip_error: return r
 
 		if r.status_code != status_code and self.stop_on_error:
-			sys.stderr.write ( """%s\nREQUEST ERROR\n%s\n""" % ( "*" * 70, "*" * 70 ) )
+			sys.stderr.write ( """\n\n%s\n%s %s\n%s\n\n""" % ( "=" * 78, colored ( "REQUEST ERROR: ", "red" ), colored ( r.text, "white" ), "=" * 78 ) )
 			sys.exit ( 1 )
 
 		ms = r.elapsed.microseconds / 1000
@@ -351,8 +353,6 @@ Raw Response: %s
 		expected_val = self._expand_var ( chk.get ( 'value' ) )
 
 		mode = chk.get ( 'mode', 'EQUALS' )
-
-		print ( "---- FIELD: ", field, v, mode, current_val, expected_val )
 
 		if mode in ( 'EXISTS', 'EXIST', "!!", "NOT_NULL", "IS_NOT_NULL" ):
 			if ( str ( v ) == "None" ) or ( len ( str ( v ) ) == 0 ):
