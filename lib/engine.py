@@ -10,7 +10,7 @@ import json
 import sys
 import urllib
 
-from termcolor import colored
+from termcolor import colored as _c
 
 import requests
 
@@ -105,7 +105,7 @@ Raw Response: %s
 			try:
 				hv = self._expand_var ( self.authorization_template )
 			except:
-				sys.stderr.write ( colored ( "ERROR", "red" ) + " could not create Authorization template: %s" % self.authorization_template )
+				sys.stderr.write ( _c ( "ERROR", "red" ) + " could not create Authorization template: %s" % self.authorization_template )
 				raise
 
 			if hv:
@@ -165,7 +165,7 @@ Raw Response: %s
 			else:
 				v = self._get_v ( v )
 		except:
-			sys.stderr.write ( colored ( "\nERROR:", "red" ) + " could not expand: %s (%s)" % ( v, self.globals ) )
+			sys.stderr.write ( _c ( "\nERROR:", "red" ) + " could not expand: %s (%s)" % ( v, self.globals ) )
 
 		return v
 
@@ -270,7 +270,7 @@ Raw Response: %s
 		if skip_error: return r
 
 		if r.status_code != status_code and self.stop_on_error:
-			sys.stderr.write ( """\n\n%s\n%s %s\n%s\n\n""" % ( "=" * 78, colored ( "REQUEST ERROR: ", "red" ), colored ( r.text, "white" ), "=" * 78 ) )
+			sys.stderr.write ( """\n\n%s\n%s %s\n%s\n\n""" % ( "=" * 78, _c ( "REQUEST ERROR: ", "red" ), _c ( r.text, "white" ), "=" * 78 ) )
 			sys.exit ( 1 )
 
 		ms = r.elapsed.microseconds / 1000
@@ -320,7 +320,7 @@ Raw Response: %s
 			print ( "==== %s: %s\n" % ( glob_key, json.dumps ( v, indent = 4, default=str ) ) )
 
 	def _error ( self, txt ):
-		sys.stderr.write ( "*** ERROR: %s\n" % txt )
+		sys.stderr.write ( _c ( "\n\n=== ERROR: ", 'red' ) + "%s\n" % txt )
 		self._log_write ( "\n\n*** ERROR: %s\n" % txt )
 		if self.stop_on_error: sys.exit ( 1 )
 		self._errors += 1
@@ -354,51 +354,53 @@ Raw Response: %s
 
 		mode = chk.get ( 'mode', 'EQUALS' )
 
+		cols = ( _c ( field, 'white' ), _c ( expected_val, 'yellow' ), _c ( current_val, 'red' ) )
+
 		if mode in ( 'EXISTS', 'EXIST', "!!", "NOT_NULL", "IS_NOT_NULL" ):
 			if ( str ( v ) == "None" ) or ( len ( str ( v ) ) == 0 ):
-				return "FIELD: %s is EMPTY" % ( field )
+				return "FIELD: %s is EMPTY" % ( _c ( field, 'white' ) )
 		elif mode in ( "EMPTY", "IS_EMPTY", "IS_NULL", "NULL", "@" ):
 			if ( str ( v ) != "None" ):
-				return "FIELD: %s VALUE mismatch. Expected: Null - got: %s" % ( field, current_val )
+				return "FIELD: %s VALUE mismatch. Expected: Null - got: %s" % ( _c ( field, 'white' ), _c  (current_val, 'red' ) )
 		elif mode in ( 'EQUALS', "==", "=", "EQUAL" ):
 			if current_val != expected_val:
-				return "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % cols
 		elif mode in ( 'NOT_EQUAL', "!=", "<>" ):
 			if current_val == expected_val:
-				return "FIELD: %s VALUE mismatch. Expected difference: %s - got: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s VALUE mismatch. Expected difference: %s - got: %s" % cols
 		elif mode in ( 'CONTAINS', '->' ):
 			if expected_val  not in current_val:
-				return "FIELD: %s DOES NOT contains %s. List: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s DOES NOT contains %s. List: %s" % cols
 		elif mode in ( 'SIZE', 'LEN', 'LENGTH' ):
 			if len ( current_val ) != int ( expected_val ):
-				return "FIELD: %s SIZE mismatch. Expected: %s - got: %s (%s)" % ( field, expected_val, len ( current_val ), current_val )
+				return "FIELD: %s SIZE mismatch. Expected: %s - got: %s (%s)" % ( _c ( field, 'white' ), _c ( expected_val, 'yellow' ), _c ( len ( current_val ), 'red' ), _c  (current_val, 'yellow' ) )
 		elif mode in ( 'GT', '>' ):
 			if current_val  <= expected_val:
-				return "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
 		elif mode in ( 'GTE', '>=' ):
 			if current_val  < expected_val:
-				return "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
 		elif mode in ( 'LT', '<' ):
 			if current_val  >= expected_val:
-				return "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
 		elif mode in ( 'LTE', '<=' ):
 			if current_val  <= expected_val:
-				return "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
 		elif mode in ( 'SIZE-GT', '()>' ):
 			if len ( current_val ) <= int ( expected_val ):
-				return "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
 		elif mode in ( 'SIZE-GTE', '()>=' ):
 			if len ( current_val ) < int ( expected_val ):
-				return "FIELD: %s is SMALLER. Expected: %s got: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
 		elif mode in ( 'SIZE-LT', '()<' ):
 			if len ( current_val ) >= int ( expected_val ):
-				return "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
 		elif mode in ( 'SIZE-LTE', '()<=' ):
 			if len ( current_val ) <= int ( expected_val ):
-				return "FIELD: %s is BIGGER. Expected: %s got: %s" % ( field, expected_val, current_val )
+				return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
 		elif mode in ( "OBJ", "OBJECT" ):
 			if not self._object_compare ( current_val, expected_val ):
-				return "FIELD: %s object values mismatch" % ( field )
+				return "FIELD: %s object values mismatch" % ( _c ( field, 'white' ) )
 		else:
 			return "ERROR: unsupported test mode: %s " % mode
 
