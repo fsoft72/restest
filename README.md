@@ -129,16 +129,16 @@ Defines the request content-type and mode. Possible values are:
 ### `ignore_error`
 
 This is a `true` / `false` flag which determines if `restest` should ignore an error occurring on this request.
-Default is **`false`**
+Default is **`true`**
 
 ### `status_code`
 
 With `status_code` key you can specify the `HTTP Status Code` you expect the call to return.
 For example, if you make an unauthorized call to a specific endpoint, it should return a `403 Unauthorized` return code.
-If you do *not* specify `return_code` key and your request returns a `403`, then `restest` will return an error, but if you know *for sure* that
+If you do *not* specify `status_code` key and your request returns a `403`, then `restest` will return an error, but if you know *for sure* that
 your request is going to fail with a `403` return code, then you can specify it with:
 ```json
-"return_code": 403
+"status_code": 403
 ```
 And the `restest` action will succeed.
 
@@ -146,7 +146,7 @@ Default value for `return_code` is **`200`**
 
 ### `params`
 
-If the action is a `post` request, you can specify `POST` parameters with this keyword and passing an array.
+If the request has parameters, you can specify them with the `params` keyword and passing an array.
 Here there is an example:
 ```json
 {
@@ -158,6 +158,8 @@ Here there is an example:
 	}
 }
 ```
+
+if the request is a `POST` request, parameters will be sent in post data, if it is a `GET` request, parameters will be added to the `url` with the classic `name=value&` format, correctly escaped.
 
 ### `files`
 
@@ -183,8 +185,6 @@ This is a `true` or `false` flag. If set to `true` the cookies will not be sent 
 
 You can have a test failing when the request exceedes a certain amount of time defined by `max_time`.
 `max_time` is set in milliseconds, so if you want to fail after one second, set it to `1000`.
-
-
 
 ### `fields`
 
