@@ -2,6 +2,8 @@
 
 ## v1.87
 
+  - ENH: 'mode' is now case insensitive
+
 ## v1.86
   - ADD: the very first experimental support for custom 'code' blocks
   - ENH: better error reporting

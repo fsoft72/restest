@@ -356,6 +356,9 @@ Raw Response: %s
 
 		cols = ( _c ( field, 'white' ), _c ( expected_val, 'yellow' ), _c ( current_val, 'red' ) )
 
+		# mode is now case insensitive
+		mode = mode.upper ()
+
 		if mode in ( 'EXISTS', 'EXIST', "!!", "NOT_NULL", "IS_NOT_NULL" ):
 			if ( str ( v ) == "None" ) or ( len ( str ( v ) ) == 0 ):
 				return "FIELD: %s is EMPTY" % ( _c ( field, 'white' ) )
