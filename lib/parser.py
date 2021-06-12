@@ -76,11 +76,20 @@ class RESTestParser:
 
 		files = self._parse_files ( act.get ( 'files', {} ) )
 
+		if m == 'POST':
+			_col = 'blue'
+		elif m == 'GET':
+			_col = 'green'
+		elif m == 'DELETE':
+			_col = 'red'
+		else:
+			_col = 'white'
+
 		if not self.quiet:
 			sys.stdout.write (
 				"%s %s %s %s %s %s" % (
 				self.rt._tabs (),
-				colored ( "%-4s" % m.upper (), 'red' ),
+				colored ( "%-6s" % m, _col ),
 				colored ( "%-35s" % act.get ( "url", "" ), 'yellow' ),
 				colored ( act.get ( 'params', {} ), 'green' ),
 				'auth:', colored ( auth, 'blue' )
