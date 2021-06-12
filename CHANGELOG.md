@@ -2,6 +2,7 @@
 
 ## v1.87
 
+  - ENH: now the method list has different colours depending on the method and it is more tidy
   - ENH: 'mode' is now case insensitive
 
 ## v1.86
