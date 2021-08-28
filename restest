@@ -11,6 +11,7 @@ import argparse
 import os
 import sys
 import time
+import json
 
 from lib.parser import RESTestParser
 from lib.postman_exp import PostmanExporter
@@ -20,8 +21,11 @@ parser = argparse.ArgumentParser ( description = "RESTest v%s the easy REST test
 parser.add_argument ( "file", nargs = '+', help="Files containing the tests" )
 parser.add_argument ( "--base-url", type=str, help = "Base URL. This string overrides the 'system' parameter in JSON file" )
 parser.add_argument ( "--curl", action="store_true", help = "Dumps CURL also on console (defaults on log only" )
+parser.add_argument ( "--dry", action="store_true", help = "If set, no request is done for real" )
 parser.add_argument ( "--dont-stop-on-error", action="store_true", help = "Flag to stop RESTest on error. This flag overrides the 'system' parameter in JSON file" )
 parser.add_argument ( "--env", action="store_true", help = "If set, global vars will contain also environment variables" )
+parser.add_argument ( "--env-load", type=str, help = "If set, global vars will be loaded from the specified file" )
+parser.add_argument ( "--env-save", type=str, help = "If set, global vars will be saved to specified file" )
 parser.add_argument ( "--postman", type=str, help="Export activity to a Postman JSON file" )
 parser.add_argument ( "--postman-name", type=str, help="The Postman Collection name" )
 parser.add_argument ( "--postman-base-url", type=str, help="The base url to use in Postman instead of the real host" )
@@ -39,7 +43,15 @@ postman = None
 if args.postman:
 	postman = PostmanExporter ( args.postman, args.postman_name, args.postman_base_url, args.postman_auth_name, args.postman_auth_value )
 
-rt = RESTestParser ( quiet = args.quiet, base_url = args.base_url, stop_on_error = not args.dont_stop_on_error, log_file = args.log, postman = postman, curl = args.curl )
+rt = RESTestParser ( quiet = args.quiet, base_url = args.base_url, stop_on_error = not args.dont_stop_on_error, log_file = args.log, postman = postman, curl = args.curl, dry = args.dry )
+
+if args.env_load:
+	try:
+		data = json.loads ( open ( args.env_load ).read () )
+		for k, v in data.items ():
+			rt.rt.globals [ k.lower () ] = v
+	except:
+		pass
 
 if args.env:
 	for k, v in os.environ.items ():
@@ -61,3 +73,6 @@ total_time = int ( ( end_time - start_time ) * 1000 ) / 1000.0
 if postman: postman.save ()
 
 print ( "\n\n===== FINISHED. Total Errors: %s / %s [Total time: %f]" % ( rt.rt._errors, rt.rt._tests, total_time ) )
+
+if args.env_save:
+	open ( args.env_save, "w" ).write ( json.dumps ( rt.rt.globals, indent = 4, default = str ) )
