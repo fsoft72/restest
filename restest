@@ -31,8 +31,8 @@ parser.add_argument ( "--postman-name", type=str, help="The Postman Collection n
 parser.add_argument ( "--postman-base-url", type=str, help="The base url to use in Postman instead of the real host" )
 parser.add_argument ( "--postman-auth-name", type=str, help="Name of the authorization header name" )
 parser.add_argument ( "--postman-auth-value", type=str, help="Value to use for authorization header" )
-parser.add_argument ( "--log", type=str, help = "Custom log file overriding the one in 'system'" )
 parser.add_argument ( "--key", type=str, nargs='+', help="One or more keys to be added to the globals dict use key:value format" )
+parser.add_argument ( "--log", type=str, help = "Custom log file overriding the one in 'system'" )
 parser.add_argument ( "--quiet", action="store_true", help = "If set, no output on console" )
 parser.add_argument ( "--version", action="version", version=VERSION )
 

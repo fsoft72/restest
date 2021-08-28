@@ -2,8 +2,13 @@
 
 ## v1.87
 
+  - ADD: --env-load to load an environment file before starting the tests
+  - ADD: --env-save to save an environment file with all variables before exiting
+  - ADD: new --dry parameter to run the tests without doing any request (experiemental / WIP)
+  - ADD: new test 'expand_complex.json' to test inner expansions
   - ENH: now the method list has different colours depending on the method and it is more tidy
   - ENH: 'mode' is now case insensitive
+  - FIX: expand_list() didn't expand all variables correctly if nested.
 
 ## v1.86
   - ADD: the very first experimental support for custom 'code' blocks

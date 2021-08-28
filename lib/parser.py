@@ -11,8 +11,8 @@ from termcolor import colored, cprint
 from .engine import RESTest
 
 class RESTestParser:
-	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False, postman = None, curl = False ):
-		self.rt = RESTest ( quiet = quiet, log_file = log_file, postman = postman, curl = curl )
+	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False, postman = None, curl = False, dry = False ):
+		self.rt = RESTest ( quiet = quiet, log_file = log_file, postman = postman, curl = curl, dry = dry )
 
 		self._batches = {}
 
@@ -116,7 +116,7 @@ class RESTestParser:
 					content=content,
 				)
 
-		if not self.quiet:
+		if not self.quiet and res:
 			sys.stdout.write ( " t: %s ms\n" % ( res.elapsed.microseconds / 1000 ) )
 
 		return res

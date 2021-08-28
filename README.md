@@ -41,6 +41,8 @@ optional arguments:
   --curl                                    Dumps CURL also on console (defaults on log only
   --dont-stop-on-error                      Flag to stop RESTest on error. This flag overrides the 'system' parameter in JSON file
   --env                                     Makes environment variables available before starting
+  --env-load ENV_LOAD                       If set, global vars will be loaded from the specified file
+  --env-save ENV_SAVE                       If set, global vars will be saved to specified file
   --postman POSTMAN                         Export activity to a Postman JSON file
   --postman-name POSTMAN_NAME               The Postman Collection name
   --postman-base-url POSTMAN_BASE_URL       The base url to use in Postman instead of the real host

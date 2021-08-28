@@ -18,11 +18,12 @@ from .path_parser import expand_value
 
 
 class RESTest:
-	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False ):
+	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False ):
 		self.quiet = quiet
 		self.base_url = base_url
 		self.log_file = log_file
 		self.postman = postman
+		self.dry = dry
 		self.dump_curl_on_console = curl
 
 		self.globals = {}		# Global var / values for requests
@@ -124,7 +125,10 @@ Raw Response: %s
 	def _expand_list ( self, lst ):
 		res = []
 		for x in lst:
-			res.append ( self._get_v ( x ) )
+			if isinstance ( x, str ):
+				res.append ( self._get_v ( x ) )
+			elif isinstance ( x, dict ):
+				res.append ( self._expand_dict ( x ) )
 
 		return res
 
@@ -250,6 +254,10 @@ Raw Response: %s
 			url_params = self._data_to_url ( data )
 			url += "?" + url_params if url.find ( "?" ) == -1 else "&" + url_params
 		files = self._reorder_files ( files )
+
+		if self.dry:
+			self._log_start ( mode, url, data )
+			return None
 
 		if content == 'json':
 			r = m ( url, json = data, headers = headers, files = files )
