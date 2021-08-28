@@ -1,0 +1,38 @@
+{
+	"actions": [
+		{
+			"method": "patch",
+			"url": "/api/academy/course/admin/tree/update",
+			"params": {
+				"id": "%(id_course)s",
+				"data": [
+					{
+						"id": "%(id_sect_2)s",
+						"pos": 1,
+						"kind": "S"
+					},
+					{
+						"id": "%(id_sect)s",
+						"pos": 2,
+						"kind": "S"
+					},
+					{
+						"id": "%(id_lesson)s",
+						"pos": 3,
+						"kind": "L"
+					},
+					{
+						"id": "%(id_lesson_2)s",
+						"pos": 1,
+						"kind": "L"
+					},
+					{
+						"id": "%(id_lesson_3)s",
+						"pos": 2,
+						"kind": "L"
+					}
+				]
+			}
+		}
+	]
+}
