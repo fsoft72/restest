@@ -253,7 +253,10 @@ Raw Response: %s
 		if mode == "GET" and data:
 			url_params = self._data_to_url ( data )
 			url += "?" + url_params if url.find ( "?" ) == -1 else "&" + url_params
+
 		files = self._reorder_files ( files )
+		if files:
+			content = 'form'
 
 		if self.dry:
 			self._log_start ( mode, url, data )
@@ -262,6 +265,11 @@ Raw Response: %s
 		if content == 'json':
 			r = m ( url, json = data, headers = headers, files = files )
 		elif content == 'form':
+			new_data = {}
+			for k, v in data.items ():
+				if isinstance ( v, ( list, dict ) ):
+					data [ k ] = json.dumps(v)
+
 			r = m ( url, data = data, headers = headers, files = files )
 
 
