@@ -9,6 +9,7 @@
   - ENH: now the method list has different colours depending on the method and it is more tidy
   - ENH: 'mode' is now case insensitive
   - FIX: expand_list() didn't expand all variables correctly if nested.
+  - FIX: uploading files used to create problems with list-like fields
 
 ## v1.86
   - ADD: the very first experimental support for custom 'code' blocks
