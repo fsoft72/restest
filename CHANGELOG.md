@@ -1,5 +1,8 @@
 # restest  changelog
 
+## v1.87.1
+  - FIX: _expand_list() sometimes returned wrong values
+
 ## v1.87
 
   - ADD: --env-load to load an environment file before starting the tests
