@@ -129,6 +129,8 @@ Raw Response: %s
 				res.append ( self._get_v ( x ) )
 			elif isinstance ( x, dict ):
 				res.append ( self._expand_dict ( x ) )
+			else:
+				res.append ( x )
 
 		return res
 
