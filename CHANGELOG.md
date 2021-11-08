@@ -1,8 +1,11 @@
 # restest  changelog
 
-## v1.87
+## v1.88
 
   - ADD: support for raw list sending in body payload [thanks to Dario Barbazza]
+
+## v1.87
+
   - ADD: --env-load to load an environment file before starting the tests
   - ADD: --env-save to save an environment file with all variables before exiting
   - ADD: new --dry parameter to run the tests without doing any request (experiemental / WIP)
