@@ -250,8 +250,6 @@ Raw Response: %s
 		else:
 			data = self._expand_data ( data )
 
-		data = self._expand_data ( data )
-
 		obj = requests if no_cookies else self.session
 		if mode == "DELETE":
 			m = obj.delete
