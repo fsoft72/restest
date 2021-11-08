@@ -185,6 +185,16 @@ Raw Response: %s
 
 		return res
 
+	def _expand_data_list ( self, data ):
+		res = []
+
+		self._inner_count += 1
+
+		for item in data:
+			temp = self._expand_data( item )
+			res.append( temp )
+		return res
+
 	def _object_compare ( self, v1, v2 ):
 		o1 = eval ( v1 )
 		o2 = eval ( v2 )
@@ -234,6 +244,11 @@ Raw Response: %s
 
 		url = self._resolve_url ( endpoint )
 		headers = self._mk_headers ( authenticated = authenticated )
+
+		if type(data) is list:
+			data = self._expand_data_list ( data )
+		else:
+			data = self._expand_data ( data )
 
 		data = self._expand_data ( data )
 
