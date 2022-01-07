@@ -1,4 +1,8 @@
 *.pyc
 .vscode
 *.log
+*.back
+*.bak
+trash
 work
+*\ copy.*
