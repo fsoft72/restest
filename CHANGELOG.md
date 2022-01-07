@@ -1,5 +1,8 @@
 # restest  changelog
 
+## v1.89
+  - FIX: list expansion as arguments in GET requests
+
 ## v1.88
   - ADD: support for raw list sending in body payload [thanks to Dario Barbazza]
 
