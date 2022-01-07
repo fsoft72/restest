@@ -249,4 +249,11 @@ class RESTestParser:
 	def _json_load( self, fname ):
 		data = open ( fname ).readlines ()
 		txt = '\n'.join(n.strip () for n in data if not n.strip ().startswith ( "#" ))
-		return json.loads ( txt )
+
+		try:
+			data = json.loads ( txt )
+		except Exception as e:
+			sys.stderr.write ( "ERROR: decoding file '%s': %s\n" % ( fname, e ) )
+			sys.exit ( 1 )
+
+		return data

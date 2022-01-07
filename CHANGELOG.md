@@ -2,6 +2,7 @@
 
 ## v1.89
   - FIX: list expansion as arguments in GET requests
+  - ENH: better error reporting on loading not valid JSON files
 
 ## v1.88
   - ADD: support for raw list sending in body payload [thanks to Dario Barbazza]
