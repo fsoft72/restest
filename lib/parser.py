@@ -5,7 +5,7 @@
 # written by Fabio Rotondo <fabio.rotondo@gmail.com>
 #
 
-import sys, json, os
+import sys, json, os, gzip, bz2
 from termcolor import colored, cprint
 
 from .engine import RESTest
@@ -246,14 +246,16 @@ class RESTestParser:
 		for k, v in system.items ():
 			setattr ( self.rt, k, v )
 
-	def _json_load( self, fname ):
-		data = open ( fname ).readlines ()
-		txt = '\n'.join(n.strip () for n in data if not n.strip ().startswith ( "#" ))
+	def _json_load ( self, fname ):
+		# load gzip file
+		if fname.endswith ( ".gz" ):
+			f = gzip.open ( fname, "r" )
+		elif fname.endswith ( ".bz2" ):
+			f = bz2.BZ2File ( fname, "r" )
+		else:
+			f = open ( fname, "r" )
 
-		try:
-			data = json.loads ( txt )
-		except Exception as e:
-			sys.stderr.write ( "ERROR: decoding file '%s': %s\n" % ( fname, e ) )
-			sys.exit ( 1 )
+		data = json.load ( f )
+		f.close ()
 
 		return data
