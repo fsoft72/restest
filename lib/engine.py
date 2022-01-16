@@ -7,7 +7,7 @@
 
 import copy
 import json
-import sys
+import sys, os, time
 import urllib
 
 from termcolor import colored as _c
@@ -18,13 +18,14 @@ from .path_parser import expand_value
 
 
 class RESTest:
-	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False ):
+	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False, delay = 0 ):
 		self.quiet = quiet
 		self.base_url = base_url
 		self.log_file = log_file
 		self.postman = postman
 		self.dry = dry
 		self.dump_curl_on_console = curl
+		self.delay = delay
 
 		self.globals = {}		# Global var / values for requests
 
@@ -313,6 +314,7 @@ Raw Response: %s
 		return r
 
 	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json" ):
+		if ( self.delay ): time.sleep ( self.delay // 1000 )
 		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time, files = files, title = title, content=content )
 
 	def fields( self, resp, fields ):

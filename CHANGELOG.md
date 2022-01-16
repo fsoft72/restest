@@ -1,6 +1,7 @@
 # restest  changelog
 
 ## v1.89
+  - ADD: new --delay command line option to slowdown requests
   - ADD: support for .bz2 and .gz files
   - FIX: list expansion as arguments in GET requests
   - ENH: better error reporting on loading not valid JSON files

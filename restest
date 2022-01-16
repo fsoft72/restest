@@ -35,6 +35,7 @@ parser.add_argument ( "--key", type=str, nargs='+', help="One or more keys to be
 parser.add_argument ( "--log", type=str, help = "Custom log file overriding the one in 'system'" )
 parser.add_argument ( "--quiet", action="store_true", help = "If set, no output on console" )
 parser.add_argument ( "--version", action="version", version=VERSION )
+parser.add_argument( "--delay", type=int, help="Delay in milliseconds between requests" )
 
 
 args = parser.parse_args ()
@@ -43,7 +44,9 @@ postman = None
 if args.postman:
 	postman = PostmanExporter ( args.postman, args.postman_name, args.postman_base_url, args.postman_auth_name, args.postman_auth_value )
 
-rt = RESTestParser ( quiet = args.quiet, base_url = args.base_url, stop_on_error = not args.dont_stop_on_error, log_file = args.log, postman = postman, curl = args.curl, dry = args.dry )
+rt = RESTestParser ( quiet = args.quiet, base_url = args.base_url,
+					stop_on_error = not args.dont_stop_on_error, log_file = args.log,
+					postman = postman, curl = args.curl, dry = args.dry, delay = args.delay )
 
 if args.env_load:
 	try:
