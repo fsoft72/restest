@@ -108,7 +108,7 @@ class RESTestParser:
 		res = self.rt.do_EXEC ( m, act [ 'url' ],
 					act.get ( 'params', {} ),
 					auth,
-					status_code = act.get ( 'status_code', 200 ),
+					status_code = act.get ( 'status_code', act.get ( 'status', 200 ) ),
 					skip_error = ignore,
 					no_cookies = act.get ( "no_cookies", False ),
 					max_exec_time= act.get ( "max_time", 0 ),
@@ -117,8 +117,15 @@ class RESTestParser:
 					content=content,
 				)
 
-		if not self.quiet and res:
-			sys.stdout.write ( " t: %s ms\n" % ( res.elapsed.microseconds / 1000 ) )
+		if ( not self.quiet ) and res.status_code:
+			if res.status_code < 300:
+				status = colored ( "%-3s" % res.status_code, 'green' )
+			elif res.status_code < 500:
+				status = colored ( "%-3s" % res.status_code, 'yellow', 'on_grey', ['reverse' ] )
+			else:
+				status = colored ( "%-3s" % res.status_code, 'red', 'on_grey', ['reverse', 'blink' ] )
+
+			sys.stdout.write ( " - status: %s - t: %s ms\n" % ( status, res.elapsed.microseconds / 1000 ) )
 
 		return res
 
