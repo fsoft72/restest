@@ -86,13 +86,14 @@ class RESTestParser:
 		else:
 			_col = 'white'
 
+		params = act.get ( 'params', act.get ( 'data', {} ) )
 		if not self.quiet:
 			sys.stdout.write (
 				"%s %s %s %s %s %s" % (
 				self.rt._tabs (),
 				colored ( "%-6s" % m, _col ),
 				colored ( "%-35s" % act.get ( "url", "" ), 'yellow' ),
-				colored ( act.get ( 'params', {} ), 'green' ),
+				colored ( params, 'green' ),
 				'auth:', colored ( auth, 'blue' )
 				)
 			)
@@ -106,7 +107,7 @@ class RESTestParser:
 			ignore = act [ 'skip_error' ]
 
 		res = self.rt.do_EXEC ( m, act [ 'url' ],
-					act.get ( 'params', {} ),
+					params,
 					auth,
 					status_code = act.get ( 'status_code', act.get ( 'status', 200 ) ),
 					skip_error = ignore,
@@ -117,13 +118,13 @@ class RESTestParser:
 					content=content,
 				)
 
-		if ( not self.quiet ) and res.status_code:
+		if not self.quiet:
 			if res.status_code < 300:
 				status = colored ( "%-3s" % res.status_code, 'green' )
 			elif res.status_code < 500:
-				status = colored ( "%-3s" % res.status_code, 'yellow', 'on_grey', ['reverse' ] )
+				status = colored ( "%-3s" % res.status_code, 'yellow', 'on_black', ['reverse' ] )
 			else:
-				status = colored ( "%-3s" % res.status_code, 'red', 'on_grey', ['reverse', 'blink' ] )
+				status = colored ( "%-3s" % res.status_code, 'red', 'on_black', ['reverse', 'blink' ] )
 
 			sys.stdout.write ( " - status: %s - t: %s ms\n" % ( status, res.elapsed.microseconds / 1000 ) )
 

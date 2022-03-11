@@ -3,8 +3,10 @@
 ## v1.89
   - ADD: new --delay command line option to slowdown requests
   - ADD: support for .bz2 and .gz files
+  - ENH: now status codes are shown in log
   - ENH: better error reporting on loading not valid JSON files
   - ENH: better error reporting on wrong array sizes
+  - ENH: now `status_code` can be called `status` in tests
   - FIX: list expansion as arguments in GET requests
 
 ## v1.88
