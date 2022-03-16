@@ -122,9 +122,9 @@ class RESTestParser:
 			if res.status_code < 300:
 				status = colored ( "%-3s" % res.status_code, 'green' )
 			elif res.status_code < 500:
-				status = colored ( "%-3s" % res.status_code, 'yellow', 'on_black', ['reverse' ] )
+				status = colored ( "%-3s" % res.status_code, 'yellow', 'on_grey', ['reverse' ] )
 			else:
-				status = colored ( "%-3s" % res.status_code, 'red', 'on_black', ['reverse', 'blink' ] )
+				status = colored ( "%-3s" % res.status_code, 'red', 'on_grey', ['reverse', 'blink' ] )
 
 			sys.stdout.write ( " - status: %s - t: %s ms\n" % ( status, res.elapsed.microseconds / 1000 ) )
 
