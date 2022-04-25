@@ -47,10 +47,15 @@ class RESTestParser:
 
 	def _actions ( self, actions ):
 		for act in actions:
+			if 'title' in act: print ( act [ 'title' ] )
+
 			action = act.get ( 'method', act.get ( 'action', '' ) ).lower ()
-			meth = getattr ( self, "_method_" + action )
-			if 'title' in act and ( act.get ( 'action' ) != 'section' ): print ( act [ 'title' ] )
-			meth ( act )
+			if action:
+				meth = getattr ( self, "_method_" + action )
+				meth ( act )
+
+			if 'actions' in act:
+				self._actions ( act [ 'actions' ] )
 
 	def _parse_files ( self, dct ):
 		files = {}
