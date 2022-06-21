@@ -8,6 +8,17 @@
 			"params": {
 				"messagge": "UTF-8 characters: èàòù"
 			}
+		},
+		{
+			"title": "Get with params",
+			"method": "get",
+			"url": "/get",
+			"auth": false,
+			"params": {
+				"bool": true,
+				"str": "string",
+				"num": 1
+			}
 		}
 	]
 }

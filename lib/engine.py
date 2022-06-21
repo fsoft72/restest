@@ -152,14 +152,16 @@ Raw Response: %s
 		if isinstance ( x, dict ):
 			return self._expand_dict ( x )
 
+		"""
 		if isinstance ( x, bool ):
 			if x == True: x = 1
 			if x == False: x = 0
+		"""
 
-		x = str ( x )
-		if x.find ( "%(" ) == -1: return x
+		n = str ( x )
+		if n.find ( "%(" ) == -1: return x
 
-		return  x % self.globals
+		return  n % self.globals
 
 
 	def _expand_var ( self, v ):
@@ -214,6 +216,7 @@ Raw Response: %s
 		return True
 
 	def _data_to_url ( self, dct ):
+		print ( "MY DCT: ", dct )
 		elems = []
 		for k, v in dct.items ():
 			v = json.dumps(v)
