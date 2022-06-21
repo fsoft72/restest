@@ -1,5 +1,9 @@
 # restest  changelog
 
+## v1.90
+  - ENH: a new way of encoding JSON payloads, to better support utf8 (experimental)
+  - ADD: a new example `utf8.example.json` to test JSON encoding
+
 ## v1.89
   - ADD: new --delay command line option to slowdown requests
   - ADD: support for .bz2 and .gz files
