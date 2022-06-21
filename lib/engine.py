@@ -280,7 +280,15 @@ Raw Response: %s
 			return None
 
 		if content == 'json':
-			r = m ( url, json = data, headers = headers, files = files )
+			# v1.90 - changing the json = data to data = encoded
+			#		  to better support UTF-8 strings
+
+			#r = m ( url, json = data, headers = headers, files = files )
+			data = json.dumps(data, ensure_ascii=False, default = str )
+			encoded = data.encode ( 'utf-8' )
+			headers [ 'Content-Type' ] = 'application/json; charset=utf-8'
+			r = m ( url, data = encoded, headers = headers, files = files )
+
 		elif content == 'form':
 			new_data = {}
 			for k, v in data.items ():
@@ -308,7 +316,7 @@ Raw Response: %s
 
 		ms = r.elapsed.microseconds / 1000
 		if max_exec_time and ms > max_exec_time:
-			sys.stderr.write ( """%s\nTOO MUCH TIME ERROR (res: %s - exprected: %s)\n%s\n""" % ( "*" * 70, ms, max_exec_time,  "*" * 70 ) )
+			sys.stderr.write ( """%s\nTOO MUCH TIME ERROR (res: %s - expected: %s)\n%s\n""" % ( "*" * 70, ms, max_exec_time,  "*" * 70 ) )
 			sys.exit ( 1 )
 
 		return r

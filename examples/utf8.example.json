@@ -1,0 +1,13 @@
+{
+	"actions": [
+		{
+			"title": "This message contains utf-8 characters",
+			"method": "post",
+			"url": "/post",
+			"auth": false,
+			"params": {
+				"messagge": "UTF-8 characters: èàòù"
+			}
+		}
+	]
+}

@@ -267,7 +267,7 @@ class RESTestParser:
 		elif fname.endswith ( ".bz2" ):
 			f = bz2.BZ2File ( fname, "r" )
 		else:
-			f = open ( fname, "r" )
+			f = open ( fname, "r", encoding='utf-8' )
 
 		data = json.load ( f )
 		f.close ()
