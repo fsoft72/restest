@@ -218,7 +218,8 @@ Raw Response: %s
 	def _data_to_url ( self, dct ):
 		elems = []
 		for k, v in dct.items ():
-			v = json.dumps(v) [ 1 : -1 ]
+			v = json.dumps(v)
+			if v.startswith( '"' ): v = v [ 1 : -1 ]
 			elems.append ( f"{k}={urllib.parse.quote(v)}" )
 
 		if not elems: return ""
