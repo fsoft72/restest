@@ -1,5 +1,8 @@
 # restest  changelog
 
+## v1.91
+	- starting to work on custom headers
+
 ## v1.90
   - ADD: a new example `utf8.example.json` to test JSON encoding
   - ADD: restest version can be returned by `-v` and `--version` command line options
