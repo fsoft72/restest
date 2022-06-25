@@ -216,10 +216,9 @@ Raw Response: %s
 		return True
 
 	def _data_to_url ( self, dct ):
-		print ( "MY DCT: ", dct )
 		elems = []
 		for k, v in dct.items ():
-			v = json.dumps(v)
+			v = json.dumps(v) [ 1 : -1 ]
 			elems.append ( f"{k}={urllib.parse.quote(v)}" )
 
 		if not elems: return ""
