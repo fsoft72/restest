@@ -174,9 +174,22 @@ Raw Response: %s
 			else:
 				v = self._get_v ( v )
 		except:
-			sys.stderr.write ( _c ( "\nERROR:", "red" ) + " could not expand: %s (%s)" % ( v, self.globals ) )
+			sys.stderr.write ( _c ( "\nERROR:", "red" ) + " could not expand: %s\n" % _c ( v, "white" ) )
+			self._dump_globals ()
 
 		return v
+
+	def _dump_globals ( self ):
+		keys = list ( self.globals.keys() )
+		keys.sort ()
+
+		max_len = max ( [ len ( x ) for x in keys ] )
+
+		for k in keys:
+			# pad k to max_len
+			sk = k.ljust ( max_len )
+
+			sys.stderr.write ( "    %s : %s\n" % ( _c ( sk, 'white' ), self.globals [ k ] ) )
 
 	def _expand_data ( self, data ):
 		res = {}

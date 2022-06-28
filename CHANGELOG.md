@@ -1,6 +1,7 @@
 # restest  changelog
 
 ## v1.91
+	- ADD: better error reporting when a global variable is missing
 	- starting to work on custom headers
 
 ## v1.90
