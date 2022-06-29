@@ -2,7 +2,10 @@
 	"system": {
 		"base_url": "https://jsonplaceholder.typicode.com",
 		"log_file": "./restest-typicode.log",
-		"stop_on_error": true
+		"stop_on_error": true,
+		"global_headers": {
+			"X-Fabio": 1
+		}
 	},
 	"actions": [
 		{
@@ -38,6 +41,7 @@
 						"userId": 1
 					},
 					"status_code": 201,
+					"auth": false,
 					"tests": [
 						{
 							"field": "id",

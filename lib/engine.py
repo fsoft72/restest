@@ -18,7 +18,9 @@ from .path_parser import expand_value
 
 
 class RESTest:
-	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False, delay = 0 ):
+	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False, delay = 0, global_headers = None ):
+		if not global_headers: global_headers = {}
+
 		self.quiet = quiet
 		self.base_url = base_url
 		self.log_file = log_file
@@ -35,6 +37,9 @@ class RESTest:
 		# This is a number used to generate counts
 		self._inner_count = 0
 
+		# These are the global headers that will be added to all requests
+		self.global_headers = global_headers
+
 		self.stop_on_error = stop_on_error
 		self.sections = []
 
@@ -48,6 +53,7 @@ class RESTest:
 
 	def _parse_headers ( self, r ):
 		heads = {}
+
 		for k, v in r.headers.items ():
 			hk = k.lower ()
 			heads [ hk ] = r.headers [ k ]
@@ -101,7 +107,8 @@ Raw Response: %s
 			sys.stderr.flush ()
 
 	def _mk_headers ( self, authenticated ):
-		headers = {}
+		headers = self.global_headers.copy()
+
 		if authenticated:
 			hv = ""
 			try:
@@ -112,6 +119,9 @@ Raw Response: %s
 
 			if hv:
 				headers [ self.authorization_header ] = hv
+
+		for k, v in headers.items()	:
+			headers [ k ] = self._expand_var ( str ( v ) )
 
 		return headers
 
@@ -181,6 +191,8 @@ Raw Response: %s
 
 	def _dump_globals ( self ):
 		keys = list ( self.globals.keys() )
+		if not keys: return
+
 		keys.sort ()
 
 		max_len = max ( [ len ( x ) for x in keys ] )
