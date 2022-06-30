@@ -104,6 +104,9 @@ class RESTestParser:
 			)
 			sys.stdout.flush ()
 
+		# New 1.91 - support for custom headers in single call
+		headers = act.get ( 'headers', {} )
+
 		ignore = False
 		if "ignore_error" in act:
 			ignore = act [ 'ignore_error' ]
@@ -121,6 +124,7 @@ class RESTestParser:
 					title = act.get ( 'title', 'No title provided' ),
 					files = files,
 					content=content,
+					headers=headers,
 				)
 
 		if not self.quiet:

@@ -25,6 +25,12 @@
 					"field": "[1].username",
 					"value": "Antonette"
 				}
+			],
+			"fields": [
+				[
+					"[0].id",
+					"id_first_user"
+				]
 			]
 		},
 		{
@@ -47,7 +53,11 @@
 							"field": "id",
 							"value": 101
 						}
-					]
+					],
+					"headers": {
+						"X-Hello": "world",
+						"X-First-User-ID": "%(id_first_user)s"
+					}
 				},
 				{
 					"title": "Retrieve post 10",

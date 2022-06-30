@@ -106,8 +106,11 @@ Raw Response: %s
 			sys.stderr.write ( "\n\n%s\n\n" % curl )
 			sys.stderr.flush ()
 
-	def _mk_headers ( self, authenticated ):
+	def _mk_headers ( self, authenticated, local_headers ):
+		if not local_headers: local_headers = {}
+
 		headers = self.global_headers.copy()
+		headers.update(local_headers)
 
 		if authenticated:
 			hv = ""
@@ -271,11 +274,11 @@ Raw Response: %s
 		return res
 
 
-	def _req( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json" ):
+	def _req( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json", headers = None ):
 		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
 
 		url = self._resolve_url ( endpoint )
-		headers = self._mk_headers ( authenticated = authenticated )
+		headers = self._mk_headers ( authenticated = authenticated, local_headers = headers )
 
 		if type(data) is list:
 			data = self._expand_data_list ( data )
@@ -349,9 +352,9 @@ Raw Response: %s
 
 		return r
 
-	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json" ):
-		if ( self.delay ): time.sleep ( self.delay // 1000 )
-		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time, files = files, title = title, content=content )
+	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json", headers = None ):
+		if self.delay: time.sleep ( self.delay // 1000 )
+		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time, files = files, title = title, content=content, headers=headers )
 
 	def fields( self, resp, fields ):
 		j = resp.json ()

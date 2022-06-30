@@ -163,6 +163,33 @@ Here there is an example:
 
 if the request is a `POST` request, parameters will be sent in post data, if it is a `GET` request, parameters will be added to the `url` with the classic `name=value&` format, correctly escaped.
 
+### `headers`
+
+If the request needs custom  headers, you can add them with the `headers` keyword.
+Provided headers are not manipulated in any way (so, be carefull with uppercase and lowercase letters).
+You can add the usual *variable escape* feature in the `value` field of your headers.
+
+**NOTE 1**: headers can only contain `string` values.
+
+**NOTE 2**: authentication headers are still handled with the `auth` keyword.
+
+**NOTE 3**: if you have the same header key in both `global_headers` and `headers`, the value from `headers` will be used for this call.
+
+```json
+{
+	"method": "post",
+	"url": "/api/site/login",
+	"params": {
+		...
+	},
+	"headers": {
+		"X-Header1": "header 1",
+		"X-Custom": "%(custom_value)s"
+	}
+}
+```
+
+
 ### `files`
 
 If the action is a `post` request, you can specify `files` keyword, passing an array of files to be posted.

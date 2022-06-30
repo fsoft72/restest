@@ -1,8 +1,10 @@
 # restest  changelog
 
 ## v1.91
+	- ADD: custom headers support
+	- ADD: now you can add global headers by adding the `global_headers` section inside the `system` section of the json file
+	- ADD: now you can add custom headers to a single request by adding the `headers` section inside the request definition
 	- ADD: better error reporting when a global variable is missing
-	- starting to work on custom headers
 
 ## v1.90
   - ADD: a new example `utf8.example.json` to test JSON encoding
