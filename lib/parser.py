@@ -257,9 +257,9 @@ class RESTestParser:
 	def _parse_system ( self ):
 		self.rt.sections = []
 
-		if "system" not in self.script: return
+		system = self.script.get ( 'system' )
 
-		system = self.script [ 'system' ]
+		if not system: return
 
 		for k, v in system.items ():
 			setattr ( self.rt, k, v )
