@@ -18,8 +18,8 @@ from .path_parser import expand_value
 
 
 class RESTest:
-	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False, delay = 0, global_headers = None ):
-		if not global_headers: global_headers = {}
+	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False, delay = 0, headers = None ):
+		if not headers: headers = {}
 
 		self.quiet = quiet
 		self.base_url = base_url
@@ -38,7 +38,7 @@ class RESTest:
 		self._inner_count = 0
 
 		# These are the global headers that will be added to all requests
-		self.global_headers = global_headers
+		self.headers = headers
 
 		self.stop_on_error = stop_on_error
 		self.sections = []
@@ -109,7 +109,7 @@ Raw Response: %s
 	def _mk_headers ( self, authenticated, local_headers ):
 		if not local_headers: local_headers = {}
 
-		headers = self.global_headers.copy()
+		headers = self.headers.copy()
 		headers.update(local_headers)
 
 		if authenticated:
