@@ -10,15 +10,14 @@ import json
 import sys, os, time
 import urllib
 
-from termcolor import colored as _c
-
 import requests
 
 from .path_parser import expand_value
+from .cols import xcolored as _c
 
 
 class RESTest:
-	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False, delay = 0, headers = None ):
+	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False, delay = 0, headers = None, no_colors = False ):
 		if not headers: headers = {}
 
 		self.quiet = quiet
@@ -28,6 +27,7 @@ class RESTest:
 		self.dry = dry
 		self.dump_curl_on_console = curl
 		self.delay = delay
+		self.no_colors = no_colors
 
 		self.globals = {}		# Global var / values for requests
 
@@ -117,7 +117,7 @@ Raw Response: %s
 			try:
 				hv = self._expand_var ( self.authorization_template )
 			except:
-				sys.stderr.write ( _c ( "ERROR", "red" ) + " could not create Authorization template: %s" % self.authorization_template )
+				sys.stderr.write ( _c ( self, "ERROR", "red" ) + " could not create Authorization template: %s" % self.authorization_template )
 				raise
 
 			if hv:
@@ -187,7 +187,7 @@ Raw Response: %s
 			else:
 				v = self._get_v ( v )
 		except:
-			sys.stderr.write ( _c ( "\nERROR:", "red" ) + " could not expand: %s\n" % _c ( v, "white" ) )
+			sys.stderr.write ( _c ( self, "\nERROR:", "red" ) + " could not expand: %s\n" % _c ( self, v, "white" ) )
 			self._dump_globals ()
 
 		return v
@@ -204,7 +204,7 @@ Raw Response: %s
 			# pad k to max_len
 			sk = k.ljust ( max_len )
 
-			sys.stderr.write ( "    %s : %s\n" % ( _c ( sk, 'white' ), self.globals [ k ] ) )
+			sys.stderr.write ( "    %s : %s\n" % ( _c ( self, sk, 'white' ), self.globals [ k ] ) )
 
 	def _expand_data ( self, data ):
 		res = {}
@@ -342,7 +342,7 @@ Raw Response: %s
 		if skip_error: return r
 
 		if r.status_code != status_code and self.stop_on_error:
-			sys.stderr.write ( """\n\n%s\n%s %s\n%s\n\n""" % ( "=" * 78, _c ( "REQUEST ERROR: ", "red" ), _c ( r.text, "white" ), "=" * 78 ) )
+			sys.stderr.write ( """\n\n%s\n%s %s\n%s\n\n""" % ( "=" * 78, _c ( self, "REQUEST ERROR: ", "red" ), _c ( self, r.text, "white" ), "=" * 78 ) )
 			sys.exit ( 1 )
 
 		ms = r.elapsed.microseconds / 1000
@@ -393,7 +393,7 @@ Raw Response: %s
 			print ( "==== %s: %s\n" % ( glob_key, json.dumps ( v, indent = 4, default=str ) ) )
 
 	def _error ( self, txt ):
-		sys.stderr.write ( _c ( "\n\n=== ERROR: ", 'red' ) + "%s\n" % txt )
+		sys.stderr.write ( _c ( self, "\n\n=== ERROR: ", 'red' ) + "%s\n" % txt )
 		self._log_write ( "\n\n*** ERROR: %s\n" % txt )
 		if self.stop_on_error: sys.exit ( 1 )
 		self._errors += 1
@@ -427,17 +427,17 @@ Raw Response: %s
 
 		mode = chk.get ( 'mode', 'EQUALS' )
 
-		cols = ( _c ( field, 'white' ), _c ( expected_val, 'yellow' ), _c ( current_val, 'red' ) )
+		cols = ( _c ( self, field, 'white' ), _c ( self, expected_val, 'yellow' ), _c ( self, current_val, 'red' ) )
 
 		# mode is now case insensitive
 		mode = mode.upper ()
 
 		if mode in ( 'EXISTS', 'EXIST', "!!", "NOT_NULL", "IS_NOT_NULL" ):
 			if ( str ( v ) == "None" ) or ( len ( str ( v ) ) == 0 ):
-				return "FIELD: %s is EMPTY" % ( _c ( field, 'white' ) )
+				return "FIELD: %s is EMPTY" % ( _c ( self, field, 'white' ) )
 		elif mode in ( "EMPTY", "IS_EMPTY", "IS_NULL", "NULL", "@" ):
 			if ( str ( v ) != "None" ):
-				return "FIELD: %s VALUE mismatch. Expected: Null - got: %s" % ( _c ( field, 'white' ), _c  (current_val, 'red' ) )
+				return "FIELD: %s VALUE mismatch. Expected: Null - got: %s" % ( _c ( self, field, 'white' ), _c ( self, current_val, 'red' ) )
 		elif mode in ( 'EQUALS', "==", "=", "EQUAL" ):
 			if current_val != expected_val:
 				return "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % cols
@@ -449,7 +449,7 @@ Raw Response: %s
 				return "FIELD: %s DOES NOT contains %s. List: %s" % cols
 		elif mode in ( 'SIZE', 'LEN', 'LENGTH' ):
 			if len ( current_val ) != int ( expected_val ):
-				return "FIELD: %s SIZE mismatch. Expected: %s - got: %s (%s)" % ( _c ( field, 'white' ), _c ( expected_val, 'yellow' ), _c ( len ( current_val ), 'red' ), _c  (current_val, 'yellow' ) )
+				return "FIELD: %s SIZE mismatch. Expected: %s - got: %s (%s)" % ( _c ( self, field, 'white' ), _c ( self, expected_val, 'yellow' ), _c ( self, len ( current_val ), 'red' ), _c  ( self, current_val, 'yellow' ) )
 		elif mode in ( 'GT', '>' ):
 			if current_val  <= expected_val:
 				return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
@@ -476,7 +476,7 @@ Raw Response: %s
 				return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
 		elif mode in ( "OBJ", "OBJECT" ):
 			if not self._object_compare ( current_val, expected_val ):
-				return "FIELD: %s object values mismatch" % ( _c ( field, 'white' ) )
+				return "FIELD: %s object values mismatch" % ( _c ( self, field, 'white' ) )
 		else:
 			return "ERROR: unsupported test mode: %s " % mode
 

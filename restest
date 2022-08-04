@@ -26,6 +26,7 @@ parser.add_argument ( "--dont-stop-on-error", action="store_true", help = "Flag 
 parser.add_argument ( "--env", action="store_true", help = "If set, global vars will contain also environment variables" )
 parser.add_argument ( "--env-load", type=str, help = "If set, global vars will be loaded from the specified file" )
 parser.add_argument ( "--env-save", type=str, help = "If set, global vars will be saved to specified file" )
+parser.add_argument ( "--no-colors", action="store_true", help = "If set, colors in console output are disabled" )
 parser.add_argument ( "--postman", type=str, help="Export activity to a Postman JSON file" )
 parser.add_argument ( "--postman-name", type=str, help="The Postman Collection name" )
 parser.add_argument ( "--postman-base-url", type=str, help="The base url to use in Postman instead of the real host" )
@@ -46,7 +47,9 @@ if args.postman:
 
 rt = RESTestParser ( quiet = args.quiet, base_url = args.base_url,
 					stop_on_error = not args.dont_stop_on_error, log_file = args.log,
-					postman = postman, curl = args.curl, dry = args.dry, delay = args.delay )
+					postman = postman, curl = args.curl, dry = args.dry, delay = args.delay,
+					no_colors = args.no_colors,
+					 )
 
 if args.env_load:
 	try:

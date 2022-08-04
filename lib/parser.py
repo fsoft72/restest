@@ -5,14 +5,14 @@
 # written by Fabio Rotondo <fabio.rotondo@gmail.com>
 #
 
-import sys, json, os, gzip, bz2
-from termcolor import colored, cprint
+import sys, json, os, gzip, bz2, time
 
 from .engine import RESTest
+from .cols import xcolored
 
 class RESTestParser:
-	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False, postman = None, curl = False, dry = False, delay = 0 ):
-		self.rt = RESTest ( quiet = quiet, log_file = log_file, postman = postman, curl = curl, dry = dry, delay = delay )
+	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False, postman = None, curl = False, dry = False, delay = 0, no_colors = False  ):
+		self.rt = RESTest ( quiet = quiet, log_file = log_file, postman = postman, curl = curl, dry = dry, delay = delay, no_colors = no_colors )
 
 		self._batches = {}
 
@@ -21,6 +21,7 @@ class RESTestParser:
 		self.forced_base_url = base_url
 		self.quiet = quiet
 		self.delay = delay
+		self.no_colors = no_colors
 
 		self._paths = []
 		self._included = {}
@@ -96,10 +97,10 @@ class RESTestParser:
 			sys.stdout.write (
 				"%s %s %s %s %s %s" % (
 				self.rt._tabs (),
-				colored ( "%-6s" % m, _col ),
-				colored ( "%-35s" % act.get ( "url", "" ), 'yellow' ),
-				colored ( params, 'green' ),
-				'auth:', colored ( auth, 'blue' )
+				xcolored ( self, "%-6s" % m, _col ),
+				xcolored ( self, "%-35s" % act.get ( "url", "" ), 'yellow' ),
+				xcolored ( self, params, 'green' ),
+				'auth:', xcolored ( self, auth, 'blue' )
 				)
 			)
 			sys.stdout.flush ()
@@ -111,8 +112,11 @@ class RESTestParser:
 		if "ignore_error" in act:
 			ignore = act [ 'ignore_error' ]
 		elif "skip_error" in act:
-			sys.stderr.write ( "%s 'skip_error' is deprecated use 'ignore_error' in actions\n" % ( colored ( "WARNING",  'yellow' ) ) )
+			sys.stderr.write ( "%s 'skip_error' is deprecated use 'ignore_error' in actions\n" % ( xcolored ( self, "WARNING",  'yellow' ) ) )
 			ignore = act [ 'skip_error' ]
+
+		# get current time in milliseconds
+		start_time = int ( round ( 1000 * time.time () ) )
 
 		res = self.rt.do_EXEC ( m, act [ 'url' ],
 					params,
@@ -127,15 +131,18 @@ class RESTestParser:
 					headers=headers,
 				)
 
+		# get current time in milliseconds
+		end_time = int ( round ( 1000 * time.time () ) )
+
 		if not self.quiet:
 			if res.status_code < 300:
-				status = colored ( "%-3s" % res.status_code, 'green' )
+				status = xcolored (self,  "%-3s" % res.status_code, 'green' )
 			elif res.status_code < 500:
-				status = colored ( "%-3s" % res.status_code, 'yellow', 'on_grey', ['reverse' ] )
+				status = xcolored ( self, "%-3s" % res.status_code, 'yellow', 'on_grey', ['reverse' ] )
 			else:
-				status = colored ( "%-3s" % res.status_code, 'red', 'on_grey', ['reverse', 'blink' ] )
+				status = xcolored ( self, "%-3s" % res.status_code, 'red', 'on_grey', ['reverse', 'blink' ] )
 
-			sys.stdout.write ( " - status: %s - t: %s ms\n" % ( status, res.elapsed.microseconds / 1000 ) )
+			sys.stdout.write ( " - status: %s - t: %s ms / %s s\n" % ( status, ( end_time - start_time ), ( end_time - start_time ) / 1000 ) )
 
 		return res
 
@@ -173,7 +180,7 @@ class RESTestParser:
 			print (
 				"\n%s====== %s" % (
 					self.rt._tabs (),
-					colored ( title  , 'green' )
+					xcolored ( self, title  , 'green' )
 				)
 			)
 
