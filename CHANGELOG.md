@@ -1,5 +1,8 @@
 # restest  changelog
 
+## v1.92:
+	- ADD: support for `--prefix` option in `restest` command
+
 ## v1.91
 	- ADD: custom headers support
 	- ADD: --no-colors option to disable colors in output

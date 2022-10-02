@@ -11,8 +11,8 @@ from .engine import RESTest
 from .cols import xcolored
 
 class RESTestParser:
-	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False, postman = None, curl = False, dry = False, delay = 0, no_colors = False  ):
-		self.rt = RESTest ( quiet = quiet, log_file = log_file, postman = postman, curl = curl, dry = dry, delay = delay, no_colors = no_colors )
+	def __init__ ( self, base_url = None, stop_on_error = None, log_file = None, quiet = False, postman = None, curl = False, dry = False, delay = 0, no_colors = False, prefix = ''  ):
+		self.rt = RESTest ( quiet = quiet, log_file = log_file, postman = postman, curl = curl, dry = dry, delay = delay, no_colors = no_colors, prefix = prefix )
 
 		self._batches = {}
 
@@ -22,6 +22,8 @@ class RESTestParser:
 		self.quiet = quiet
 		self.delay = delay
 		self.no_colors = no_colors
+		# API prefix URL  (append to base_url)
+		self.prefix = prefix
 
 		self._paths = []
 		self._included = {}

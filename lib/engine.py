@@ -17,7 +17,7 @@ from .cols import xcolored as _c
 
 
 class RESTest:
-	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False, delay = 0, headers = None, no_colors = False ):
+	def __init__ ( self, base_url = '', log_file = '', stop_on_error = True, quiet = False, postman = None, curl = False, dry = False, delay = 0, headers = None, no_colors = False, prefix = '' ):
 		if not headers: headers = {}
 
 		self.quiet = quiet
@@ -28,6 +28,7 @@ class RESTest:
 		self.dump_curl_on_console = curl
 		self.delay = delay
 		self.no_colors = no_colors
+		self.prefix = prefix
 
 		self.globals = {}		# Global var / values for requests
 
@@ -47,6 +48,12 @@ class RESTest:
 		self._errors = 0
 
 		self.session = requests.Session ()
+
+		# Base URL and Prefix
+		if not self.prefix: self.prefix = ""
+		if self.prefix.startswith( "/" ): self.prefix = self.prefix[1:]
+		if self.prefix.endswith( "/" ): self.prefix = self.prefix[:-1]
+		if self.base_url.endswith( "/" ): self.base_url = self.base_url[:-1]
 
 	def _tabs ( self, indent = 0 ):
 		return "\t" * ( len ( self.sections ) + indent )
@@ -131,10 +138,13 @@ Raw Response: %s
 	def _resolve_url ( self, endpoint ):
 		if endpoint.lower ().find ( "http:" ) != -1:  return endpoint
 		if endpoint.lower ().find ( "https:" ) != -1: return endpoint
-		if endpoint.startswith ( "/" ):
-			return self.base_url + endpoint
 
-		return self.base_url + "/" + endpoint
+		base_url = self.base_url + "/" + self.prefix
+
+		if endpoint.startswith ( "/" ):
+			return base_url + endpoint
+
+		return base_url + "/" + endpoint
 
 	def _expand_list ( self, lst ):
 		res = []
