@@ -142,7 +142,7 @@ Raw Response: %s
 		base_url = self.base_url + "/" + self.prefix
 
 		if endpoint.startswith ( "/" ):
-			return base_url + endpoint
+			return self.base_url + endpoint
 
 		return base_url + "/" + endpoint
 
