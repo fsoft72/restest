@@ -41,6 +41,9 @@ class RESTest:
 		# These are the global headers that will be added to all requests
 		self.headers = headers
 
+		# These are the global cookies that will be added to all requests
+		self.cookies = {}
+
 		self.stop_on_error = stop_on_error
 		self.sections = []
 
@@ -134,6 +137,16 @@ Raw Response: %s
 			headers [ k ] = self._expand_var ( str ( v ) )
 
 		return headers
+
+	def _mk_cookies ( self, local_cookies ):
+		if not local_cookies: local_cookies = {}
+
+		cookies = self.cookies.copy()
+
+		for k, v in local_cookies.items():
+			cookies [ k ] = self._expand_var ( str ( v ) )
+
+		return cookies
 
 	def _resolve_url ( self, endpoint ):
 		if endpoint.lower ().find ( "http:" ) != -1:  return endpoint
@@ -284,18 +297,27 @@ Raw Response: %s
 		return res
 
 
-	def _req( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json", headers = None ):
+	def _req( self, mode, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json", headers = None, cookies = None ):
 		endpoint = self._expand_data ( { "endpoint" : endpoint } ) [ 'endpoint' ]
 
 		url = self._resolve_url ( endpoint )
 		headers = self._mk_headers ( authenticated = authenticated, local_headers = headers )
+		cookies = self._mk_cookies ( local_cookies = cookies )
 
 		if type(data) is list:
 			data = self._expand_data_list ( data )
 		else:
 			data = self._expand_data ( data )
 
-		obj = requests if no_cookies else self.session
+		if no_cookies:
+			obj = requests
+		else:
+			obj = self.session
+
+			# set cookies
+			for k, v in cookies.items ():
+				self.session.cookies.set ( k, v )
+
 		if mode == "DELETE":
 			m = obj.delete
 		elif mode == "GET":
@@ -362,9 +384,9 @@ Raw Response: %s
 
 		return r
 
-	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json", headers = None ):
+	def do_EXEC ( self, meth, endpoint, data = {}, authenticated = True, status_code = 200, skip_error = False, no_cookies = False, max_exec_time = 0, files = None, title = "", content = "json", headers = None, cookies = None ):
 		if self.delay: time.sleep ( self.delay // 1000 )
-		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time, files = files, title = title, content=content, headers=headers )
+		return self._req ( meth, endpoint, data, authenticated, status_code, skip_error = skip_error, no_cookies=no_cookies, max_exec_time = max_exec_time, files = files, title = title, content=content, headers=headers, cookies = cookies )
 
 	def fields( self, resp, fields ):
 		j = resp.json ()

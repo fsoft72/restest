@@ -2,6 +2,7 @@
 
 ## v1.92:
 	- ADD: support for `--prefix` option in `restest` command
+	- ADD: support for request cookies
 
 ## v1.91
 	- ADD: custom headers support

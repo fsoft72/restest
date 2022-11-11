@@ -110,6 +110,9 @@ class RESTestParser:
 		# New 1.91 - support for custom headers in single call
 		headers = act.get ( 'headers', {} )
 
+		# New 1.92 - support for custom cookies in single call
+		cookies = act.get ( 'cookies', {} )
+
 		ignore = False
 		if "ignore_error" in act:
 			ignore = act [ 'ignore_error' ]
@@ -131,6 +134,7 @@ class RESTestParser:
 					files = files,
 					content=content,
 					headers=headers,
+					cookies=cookies,
 				)
 
 		# get current time in milliseconds
