@@ -529,7 +529,7 @@ Raw Response: %s
 			err = self._check ( chk, field, v )
 
 			if v == "__NOT_FOUND__":
-				return self._error ( "FIELD: %s missing %s" % ( field, json.dumps ( j, default = str ) ) )
+				return self._error ( "FIELD: %s missing %s" % ( field, json.dumps ( j, default = str, indent = 2 ) ) )
 
 			if err:
 				return self._error ( err )
