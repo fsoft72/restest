@@ -7,14 +7,13 @@ rx_split = re.compile(r"([.!=[\]])")
 
 def _is_int(txt):
     try:
-        num = int(str(txt), 10)
+        int(str(txt), 10)
         return True
-    except:
+    except:  # noqa
         return False
 
 
 def _parse_square(tokens, pos):
-    res = []
     tok = tokens[pos]
 
     if _is_int(tok):
@@ -44,21 +43,21 @@ def _parser(tokens, pos, is_pattern=False):
         if not tok:
             continue
 
-        if tok not in ('.', '!', '=', '[', ']'):
+        if tok not in (".", "!", "=", "[", "]"):
             if not is_pattern:
                 res.append({"mode": "label", "value": tok})
             else:
                 res.append({"mode": "pattern", "value": tok})
 
-        elif tok == '[':
+        elif tok == "[":
             parsed, pos = _parse_square(tokens, pos)
             res.append(parsed)
-        elif tok == ']':
+        elif tok == "]":
             return res, pos
-        elif tok == '=':
+        elif tok == "=":
             parsed, pos = _extract_value(tokens, pos, equal=True)
             res.append(parsed)
-        elif tok == '!':
+        elif tok == "!":
             parsed, pos = _extract_value(tokens, pos, equal=False)
             res.append(parsed)
 
@@ -72,8 +71,8 @@ def path_parser(path):
 
 
 def _find_in_list(field_name, tok, elem: list):
-    equal = tok['mode'] == 'equal'
-    val = str(tok['value'])
+    equal = tok["mode"] == "equal"
+    val = str(tok["value"])
 
     pos = 0
     found = False
@@ -87,42 +86,48 @@ def _find_in_list(field_name, tok, elem: list):
         if str(el[field_name]) == val:
             found = True
 
-        if not equal: found = not found
+        if not equal:
+            found = not found
 
-        if found: break
+        if found:
+            break
 
         pos += 1
 
-    if not found: return None, None
+    if not found:
+        return None, None
     return el, None
 
 
 def _expand(parsed_path, pos, dct):
     elem = dct
-    field_name = ''
-    err = ''
+    field_name = ""
+    err = ""
     while pos < len(parsed_path):
         tok = parsed_path[pos]
         pos += 1
 
         if isinstance(tok, list):
             elem, err = _expand(tok, 0, elem)
-        elif tok['mode'] == 'label':
-            n = tok['value']
+        elif tok["mode"] == "label":
+            n = tok["value"]
             if n in elem:
-                elem = elem[n]  #tok [ 'value' ] ]
+                elem = elem[n]  # tok [ 'value' ] ]
             else:
                 err = "Could not find key: '%s'" % n
-        elif tok['mode'] == 'pos':
-            _pos = tok['value']
+        elif tok["mode"] == "pos":
+            _pos = tok["value"]
             if len(elem) > _pos:
                 elem = elem[_pos]
             else:
                 err = "Index out of bounds: %s (max: %s) [%s]" % (
-                    _pos, len(elem) - 1, elem)
-        elif tok['mode'] == 'pattern':
-            field_name = tok['value']
-        elif tok['mode'] in ('equal', 'not_equal'):
+                    _pos,
+                    len(elem) - 1,
+                    elem,
+                )
+        elif tok["mode"] == "pattern":
+            field_name = tok["value"]
+        elif tok["mode"] in ("equal", "not_equal"):
             elem, err = _find_in_list(field_name, tok, elem)
 
         if err:
@@ -139,68 +144,67 @@ def expand_value(path, dct):
     return res, err
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import json
-    #print ( path_parser ( "first.second.[0].third" ) )
-    #print ( json.dumps ( path_parser ( "first.second.[user.key=5].third" ), indent = 4 ) )
-    #print ( path_parser ( "first.second.[user.email!=example@gmail.com].third" ) )
-    #print ( json.dumps ( path_parser ( "first.[3].[user.key=23].second.[1].name" ), indent = 4 ) )
-    #print ( json.dumps ( path_parser ( "first.[sub[user.key=3]].second" ), indent=4 ) )
+
+    # print ( path_parser ( "first.second.[0].third" ) )
+    # print ( json.dumps ( path_parser ( "first.second.[user.key=5].third" ), indent = 4 ) )
+    # print ( path_parser ( "first.second.[user.email!=example@gmail.com].third" ) )
+    # print ( json.dumps ( path_parser ( "first.[3].[user.key=23].second.[1].name" ), indent = 4 ) )
+    # print ( json.dumps ( path_parser ( "first.[sub[user.key=3]].second" ), indent=4 ) )
     x = """
-	{
-		"type1": [
-			{
-				"name": "hello",
-				"value": "world"
-			},
-			{
-				"name": "ciao",
-				"value": "mondo"
-			}
-		],
-		"users": [
-			{
-				"email": "test01@example.com",
-				"id": 123,
-				"perms": [
-					"admin",
-					"work",
-					"home"
-				]
-			},
-			{
-				"email": "test02@example.com",
-				"id": 999,
-				"perms": [
-					"do",
-					"this"
-				]
-			}
-		],
-		"nested": {
-			"opts": [
-				{
-					"name": "opt1",
-					"children": [
-						{
-							"name": "child1",
-							"value": 1
-						},
-						{
-							"name": "child2",
-							"value": 2
-						}
-					]
-				}
-			]
-		}
-	}
-	"""
+    {
+        "type1": [
+            {
+                "name": "hello",
+                "value": "world"
+            },
+            {
+                "name": "ciao",
+                "value": "mondo"
+            }
+        ],
+        "users": [
+            {
+                "email": "test01@example.com",
+                "id": 123,
+                "perms": [
+                    "admin",
+                    "work",
+                    "home"
+                ]
+            },
+            {
+                "email": "test02@example.com",
+                "id": 999,
+                "perms": [
+                    "do",
+                    "this"
+                ]
+            }
+        ],
+        "nested": {
+            "opts": [
+                {
+                    "name": "opt1",
+                    "children": [
+                        {
+                            "name": "child1",
+                            "value": 1
+                        },
+                        {
+                            "name": "child2",
+                            "value": 2
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+    """
     dct = json.loads(x)
-    #print ( expand_value ( "type1.[0].name", dct ) )
-    #print ( expand_value ( "type1.[0].value", dct ) )
-    #print ( expand_value ( "type1.[name=ciao].value", dct ) )
-    #print ( expand_value ( "users.[id=123].perms", dct ) )
-    print(
-        expand_value("nested.opts[name=opt1].children[name!=child2].value",
-                     dct))
+    # print ( expand_value ( "type1.[0].name", dct ) )
+    # print ( expand_value ( "type1.[0].value", dct ) )
+    # print ( expand_value ( "type1.[name=ciao].value", dct ) )
+    # print ( expand_value ( "users.[id=123].perms", dct ) )
+    print(expand_value("nested.opts[name=opt1].children[name!=child2].value", dct))
