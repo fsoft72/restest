@@ -246,6 +246,8 @@ Raw Response: %s
             )
             self._dump_globals()
 
+            sys.exit(0)
+
         return v
 
     def _dump_globals(self):
@@ -590,15 +592,23 @@ Raw Response: %s
                     _c(self, current_val, "yellow"),
                 )
         elif mode in ("GT", ">"):
+            if isinstance(current_val, str):
+                current_val = int(current_val)
             if current_val <= expected_val:
                 return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
         elif mode in ("GTE", ">="):
+            if isinstance(current_val, str):
+                current_val = int(current_val)
             if current_val < expected_val:
                 return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
         elif mode in ("LT", "<"):
+            if isinstance(current_val, str):
+                current_val = int(current_val)
             if current_val >= expected_val:
                 return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
         elif mode in ("LTE", "<="):
+            if isinstance(current_val, str):
+                current_val = int(current_val)
             if current_val <= expected_val:
                 return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
         elif mode in ("SIZE-GT", "()>"):
