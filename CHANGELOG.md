@@ -1,8 +1,11 @@
 # restest  changelog
 
 ## v1.92:
+	- Refactor: all code has been refactored with blackify
 	- ADD: support for `--prefix` option in `restest` command
 	- ADD: support for request cookies
+	- ENH: better path parsing capabilites with support for `'` and `"` strings
+	- ENH: better error reporting
 
 ## v1.91
 	- ADD: custom headers support

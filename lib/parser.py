@@ -13,7 +13,7 @@ import bz2
 import time
 
 from .engine import RESTest
-from .cols import xcolored
+from .cols import xcolored as _c
 
 
 class RESTestParser:
@@ -128,11 +128,11 @@ class RESTestParser:
                 "%s %s %s %s %s %s"
                 % (
                     self.rt._tabs(),
-                    xcolored(self, "%-6s" % m, _col),
-                    xcolored(self, "%-35s" % act.get("url", ""), "yellow"),
-                    xcolored(self, params, "green"),
+                    _c(self, "%-6s" % m, _col),
+                    _c(self, "%-35s" % act.get("url", ""), "yellow"),
+                    _c(self, params, "green"),
                     "auth:",
-                    xcolored(self, auth, "blue"),
+                    _c(self, auth, "blue"),
                 )
             )
             sys.stdout.flush()
@@ -149,7 +149,7 @@ class RESTestParser:
         elif "skip_error" in act:
             sys.stderr.write(
                 "%s 'skip_error' is deprecated use 'ignore_error' in actions\n"
-                % (xcolored(self, "WARNING", "yellow"))
+                % (_c(self, "WARNING", "yellow"))
             )
             ignore = act["skip_error"]
 
@@ -177,13 +177,13 @@ class RESTestParser:
 
         if not self.quiet:
             if res.status_code < 300:
-                status = xcolored(self, "%-3s" % res.status_code, "green")
+                status = _c(self, "%-3s" % res.status_code, "green")
             elif res.status_code < 500:
-                status = xcolored(
+                status = _c(
                     self, "%-3s" % res.status_code, "yellow", "on_grey", ["reverse"]
                 )
             else:
-                status = xcolored(
+                status = _c(
                     self,
                     "%-3s" % res.status_code,
                     "red",
@@ -237,7 +237,7 @@ class RESTestParser:
     def _method_section(self, act):
         title = act.get("title", act.get("name", "SECTION TITLE MISSING"))
         if not self.quiet:
-            print("\n%s====== %s" % (self.rt._tabs(), xcolored(self, title, "green")))
+            print("\n%s====== %s" % (self.rt._tabs(), _c(self, title, "green")))
 
         self.rt.section_start(title)
         self._actions(act["actions"])
@@ -296,7 +296,9 @@ class RESTestParser:
 
     def _method_batch_exec(self, act):
         name = act["name"].lower()
-        actions = self._batches[name]
+        actions = self._batches.get(name)
+        if not actions:
+            # pass
         self._actions(actions)
 
     def _method_rem(self, act):
