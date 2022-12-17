@@ -246,12 +246,12 @@ Raw Response: %s
             )
             self._dump_globals()
 
-            sys.exit(0)
+            sys.exit(1)
 
         return v
 
-    def _dump_globals(self):
-        keys = list(self.globals.keys())
+    def _dump_keys(self, dct, no_values=False):
+        keys = list(dct.keys())
         if not keys:
             return
 
@@ -263,7 +263,13 @@ Raw Response: %s
             # pad k to max_len
             sk = k.ljust(max_len)
 
-            sys.stderr.write("    %s : %s\n" % (_c(self, sk, "white"), self.globals[k]))
+            if no_values:
+                sys.stderr.write("    - %s\n" % (_c(self, sk, "white")))
+            else:
+                sys.stderr.write("    - %s : %s\n" % (_c(self, sk, "white"), dct[k]))
+
+    def _dump_globals(self):
+        self._dump_keys(self.globals)
 
     def _expand_data(self, data):
         res = {}

@@ -298,7 +298,13 @@ class RESTestParser:
         name = act["name"].lower()
         actions = self._batches.get(name)
         if not actions:
-            # pass
+            sys.stderr.write(
+                _c(self, "\nERROR:", "red")
+                + " could not execute: %s\n" % _c(self, name, "white")
+            )
+            self.rt._dump_keys(self._batches, no_values=True)
+            sys.exit(1)
+
         self._actions(actions)
 
     def _method_rem(self, act):
