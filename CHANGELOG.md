@@ -1,6 +1,7 @@
 # restest  changelog
 
 ## v1.92:
+	- Now code is formatted using flake8
 	- ADD: support for `--prefix` option in `restest` command
 	- ADD: support for request cookies
 
