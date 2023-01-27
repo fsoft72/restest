@@ -2,6 +2,8 @@
 
 ## v2.00 - DEV BRANCH
 
+	- ADD: support for timing CVS output
+
 ## v1.92:
 	- Now code is formatted using flake8
 	- ADD: support for `--prefix` option in `restest` command

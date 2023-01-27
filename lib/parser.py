@@ -10,10 +10,10 @@ import json
 import os
 import gzip
 import bz2
-import time
 
 from .engine import RESTest
 from .cols import xcolored
+from .timings import Timings
 
 
 class RESTestParser:
@@ -55,6 +55,9 @@ class RESTestParser:
         self._paths = []
         self._included = {}
 
+        # New 2.0 - support for recording of timings
+        self.timings = Timings()
+
     def open(self, fname):
         self.script = self._json_load(fname)
 
@@ -74,6 +77,9 @@ class RESTestParser:
             self.rt.log_file = self.forced_log_file
 
         self._actions(self.script["actions"])
+
+    def export_csv(self, fname):
+        self.timings.export_csv(fname)
 
     def _actions(self, actions):
         for act in actions:
@@ -153,8 +159,7 @@ class RESTestParser:
             )
             ignore = act["skip_error"]
 
-        # get current time in milliseconds
-        start_time = int(round(1000 * time.time()))
+        self.timings.start(m, act["url"], params)
 
         res = self.rt.do_EXEC(
             m,
@@ -172,8 +177,9 @@ class RESTestParser:
             cookies=cookies,
         )
 
-        # get current time in milliseconds
-        end_time = int(round(1000 * time.time()))
+        data = self.timings.end(res.status_code)
+        start_time = data["start_time"]
+        end_time = data["end_time"]
 
         if not self.quiet:
             if res.status_code < 300:
