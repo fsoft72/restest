@@ -5,7 +5,11 @@ Scriptable REST calls test software written in Python
 
 With `restest` you can control return responses and test values against an expected result / behaviour.
 
-**NOTE**: for complete documentation, please refer to [restest documentation](https://liwe.org/tools/restest/)
+**NOTE**: for full documentation, please refer to [restest documentation](https://liwe.org/tools/restest/)
+
+**NOTE**: The complete roadmap of the project, please visit here: [restest project](https://github.com/users/fsoft72/projects/1/views/1)
+
+I am currently working on a `v2` version with brand new features and some code cleanup. You can test it from the `2.0` branch.
 
 ## Main Features
 
