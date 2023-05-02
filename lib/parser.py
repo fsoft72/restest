@@ -14,6 +14,7 @@ import bz2
 from .engine import RESTest
 from .cols import xcolored
 from .timings import Timings
+from .utils import deepcopy
 
 
 class RESTestParser:
@@ -111,7 +112,7 @@ class RESTestParser:
 
         return files
 
-    def _send_req(self, act):
+    def _send_req(self, act, counter):
         m = act["method"].upper()
 
         auth = act.get("auth", True)
@@ -175,6 +176,9 @@ class RESTestParser:
             content=content,
             headers=headers,
             cookies=cookies,
+            internal_info={
+                "counter": counter + 1,
+            },
         )
 
         data = self.timings.end(res.status_code)
@@ -205,15 +209,20 @@ class RESTestParser:
         return res
 
     def _method_exec(self, act):
-        res = self._send_req(act)
+        repeat = act.get("repeat", 1)
+        orig_act = deepcopy(act)
 
-        # if 'save_cookies' in act: self.rt.save_cookies ( res, act [ 'save_cookies' ] )
-        if "fields" in act:
-            self.rt.fields(res, act["fields"])
-        if "tests" in act:
-            self.rt.check(res, act["tests"])
-        if "dumps" in act:
-            self.rt.dumps(res, act["dumps"])
+        for i in range(repeat):
+            act = deepcopy(orig_act)
+            res = self._send_req(act, i)
+
+            # if 'save_cookies' in act: self.rt.save_cookies ( res, act [ 'save_cookies' ] )
+            if "fields" in act:
+                self.rt.fields(res, act["fields"])
+            if "tests" in act:
+                self.rt.check(res, act["tests"])
+            if "dumps" in act:
+                self.rt.dumps(res, act["dumps"])
 
     def _method_get(self, act):
         if "method" not in act:
