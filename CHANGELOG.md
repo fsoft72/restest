@@ -2,7 +2,8 @@
 
 ## v2.00 - DEV BRANCH
 
-	- ADD: support for timing CVS output
+	- ADD: support for timing CSV output
+  - ADD: support for `repeat` attribute in requests
 
 ## v1.92:
 	- Now code is formatted using flake8
