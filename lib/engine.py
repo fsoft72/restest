@@ -228,6 +228,10 @@ Raw Response: %s
         if n.find("%(") == -1:
             return x
 
+        if n.find("__internal_") != -1:
+            n = n.replace("__internal_", "")
+            return n % self._internal_info
+
         return n % self.globals
 
     def _expand_var(self, v):
@@ -463,7 +467,11 @@ Raw Response: %s
         content="json",
         headers=None,
         cookies=None,
+        internal_info=None,
     ):
+        # v2.0 - added internal_info dict to the Engine class
+        self._internal_info = internal_info
+
         if self.delay:
             time.sleep(self.delay // 1000)
         return self._req(
@@ -528,6 +536,7 @@ Raw Response: %s
 
     def _expand_value(self, dct, key):
         key = self._expand_var(key)
+
         res, err = expand_value(key, dct)
 
         if err:

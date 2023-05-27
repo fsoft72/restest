@@ -10,10 +10,11 @@ import json
 import os
 import gzip
 import bz2
-import time
 
 from .engine import RESTest
 from .cols import xcolored
+from .timings import Timings
+from .utils import deepcopy
 
 
 class RESTestParser:
@@ -55,6 +56,9 @@ class RESTestParser:
         self._paths = []
         self._included = {}
 
+        # New 2.0 - support for recording of timings
+        self.timings = Timings()
+
     def open(self, fname):
         self.script = self._json_load(fname)
 
@@ -74,6 +78,9 @@ class RESTestParser:
             self.rt.log_file = self.forced_log_file
 
         self._actions(self.script["actions"])
+
+    def export_csv(self, fname):
+        self.timings.export_csv(fname)
 
     def _actions(self, actions):
         for act in actions:
@@ -105,7 +112,7 @@ class RESTestParser:
 
         return files
 
-    def _send_req(self, act):
+    def _send_req(self, act, counter):
         m = act["method"].upper()
 
         auth = act.get("auth", True)
@@ -153,8 +160,7 @@ class RESTestParser:
             )
             ignore = act["skip_error"]
 
-        # get current time in milliseconds
-        start_time = int(round(1000 * time.time()))
+        self.timings.start(m, act["url"], params)
 
         res = self.rt.do_EXEC(
             m,
@@ -170,10 +176,14 @@ class RESTestParser:
             content=content,
             headers=headers,
             cookies=cookies,
+            internal_info={
+                "counter": counter + 1,
+            },
         )
 
-        # get current time in milliseconds
-        end_time = int(round(1000 * time.time()))
+        data = self.timings.end(res.status_code)
+        start_time = data["start_time"]
+        end_time = data["end_time"]
 
         if not self.quiet:
             if res.status_code < 300:
@@ -199,15 +209,20 @@ class RESTestParser:
         return res
 
     def _method_exec(self, act):
-        res = self._send_req(act)
+        repeat = act.get("repeat", 1)
+        orig_act = deepcopy(act)
 
-        # if 'save_cookies' in act: self.rt.save_cookies ( res, act [ 'save_cookies' ] )
-        if "fields" in act:
-            self.rt.fields(res, act["fields"])
-        if "tests" in act:
-            self.rt.check(res, act["tests"])
-        if "dumps" in act:
-            self.rt.dumps(res, act["dumps"])
+        for i in range(repeat):
+            act = deepcopy(orig_act)
+            res = self._send_req(act, i)
+
+            # if 'save_cookies' in act: self.rt.save_cookies ( res, act [ 'save_cookies' ] )
+            if "fields" in act:
+                self.rt.fields(res, act["fields"])
+            if "tests" in act:
+                self.rt.check(res, act["tests"])
+            if "dumps" in act:
+                self.rt.dumps(res, act["dumps"])
 
     def _method_get(self, act):
         if "method" not in act:

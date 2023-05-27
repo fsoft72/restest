@@ -5,7 +5,7 @@
 # written by Fabio Rotondo <fabio.rotondo@gmail.com>
 #
 
-VERSION = "1.92"
+VERSION = "2.0-dev"
 
 import argparse
 import os
@@ -85,6 +85,7 @@ parser.add_argument("--quiet", action="store_true", help="If set, no output on c
 parser.add_argument("-v", "--version", action="version", version=VERSION)
 parser.add_argument("--delay", type=int, help="Delay in milliseconds between requests")
 parser.add_argument("--prefix", type=str, help="The API prefix URL")
+parser.add_argument("--csv", type=str, help="Export results to a CSV file")
 
 
 args = parser.parse_args()
@@ -147,3 +148,6 @@ print(
 
 if args.env_save:
     open(args.env_save, "w").write(json.dumps(rt.rt.globals, indent=4, default=str))
+
+if args.csv:
+    rt.export_csv(args.csv)
