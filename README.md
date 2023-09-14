@@ -1,6 +1,8 @@
 # restest
 Scriptable REST calls test software written in Python
 
+[![Watch the video](https://i.ytimg.com/vi/W2xV3mGT2RA/hq720.jpg)](https://youtu.be/W2xV3mGT2RA)
+
 `restest` actions are defined inside a JSON file.
 
 With `restest` you can control return responses and test values against an expected result / behaviour.
