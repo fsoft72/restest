@@ -474,6 +474,7 @@ Raw Response: %s
 
         if self.delay:
             time.sleep(self.delay // 1000)
+
         return self._req(
             meth,
             endpoint,

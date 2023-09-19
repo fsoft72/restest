@@ -90,7 +90,14 @@ class RESTestParser:
             action = act.get("method", act.get("action", "")).lower()
             if action:
                 meth = getattr(self, "_method_" + action)
-                meth(act)
+                res = meth(act)
+                if not res:
+                    sys.stderr.write(
+                        "%s: stopping on unhandled error\n\n"
+                        % (xcolored(self, "ERROR", "red", "on_white", ["reverse"]),)
+                    )
+
+                    sys.exit(1)
 
             if "actions" in act:
                 self._actions(act["actions"])
@@ -162,51 +169,64 @@ class RESTestParser:
 
         self.timings.start(m, act["url"], params)
 
-        res = self.rt.do_EXEC(
-            m,
-            act["url"],
-            params,
-            auth,
-            status_code=act.get("status_code", act.get("status", 200)),
-            skip_error=ignore,
-            no_cookies=act.get("no_cookies", False),
-            max_exec_time=act.get("max_time", 0),
-            title=act.get("title", "No title provided"),
-            files=files,
-            content=content,
-            headers=headers,
-            cookies=cookies,
-            internal_info={
-                "counter": counter + 1,
-            },
-        )
-
-        data = self.timings.end(res.status_code)
-        start_time = data["start_time"]
-        end_time = data["end_time"]
-
-        if not self.quiet:
-            if res.status_code < 300:
-                status = xcolored(self, "%-3s" % res.status_code, "green")
-            elif res.status_code < 500:
-                status = xcolored(
-                    self, "%-3s" % res.status_code, "yellow", "on_grey", ["reverse"]
-                )
-            else:
-                status = xcolored(
-                    self,
-                    "%-3s" % res.status_code,
-                    "red",
-                    "on_grey",
-                    ["reverse", "blink"],
-                )
-
-            sys.stdout.write(
-                " - status: %s - t: %s ms / %s s\n"
-                % (status, (end_time - start_time), (end_time - start_time) / 1000)
+        try:
+            res = self.rt.do_EXEC(
+                m,
+                act["url"],
+                params,
+                auth,
+                status_code=act.get("status_code", act.get("status", 200)),
+                skip_error=ignore,
+                no_cookies=act.get("no_cookies", False),
+                max_exec_time=act.get("max_time", 0),
+                title=act.get("title", "No title provided"),
+                files=files,
+                content=content,
+                headers=headers,
+                cookies=cookies,
+                internal_info={
+                    "counter": counter + 1,
+                },
             )
 
-        return res
+            data = self.timings.end(res.status_code)
+            start_time = data["start_time"]
+            end_time = data["end_time"]
+
+            if not self.quiet:
+                if res.status_code < 300:
+                    status = xcolored(self, "%-3s" % res.status_code, "green")
+                elif res.status_code < 500:
+                    status = xcolored(
+                        self, "%-3s" % res.status_code, "yellow", "on_grey", ["reverse"]
+                    )
+                else:
+                    status = xcolored(
+                        self,
+                        "%-3s" % res.status_code,
+                        "red",
+                        "on_grey",
+                        ["reverse", "blink"],
+                    )
+
+                sys.stdout.write(
+                    " - status: %s - t: %s ms / %s s\n"
+                    % (status, (end_time - start_time), (end_time - start_time) / 1000)
+                )
+
+            return res
+        except Exception as e:
+            if not self.quiet:
+                sys.stdout.write(
+                    " - status: %s - E: %s\n"
+                    % (
+                        xcolored(
+                            self, "ERROR", "red", "on_white", ["reverse", "blink"]
+                        ),
+                        e,
+                    )
+                )
+            return None
 
     def _method_exec(self, act):
         repeat = act.get("repeat", 1)
@@ -216,6 +236,9 @@ class RESTestParser:
             act = deepcopy(orig_act)
             res = self._send_req(act, i)
 
+            if not res:
+                return False
+
             # if 'save_cookies' in act: self.rt.save_cookies ( res, act [ 'save_cookies' ] )
             if "fields" in act:
                 self.rt.fields(res, act["fields"])
@@ -224,30 +247,32 @@ class RESTestParser:
             if "dumps" in act:
                 self.rt.dumps(res, act["dumps"])
 
+        return True
+
     def _method_get(self, act):
         if "method" not in act:
             act["method"] = "get"
-        self._method_exec(act)
+        return self._method_exec(act)
 
     def _method_post(self, act):
         if "method" not in act:
             act["method"] = "post"
-        self._method_exec(act)
+        return self._method_exec(act)
 
     def _method_delete(self, act):
         if "method" not in act:
             act["method"] = "delete"
-        self._method_exec(act)
+        return self._method_exec(act)
 
     def _method_patch(self, act):
         if "method" not in act:
             act["method"] = "patch"
-        self._method_exec(act)
+        return self._method_exec(act)
 
     def _method_put(self, act):
         if "method" not in act:
             act["method"] = "put"
-        self._method_exec(act)
+        return self._method_exec(act)
 
     def _method_section(self, act):
         title = act.get("title", act.get("name", "SECTION TITLE MISSING"))
@@ -263,14 +288,22 @@ class RESTestParser:
                 "%s=========================================== \n" % (self.rt._tabs(),)
             )
 
+        return True
+
     def _method_copy(self, act):
         self.rt.copy_val(act["from"], act["to"])
+
+        return True
 
     def _method_dump(self, act):
         self.rt.dump(act["fields"], act.get("print"))
 
+        return True
+
     def _method_set(self, act):
         self.rt.set_val(act["key"], act["value"])
+
+        return True
 
     def _resolve_fname(self, fname):
         if not fname.startswith("/"):
@@ -304,23 +337,31 @@ class RESTestParser:
 
         self._paths.pop()
 
+        return True
+
     def _method_batch_set(self, act):
         name = act["name"].lower()
         actions = act["actions"]
         self._batches[name] = actions
+
+        return True
 
     def _method_batch_exec(self, act):
         name = act["name"].lower()
         actions = self._batches[name]
         self._actions(actions)
 
+        return True
+
     def _method_rem(self, act):
-        pass
+        return True
 
     def _method_code(self, act):
         code = ("\n".join(act["code"])) % self.rt.globals
         print("---- CODE: ", code)
         exec(code)
+
+        return True
 
     def _method_if(self, act):
         err = self.rt._check(act, act["field"], act.get("value", 0))
