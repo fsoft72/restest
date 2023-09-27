@@ -92,6 +92,7 @@ class RESTestParser:
                 meth = getattr(self, "_method_" + action)
                 res = meth(act)
                 if not res:
+                    print("=== RES: ", json.dumps(res, indent=4, default=str))
                     sys.stderr.write(
                         "%s: stopping on unhandled error\n\n"
                         % (xcolored(self, "ERROR", "red", "on_white", ["reverse"]),)
@@ -226,6 +227,7 @@ class RESTestParser:
                         e,
                     )
                 )
+
             return None
 
     def _method_exec(self, act):
@@ -235,9 +237,6 @@ class RESTestParser:
         for i in range(repeat):
             act = deepcopy(orig_act)
             res = self._send_req(act, i)
-
-            if not res:
-                return False
 
             # if 'save_cookies' in act: self.rt.save_cookies ( res, act [ 'save_cookies' ] )
             if "fields" in act:
