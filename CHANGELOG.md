@@ -1,9 +1,13 @@
 # restest  changelog
 
-## v2.00 - DEV BRANCH
+## v2.00.1:
+
+    	- FIX: merged PR from danielerizzoarchivi for field `data` in postman generator
+
+## v2.00:
 
 	- ADD: support for timing CSV output
-  - ADD: support for `repeat` attribute in requests
+  	- ADD: support for `repeat` attribute in requests
 
 ## v1.92:
 	- Now code is formatted using flake8
