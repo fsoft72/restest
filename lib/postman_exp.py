@@ -12,7 +12,7 @@ class PostmanExporterItem:
         self.mode = mode
         self.name = None
         self.url = {}
-        self.data = data
+        self.data = json.loads(data)
         self.title = title
         self.body = None
         self.base_url = base_url
