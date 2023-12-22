@@ -31,6 +31,7 @@ class RESTest:
         headers=None,
         no_colors=False,
         prefix="",
+        auth_mode="auth",
     ):
         if not headers:
             headers = {}
@@ -44,6 +45,7 @@ class RESTest:
         self.delay = delay
         self.no_colors = no_colors
         self.prefix = prefix
+        self.auth_mode = auth_mode
 
         self.globals = {}  # Global var / values for requests
 

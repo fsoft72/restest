@@ -2,7 +2,9 @@
 
 ## v2.0.1
 
+    - ADD: --auth-mode option to set the default auth mode (auth or no)
     - ENH: better error reporting on corner cases
+    - ENH: command line options are now sorted in --help
 
 ## v2.00.1:
 

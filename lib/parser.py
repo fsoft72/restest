@@ -30,6 +30,7 @@ class RESTestParser:
         delay=0,
         no_colors=False,
         prefix="",
+        auth_mode="auth",
     ):
         self.rt = RESTest(
             quiet=quiet,
@@ -40,6 +41,7 @@ class RESTestParser:
             delay=delay,
             no_colors=no_colors,
             prefix=prefix,
+            auth_mode=auth_mode,
         )
 
         self._batches = {}
@@ -52,6 +54,7 @@ class RESTestParser:
         self.no_colors = no_colors
         # API prefix URL  (append to base_url)
         self.prefix = prefix
+        self.auth_mode = auth_mode
 
         self._paths = []
         self._included = {}
@@ -123,7 +126,8 @@ class RESTestParser:
     def _send_req(self, act, counter):
         m = act["method"].upper()
 
-        auth = act.get("auth", True)
+        # 2.0.1 - support for auth_mode flag
+        auth = act.get("auth", True if self.rt.auth_mode == "auth" else False)
         content = act.get("content", "json")
 
         files = self._parse_files(act.get("files", {}))
