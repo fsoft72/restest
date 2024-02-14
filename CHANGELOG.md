@@ -1,5 +1,9 @@
 # restest changelog
 
+## v2.0.2
+
+    - FIX: fixed a bug that prevented the fields field as a one element list to be expanded correctly
+
 ## v2.0.1
 
     - ADD: --auth-mode option to set the default auth mode (auth or no)

@@ -498,8 +498,12 @@ Raw Response: %s
 
         for k in fields:
             if isinstance(k, (list, tuple)):
-                json_key = k[0]
-                glob_key = k[1]
+                if len(k) == 2:
+                    json_key = k[0]
+                    glob_key = k[1]
+                else:
+                    json_key = k[0]
+                    glob_key = k[0]
             else:
                 glob_key = k
                 json_key = k
