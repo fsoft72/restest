@@ -366,6 +366,12 @@ class RESTestParser:
 
         return True
 
+    # 2.0.2 - support for sleep action
+    def _method_sleep(self, act):
+        self.rt.sleep(act["ms"])
+
+        return True
+
     def _method_if(self, act):
         err = self.rt._check(act, act["field"], act.get("value", 0))
 

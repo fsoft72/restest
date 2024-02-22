@@ -564,6 +564,10 @@ Raw Response: %s
 
         self.globals[_key] = _val
 
+    def sleep(self, _ms):
+        _ms = self._expand_var(_ms)
+        time.sleep(int(_ms) / 1000)
+
     def _check(self, chk, field, v):
         current_val = self._expand_var(v)
         expected_val = self._expand_var(chk.get("value"))
