@@ -156,6 +156,7 @@ class RESTestParser:
             )
             sys.stdout.flush()
 
+        # New 2.1.0 - support for skip flag
         if act.get("skip", False):
             if not self.quiet:
                 sys.stdout.write(" - %s\n" % xcolored(self, "SKIP", "yellow"))
