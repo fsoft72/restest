@@ -3,9 +3,6 @@
 ## v2.1.0
 
     - ADD: 'skip' attribute. If set to `true`, the request is skipped
-
-## v2.0.2
-
     - ADD: new action 'sleep' to wait for a number of milliseconds
     - FIX: fixed a bug that prevented the fields field as a one element list to be expanded correctly
 
