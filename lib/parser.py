@@ -156,6 +156,12 @@ class RESTestParser:
             )
             sys.stdout.flush()
 
+        if act.get("skip", False):
+            if not self.quiet:
+                sys.stdout.write(" - %s\n" % xcolored(self, "SKIP", "yellow"))
+                sys.stdout.flush()
+            return None
+
         # New 1.91 - support for custom headers in single call
         headers = act.get("headers", {})
 
