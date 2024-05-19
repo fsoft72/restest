@@ -358,7 +358,21 @@ class RESTestParser:
 
     def _method_batch_exec(self, act):
         name = act["name"].lower()
-        actions = self._batches[name]
+        actions = self._batches.get(name)
+
+        # 2.1.0 - support for batch not found
+        if not actions:
+            sys.stderr.write(
+                "%s: batch %s not found\n"
+                % (xcolored(self, "ERROR", "red", "on_white", ["reverse"]), name)
+            )
+
+            # List all available batches keys
+            for k in self._batches.keys():
+                print("  - %s\n" % k)
+
+            return False
+
         self._actions(actions)
 
         return True
