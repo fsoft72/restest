@@ -586,7 +586,15 @@ Raw Response: %s
         if mode in ("EXISTS", "EXIST", "!!", "NOT_NULL", "IS_NOT_NULL"):
             if (str(v) == "None") or (len(str(v)) == 0):
                 return "FIELD: %s is EMPTY" % (_c(self, field, "white"))
-        elif mode in ("EMPTY", "IS_EMPTY", "IS_NULL", "NULL", "@"):
+        elif mode in (
+            "EMPTY",
+            "IS_EMPTY",
+            "IS_NULL",
+            "NULL",
+            "NOT_EXISTS",
+            "NOT_EXIST",
+            "@",
+        ):
             if str(v) != "None":
                 return "FIELD: %s VALUE mismatch. Expected: Null - got: %s" % (
                     _c(self, field, "white"),
