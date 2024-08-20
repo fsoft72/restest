@@ -4,6 +4,7 @@
 
     - ADD: 'skip' attribute. If set to `true`, the request is skipped
     - ADD: new action 'sleep' to wait for a number of milliseconds
+    - ADD: new 'NOT_EXISTS' / 'NOT_EXIST' condition
     - FIX: fixed a bug that prevented the fields field as a one element list to be expanded correctly
 
 ## v2.0.1
