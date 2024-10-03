@@ -14,7 +14,7 @@ import bz2
 from .engine import RESTest
 from .cols import xcolored
 from .timings import Timings
-from .utils import deepcopy
+from .utils import deepcopy, size2str
 
 
 class RESTestParser:
@@ -205,6 +205,9 @@ class RESTestParser:
             start_time = data["start_time"]
             end_time = data["end_time"]
 
+            # 2.1.0 - support for response_size
+            res.size = size2str(len(res.content))
+
             if not self.quiet:
                 if res.status_code < 300:
                     status = xcolored(self, "%-3s" % res.status_code, "green")
@@ -222,8 +225,13 @@ class RESTestParser:
                     )
 
                 sys.stdout.write(
-                    " - status: %s - t: %s ms / %s s\n"
-                    % (status, (end_time - start_time), (end_time - start_time) / 1000)
+                    " size: %5s - status: %s - t: %s ms / %s s\n"
+                    % (
+                        res.size,  # 2.1.0 - support for response_size
+                        status,
+                        (end_time - start_time),
+                        (end_time - start_time) / 1000,
+                    )
                 )
 
             return res
