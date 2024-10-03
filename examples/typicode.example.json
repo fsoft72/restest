@@ -68,6 +68,11 @@
 						{
 							"field": "id",
 							"value": 10
+						},
+						{
+							"field": "rt:size",
+							"value": 250,
+							"mode": "lt"
 						}
 					]
 				},
