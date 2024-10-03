@@ -670,7 +670,12 @@ Raw Response: %s
             self._tests += 1
 
             field = self._expand_var(chk["field"])
-            v = self._expand_value(j, field)
+            # 2.1.0 - added support for rt: prefix and the rt:size field
+            if field == "rt:size":
+                v = str(resp.size)
+            else:
+                v = self._expand_value(j, field)
+
             err = self._check(chk, field, v)
 
             if v == "__NOT_FOUND__":
