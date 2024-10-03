@@ -206,7 +206,8 @@ class RESTestParser:
             end_time = data["end_time"]
 
             # 2.1.0 - support for response_size
-            res.size = size2str(len(res.content))
+            res.size = len(res.content)
+            res.str_size = size2str(res.size)
 
             if not self.quiet:
                 if res.status_code < 300:
@@ -227,7 +228,7 @@ class RESTestParser:
                 sys.stdout.write(
                     " size: %5s - status: %s - t: %s ms / %s s\n"
                     % (
-                        res.size,  # 2.1.0 - support for response_size
+                        res.str_size,  # 2.1.0 - support for response_size
                         status,
                         (end_time - start_time),
                         (end_time - start_time) / 1000,
