@@ -1,5 +1,9 @@
 # restest changelog
 
+## v2.1.1
+
+    - Now restest can be installed with `pip install restest`
+
 ## v2.1.0
 
     - ADD: every request now returns the response size

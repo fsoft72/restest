@@ -4,5 +4,8 @@
 *.back
 *.bak
 trash
-work
 *\ copy.*
+venv
+dist
+build
+*.egg-info

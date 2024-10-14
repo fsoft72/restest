@@ -32,6 +32,15 @@ Main features of `restest` are:
 - Batch operations
 - Clean debug output
 
+## Installation
+
+`restest` is a Python 3 software distributed as a PIP package (see [PyPi page](https://pypi.org/project/restest/)).
+You can install it with `pip`:
+
+```bash
+pip install restest
+```
+
 ## How to run it
 
 Typically you run `restest` from a command line with some parameters and one or more JSON files with the tests to be performed.
