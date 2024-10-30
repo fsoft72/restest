@@ -2,6 +2,8 @@
 
 ## v2.2.0
 
+    - ADD: request body params now is called `body` by default (you can still use `params` and `data`)
+    - ADD: returns an error if `body` is not a dictionary
     - ENH: now there is a better error explanation when JSON file is not valid
 
 ## v2.1.1

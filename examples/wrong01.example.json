@@ -1,0 +1,14 @@
+{
+    "actions": [
+        {
+            "title": "Params should be a dictionary",
+            "method": "POST",
+            "url": "http://localhost:8080",
+            "auth": false,
+            "params": [
+                "hello",
+                "world"
+            ]
+        }
+    ]
+}

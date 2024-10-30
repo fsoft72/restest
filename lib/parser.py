@@ -141,7 +141,9 @@ class RESTestParser:
         else:
             _col = "white"
 
-        params = act.get("params", act.get("data", {}))
+        # 2.2.0 - support for "body" as alternative to "params" and "data"
+        params = act.get("body", act.get("params", act.get("data", {})))
+
         if not self.quiet:
             sys.stdout.write(
                 "%s %s %s %s %s %s"
@@ -155,6 +157,14 @@ class RESTestParser:
                 )
             )
             sys.stdout.flush()
+
+        # 2.2.0 - if params is present, but it is not a dict return an error
+        if params and not isinstance(params, dict):
+            sys.stderr.write(
+                "\n%s: 'body' (or 'params') must be a dictionary\n"
+                % (xcolored(self, "ERROR", "red", "on_white", ["reverse"]),)
+            )
+            sys.exit(1)
 
         # New 2.1.0 - support for skip flag
         if act.get("skip", False):
