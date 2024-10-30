@@ -105,7 +105,7 @@ def main():
     parser.add_argument(
         "--quiet", action="store_true", help="If set, no output on console"
     )
-    parser.add_argument("--version", action="version", version=VERSION)
+    parser.add_argument("--version", action="version", version=f"v{VERSION}")
 
     args = parser.parse_args()
 
