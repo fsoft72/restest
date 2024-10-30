@@ -69,6 +69,7 @@ optional arguments:
   --postman-auth-name POSTMAN_AUTH_NAME     Name of the authorization header name
   --postman-auth-value POSTMAN_AUTH_VALUE   Value to use for authorization header
   --log LOG                                 Custom log file overriding the one in 'system'
+  --log-clean                               If set, log file will be cleaned before starting
   --key KEY [KEY ...]                       One or more keys to be added to the globals dict use key:value format
   --quiet                                   If set, no output on console
   --version                                 show program's version number and exit

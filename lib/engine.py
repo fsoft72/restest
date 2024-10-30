@@ -32,6 +32,7 @@ class RESTest:
         no_colors=False,
         prefix="",
         auth_mode="auth",
+        log_clean=False,  # 2.2.0 - Added log_clean
     ):
         if not headers:
             headers = {}
@@ -78,6 +79,10 @@ class RESTest:
             self.prefix = self.prefix[:-1]
         if self.base_url.endswith("/"):
             self.base_url = self.base_url[:-1]
+
+        # 2.2.0 - Added log_clean
+        if self.log_file and log_clean:
+            open(self.log_file, "w").close()
 
     def _tabs(self, indent=0):
         return "\t" * (len(self.sections) + indent)

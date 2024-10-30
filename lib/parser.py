@@ -31,6 +31,7 @@ class RESTestParser:
         no_colors=False,
         prefix="",
         auth_mode="auth",
+        log_clean=False,  # 2.2.0 - support for log_clean
     ):
         self.rt = RESTest(
             quiet=quiet,
@@ -42,6 +43,7 @@ class RESTestParser:
             no_colors=no_colors,
             prefix=prefix,
             auth_mode=auth_mode,
+            log_clean=log_clean,  # 2.2.0 - support for log_clean
         )
 
         self._batches = {}

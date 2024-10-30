@@ -77,6 +77,11 @@ def main():
         "--log", type=str, help="Custom log file overriding the one in 'system'"
     )
     parser.add_argument(
+        "--log-clean",
+        action="store_true",
+        help="Clean the logfile before starting",
+    )
+    parser.add_argument(
         "--no-colors",
         action="store_true",
         help="If set, colors in console output are disabled",
@@ -126,6 +131,7 @@ def main():
         no_colors=args.no_colors,
         prefix=args.prefix,
         auth_mode=args.auth_mode,
+        log_clean=args.log_clean,  # 2.2.0 - Added log_clean
     )
 
     args = parser.parse_args()
