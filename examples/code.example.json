@@ -8,7 +8,7 @@
 		{
 			"action": "code",
 			"code": [
-				"print ( 'Hello %(hello)s' )"
+				"print( 'Hello %(hello)s' )"
 			]
 		}
 	]

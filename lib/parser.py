@@ -429,7 +429,16 @@ class RESTestParser:
         else:
             f = open(fname, "r", encoding="utf-8")
 
-        data = json.load(f)
-        f.close()
+        try:
+            data = json.load(f)
+        except Exception as e:
+            sys.stderr.write(
+                "%s: error parsing JSON file: %s\n"
+                % (xcolored(self, "ERROR", "red", "on_white", ["reverse"]), fname)
+            )
+            sys.stderr.write("%s\n" % e)
+            sys.exit(1)
+        finally:
+            f.close()
 
         return data

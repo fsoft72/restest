@@ -1,5 +1,9 @@
 # restest changelog
 
+## v2.2.0
+
+    - ENH: now there is a better error explanation when JSON file is not valid
+
 ## v2.1.1
 
     - Now restest can be installed with `pip install restest`

@@ -1,0 +1,13 @@
+{
+    "actions": [
+        {
+            "action": "set",
+            "key": "hello",
+            "value": "world"
+        },
+        {
+            "title": "This is a broken action",
+            "action": "code",
+        }
+    ]
+}
