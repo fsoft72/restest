@@ -251,7 +251,7 @@ class RESTestParser:
         except Exception as e:
             if not self.quiet:
                 sys.stdout.write(
-                    " - status: %s - E: %s\n"
+                    " - status: %s\n\n%s\n"
                     % (
                         xcolored(
                             self, "ERROR", "red", "on_white", ["reverse", "blink"]
@@ -259,6 +259,8 @@ class RESTestParser:
                         e,
                     )
                 )
+
+                sys.exit(1)
 
             return None
 
