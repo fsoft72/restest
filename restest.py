@@ -5,7 +5,7 @@
 # written by Fabio Rotondo <fabio.rotondo@gmail.com>
 #
 
-VERSION = "2.2.1"
+VERSION = "2.3.0"
 
 import argparse
 import os

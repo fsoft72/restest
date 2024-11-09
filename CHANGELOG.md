@@ -1,7 +1,8 @@
 # restest changelog
 
-## v2.2.1
+## v2.3.0
 
+    - ADD: comprehensive RESTest documentation
     - ENH: path expansion now warns if a value after "=" contains dots, but it is not enclosed in quotes
     - FIX: integer checks are now more robust
 
