@@ -3,6 +3,7 @@
 ## v2.2.1
 
     - ENH: path expansion now warns if a value after "=" contains dots, but it is not enclosed in quotes
+    - FIX: integer checks are now more robust
 
 ## v2.2.0
 

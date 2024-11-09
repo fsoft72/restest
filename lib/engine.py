@@ -606,7 +606,9 @@ Raw Response: %s
                     _c(self, current_val, "red"),
                 )
         elif mode in ("EQUALS", "==", "=", "EQUAL"):
-            if current_val != expected_val:
+            if (current_val != expected_val) and (
+                str(current_val) != str(expected_val)
+            ):
                 return "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % cols
         elif mode in ("NOT_EQUAL", "!=", "<>"):
             if current_val == expected_val:

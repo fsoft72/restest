@@ -1,0 +1,8 @@
+{
+	"patterns": [
+		".github",
+		".vscode",
+		"*.log",
+		"__init__.py"
+	]
+}
