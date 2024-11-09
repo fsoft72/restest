@@ -9,7 +9,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="restest",
-    version="2.1.0",
+    version="2.2.1",
     description="Scriptable REST calls test software written in Python",
     long_description=long_description,
     long_description_content_type="text/markdown",

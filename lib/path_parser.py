@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import re
+import sys
 
 # s = "[id='course.080ca4b4e3cb4e1e1b6b99776e8fb621.3tk0']"
 # a regex that splits s on "[", "]", "=", ".", "!" and keeps the content of single and double quotes in one piece
@@ -85,6 +86,11 @@ def _find_in_list(field_name, tok, elem: list):
     pos = 0
     found = False
     el = None
+
+    if not isinstance(elem, list):
+        return None, "Expected a list, got: %s" % type(elem)
+
+    print("=== ELEM: ", elem)
     while pos < len(elem):
         el = elem[pos]
 
@@ -111,6 +117,7 @@ def _expand(parsed_path, pos, dct):
     elem = dct
     field_name = ""
     err = ""
+
     while pos < len(parsed_path):
         tok = parsed_path[pos]
         pos += 1
@@ -119,6 +126,8 @@ def _expand(parsed_path, pos, dct):
             elem, err = _expand(tok, 0, elem)
         elif tok["mode"] == "label":
             n = tok["value"]
+            if not elem:
+                elem = {}
             if n in elem:
                 elem = elem[n]  # tok [ 'value' ] ]
             else:
@@ -144,7 +153,38 @@ def _expand(parsed_path, pos, dct):
     return elem, err
 
 
+def _check_path_quotes(path):
+    """
+    if a path is similar to [email=aaab.bbb@gmail.com] we need to warn the user
+    that the email should be enclosed in single quotes
+
+    In general, path with   =xxx.yyyy.xxx  (a dot or more after the =) should be enclosed in single quotes
+    """
+    pos = path.find("=")
+
+    # if there is no = in the path, then we are good
+    if pos == -1:
+        return True
+
+    # if there is a ' after the =, then we are good
+    if path[pos + 1] == "'":
+        return True
+
+    # if there is at least one "." before the "]" then we should warn the user
+    end_pos = path.find("]", pos)
+
+    if path.find(".", pos, end_pos) != -1:
+        sys.stdout.write(
+            "WARNING: in path '%s', value after \"=\" should be enclosed in single quotes.\n"
+            % path
+        )
+
+        return False
+
+
 def expand_value(path, dct):
+    path_is_ok = _check_path_quotes(path)
+
     parsed_path = path_parser(path)
 
     res, err = _expand(parsed_path, 0, dct)

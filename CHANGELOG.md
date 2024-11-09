@@ -1,5 +1,9 @@
 # restest changelog
 
+## v2.2.1
+
+    - ENH: path expansion now warns if a value after "=" contains dots, but it is not enclosed in quotes
+
 ## v2.2.0
 
     - ADD: `--log-clean` option to clean the log file before starting the tests
