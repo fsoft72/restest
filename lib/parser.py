@@ -238,7 +238,7 @@ class RESTestParser:
                     )
 
                 sys.stdout.write(
-                    " size: %5s - status: %s - t: %s ms / %s s\n"
+                    " - size: %5s - status: %s - t: %s ms / %s s\n"
                     % (
                         res.str_size,  # 2.1.0 - support for response_size
                         status,
