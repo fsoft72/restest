@@ -90,7 +90,6 @@ def _find_in_list(field_name, tok, elem: list):
     if not isinstance(elem, list):
         return None, "Expected a list, got: %s" % type(elem)
 
-    print("=== ELEM: ", elem)
     while pos < len(elem):
         el = elem[pos]
 
@@ -183,7 +182,7 @@ def _check_path_quotes(path):
 
 
 def expand_value(path, dct):
-    path_is_ok = _check_path_quotes(path)
+    _check_path_quotes(path)
 
     parsed_path = path_parser(path)
 
