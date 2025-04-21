@@ -676,7 +676,11 @@ Raw Response: %s
 
             self._tests += 1
 
+            # 2.3.0 - checking for 'field' key
+            if "field" not in chk:
+                return self._error("Tests: missing 'field' key in one of the tests")
             field = self._expand_var(chk["field"])
+
             # 2.1.0 - added support for rt: prefix and the rt:size field
             if field == "rt:size":
                 v = str(resp.size)
