@@ -439,11 +439,12 @@ Raw Response: %s
 
         if r.status_code != status_code and self.stop_on_error:
             sys.stderr.write(
-                """\n\n%s\n%s %s\n%s\n\n"""
+                """\n\n%s\n%s %s %s\n%s\n\n"""
                 % (
                     "=" * 78,
                     _c(self, "REQUEST ERROR: ", "red"),
                     _c(self, r.text, "white"),
+                    " - Status: %s " % r.status_code,
                     "=" * 78,
                 )
             )
