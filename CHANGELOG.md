@@ -4,7 +4,9 @@
 
     - ADD: comprehensive RESTest documentation
     - ENH: path expansion now warns if a value after "=" contains dots, but it is not enclosed in quotes
+    - ENH: now an error request reports also the status code
     - FIX: integer checks are now more robust
+    - FIX: added more checks to the path parser to avoid exceptions
 
 ## v2.2.0
 
