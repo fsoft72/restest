@@ -1,5 +1,10 @@
 # restest changelog
 
+## v2.4.0 - in development
+
+    - ADD: support for `--debug-file-name` to show the JSON file name that is executing
+    - ENH: (better?) title handling
+
 ## v2.3.0
 
     - ADD: comprehensive RESTest documentation

@@ -5,7 +5,7 @@
 # written by Fabio Rotondo <fabio.rotondo@gmail.com>
 #
 
-VERSION = "2.3.0"
+VERSION = "2.4.0-dev"
 
 import argparse
 import os
@@ -43,6 +43,11 @@ def main():
     )
     parser.add_argument(
         "--delay", type=int, help="Delay in milliseconds between requests"
+    )
+    parser.add_argument(
+        "--debug-file-name",
+        action="store_true",
+        help="If set, will print the file name in the log",
     )
     parser.add_argument(
         "--dont-stop-on-error",
@@ -132,10 +137,12 @@ def main():
         prefix=args.prefix,
         auth_mode=args.auth_mode,
         log_clean=args.log_clean,  # 2.2.0 - Added log_clean
+        debug_file_name=args.debug_file_name,  # 2.4.0 - Added debug_file_name
     )
 
     args = parser.parse_args()
 
+    """
     postman = None
     if args.postman:
         postman = PostmanExporter(
@@ -159,6 +166,7 @@ def main():
         prefix=args.prefix,
         auth_mode=args.auth_mode,
     )
+    """
 
     if args.env_load:
         try:
