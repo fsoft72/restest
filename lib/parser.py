@@ -32,6 +32,7 @@ class RESTestParser:
         prefix="",
         auth_mode="auth",
         log_clean=False,  # 2.2.0 - support for log_clean
+        debug_file_name=None,  # 2.4.0 - support for debug_file_name
     ):
         self.rt = RESTest(
             quiet=quiet,
@@ -64,6 +65,9 @@ class RESTestParser:
         # New 2.0 - support for recording of timings
         self.timings = Timings()
 
+        # New 2.4.0 - support for debug_file_name
+        self.debug_file_name = debug_file_name
+
     def open(self, fname):
         self.script = self._json_load(fname)
 
@@ -90,7 +94,7 @@ class RESTestParser:
     def _actions(self, actions):
         for act in actions:
             if "title" in act:
-                print(act["title"])
+                print("\n ==", act["title"])
 
             action = act.get("method", act.get("action", "")).lower()
             if action:
@@ -445,6 +449,12 @@ class RESTestParser:
 
         try:
             data = json.load(f)
+
+            if self.debug_file_name:
+                print(
+                    "\n\n%s: executing file %s"
+                    % (xcolored(self, "DEBUG", "blue"), xcolored(self, fname, "yellow"))
+                )
         except Exception as e:
             sys.stderr.write(
                 "%s: error parsing JSON file: %s\n"
