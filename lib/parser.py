@@ -452,8 +452,13 @@ class RESTestParser:
 
             if self.debug_file_name:
                 print(
-                    "\n\n%s: executing file %s"
-                    % (xcolored(self, "DEBUG", "blue"), xcolored(self, fname, "yellow"))
+                    "\n%s\n%s: executing file %s\n%s\n"
+                    % (
+                        "=" * 70,
+                        xcolored(self, "DEBUG", "blue"),
+                        xcolored(self, fname, "yellow"),
+                        "=" * 70,
+                    )
                 )
         except Exception as e:
             sys.stderr.write(
