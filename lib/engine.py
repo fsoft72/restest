@@ -277,6 +277,9 @@ Raw Response: %s
             sys.stderr.write("    %s : %s\n" % (_c(self, sk, "white"), self.globals[k]))
 
     def _expand_data(self, data):
+        if "__direct__" in data:
+            return data["__direct__"]
+
         res = {}
 
         self._inner_count += 1
