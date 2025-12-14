@@ -928,15 +928,28 @@ Raw Response: %s
             f = self._expand_var(f)
             v = self.globals.get(f, "__NOT_FOUND__")
 
+            # Format for log file (with ====)
             if v == "__NOT_FOUND__":
-                s = "==== %s: <undefined>\n" % f
+                log_s = "==== %s: <undefined>\n" % f
             else:
-                s = "==== %s: %s\n" % (f, json.dumps(v, indent=4, default=str))
+                log_s = "==== %s: %s\n" % (f, json.dumps(v, indent=4, default=str))
 
-            self._log_write(s)
+            self._log_write(log_s)
 
+            # Format for console (colored, without ====)
             if do_print:
-                print(s)
+                if v == "__NOT_FOUND__":
+                    console_s = "%s: %s" % (
+                        _c(self, f, "green"),
+                        _c(self, "<undefined>", "white")
+                    )
+                else:
+                    value_str = json.dumps(v, indent=4, default=str)
+                    console_s = "%s: %s" % (
+                        _c(self, f, "green"),
+                        _c(self, value_str, "white")
+                    )
+                print(console_s)
 
     def section_start(self, name):
         self.sections.append(name)

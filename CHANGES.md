@@ -43,5 +43,5 @@
 ### Files Modified
 - `lib/path_parser.py` - Added `#` prefix handling in `expand_value()`
 - `lib/engine.py` - Added expression support in `set_val()`, `fields()`, `_check()`, and new `_check_expr()` method
-- `lib/engine.py` - Enhanced `dump()` method: `fields` now optional (dumps all if omitted), `print` defaults to `true`
+- `lib/engine.py` - Enhanced `dump()` method: `fields` now optional (dumps all if omitted), `print` defaults to `true`, improved console output with colored formatting (green labels, white values, no "====" prefix)
 - `lib/parser.py` - Updated `_method_dump()` to support optional fields and default print behavior

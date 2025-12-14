@@ -290,7 +290,15 @@ The `dump` action prints variable values to console and/or log file for debuggin
 - `fields`: (optional) Array of variable names to print. If omitted, dumps all variables.
 - `print`: (optional) If `true` (default), prints to console; if `false`, only writes to log file
 
-**Output format:**
+**Console output format** (colored):
+```
+user_id: "123"
+auth_token: "eyJhbGc..."
+total_items: 42
+```
+*Variable names appear in green, values in white*
+
+**Log file output format:**
 ```
 ==== user_id: "123"
 
