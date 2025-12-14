@@ -333,7 +333,17 @@ class RESTestParser:
         return True
 
     def _method_dump(self, act):
-        self.rt.dump(act["fields"], act.get("print"))
+        """
+        Dump variable values to console and/or log file.
+
+        Args:
+            act: Action dict with optional 'fields' (array of var names)
+                 and optional 'print' (bool, defaults to True)
+        """
+        fields = act.get("fields")  # None if not specified
+        do_print = act.get("print", True)  # Default to True
+
+        self.rt.dump(fields, do_print)
 
         return True
 

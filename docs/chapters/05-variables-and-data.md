@@ -287,8 +287,8 @@ The `dump` action prints variable values to console and/or log file for debuggin
 ```
 
 **Parameters:**
-- `fields`: Array of variable names to print
-- `print`: (optional) If `true`, prints to console; otherwise only to log file
+- `fields`: (optional) Array of variable names to print. If omitted, dumps all variables.
+- `print`: (optional) If `true` (default), prints to console; if `false`, only writes to log file
 
 **Output format:**
 ```
@@ -299,7 +299,7 @@ The `dump` action prints variable values to console and/or log file for debuggin
 ==== total_items: 42
 ```
 
-**Example usage:**
+**Example: Dump specific variables**
 ```json
 {
     "actions": [
@@ -317,10 +317,44 @@ The `dump` action prints variable values to console and/or log file for debuggin
         },
         {
             "action": "dump",
-            "fields": ["count", "double_count"],
-            "print": true
+            "fields": ["count", "double_count"]
         }
     ]
+}
+```
+
+**Example: Dump all variables**
+```json
+{
+    "actions": [
+        {
+            "action": "set",
+            "key": "api_version",
+            "value": "v2"
+        },
+        {
+            "method": "get",
+            "url": "/api/%(api_version)s/data",
+            "fields": [
+                ["#items", "item_count"]
+            ]
+        },
+        {
+            "rem": "Dump all variables for debugging"
+        },
+        {
+            "action": "dump"
+        }
+    ]
+}
+```
+
+**Example: Dump to log file only**
+```json
+{
+    "action": "dump",
+    "fields": ["sensitive_token"],
+    "print": false
 }
 ```
 

@@ -912,12 +912,27 @@ Raw Response: %s
             if err:
                 return self._error(err)
 
-    def dump(self, fields, do_print=False):
+    def dump(self, fields=None, do_print=True):
+        """
+        Dump variable values to console and/or log file.
+
+        Args:
+            fields: List of variable names to dump, or None to dump all variables
+            do_print: If True, print to console; if False, only write to log file
+        """
+        # If no fields specified, dump all variables
+        if fields is None:
+            fields = list(self.globals.keys())
+
         for f in fields:
             f = self._expand_var(f)
-            v = self.globals[f]
+            v = self.globals.get(f, "__NOT_FOUND__")
 
-            s = "==== %s: %s\n" % (f, json.dumps(v, indent=4, default=str))
+            if v == "__NOT_FOUND__":
+                s = "==== %s: <undefined>\n" % f
+            else:
+                s = "==== %s: %s\n" % (f, json.dumps(v, indent=4, default=str))
+
             self._log_write(s)
 
             if do_print:
