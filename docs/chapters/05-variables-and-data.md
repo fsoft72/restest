@@ -274,6 +274,56 @@ RESTest supports arithmetic operations using the `${...}` expression syntax:
 
 For complete documentation on expressions, length extraction, and the EXPR test mode, see [Appendix C - Number Operations](C-number-operations.md).
 
+### Dumping Variable Values
+
+The `dump` action prints variable values to console and/or log file for debugging:
+
+```json
+{
+    "action": "dump",
+    "fields": ["user_id", "auth_token", "total_items"],
+    "print": true
+}
+```
+
+**Parameters:**
+- `fields`: Array of variable names to print
+- `print`: (optional) If `true`, prints to console; otherwise only to log file
+
+**Output format:**
+```
+==== user_id: "123"
+
+==== auth_token: "eyJhbGc..."
+
+==== total_items: 42
+```
+
+**Example usage:**
+```json
+{
+    "actions": [
+        {
+            "method": "get",
+            "url": "/api/items",
+            "fields": [
+                ["#data.items", "count"]
+            ]
+        },
+        {
+            "action": "set",
+            "key": "double_count",
+            "value": "${count * 2}"
+        },
+        {
+            "action": "dump",
+            "fields": ["count", "double_count"],
+            "print": true
+        }
+    ]
+}
+```
+
 ### Using in URLs
 ```json
 {
