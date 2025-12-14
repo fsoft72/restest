@@ -258,6 +258,22 @@ restest --env-save vars.json test.json
 }
 ```
 
+### Arithmetic Expressions (v2.5.0+)
+
+RESTest supports arithmetic operations using the `${...}` expression syntax:
+
+```json
+{
+    "action": "set",
+    "key": "total",
+    "value": "${price * quantity}"
+}
+```
+
+**Supported operators:** `+`, `-`, `*`, `/`, `%`
+
+For complete documentation on expressions, length extraction, and the EXPR test mode, see [Appendix C - Number Operations](C-number-operations.md).
+
 ### Using in URLs
 ```json
 {

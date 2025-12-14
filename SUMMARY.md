@@ -14,6 +14,7 @@
 - [Command Line Options](docs/chapters/08-command-line-options.md)
 - [APPENDIX A - Test Modes Reference](docs/chapters/A-testing-modes.md)
 - [APPENDIX B - Path Parser](docs/chapters/B-path-parser.md)
+- [APPENDIX C - Number Operations](docs/chapters/C-number-operations.md)
 
 ## Additional Information
 

@@ -18,6 +18,7 @@
 | `SIZE-LT` | `()<` | Checks if array/string length is less than specified value | `{"field": "tags", "mode": "SIZE-LT", "value": 5}` |
 | `SIZE-LTE` | `()<=` | Checks if array/string length is less than or equal to specified value | `{"field": "errors", "mode": "SIZE-LTE", "value": 3}` |
 | `OBJ` | `OBJECT` | Validates that the field is an object matching the specified structure | `{"field": "user", "mode": "OBJ", "value": {"id": "EXISTS", "name": "EXISTS"}}` |
+| `EXPR` | `EXPRESSION` | (v2.5.0+) Evaluates expression-based comparisons | `{"mode": "EXPR", "key": "total", "op": "==", "expr": "${subtotal + tax}"}` |
 
 ## Special Fields
 
@@ -34,6 +35,7 @@
 | `[n]` | Array index access | `{"field": "items[0].id", "value": 1}` |
 | `[field=value]` | Array element matching | `{"field": "users.[type=admin].name", "value": "John"}` |
 | `[field!=value]` | Array element not matching | `{"field": "items.[status!=deleted].count", "mode": "GT", "value": 0}` |
+| `#path` | (v2.5.0+) Length extraction | `{"key": "#data.items", "mode": "EXPR", "op": ">=", "expr": 10}` |
 
 ## Complete Examples
 
@@ -97,3 +99,38 @@
     ]
 }
 ```
+
+### Expression-Based Testing (v2.5.0+)
+```json
+{
+    "method": "get",
+    "url": "/api/order/123",
+    "fields": [
+        ["data.subtotal", "subtotal"],
+        ["data.tax", "tax"],
+        ["data.shipping", "shipping"],
+        ["#data.items", "item_count"]
+    ],
+    "tests": [
+        {
+            "mode": "EXPR",
+            "key": "data.total",
+            "op": "==",
+            "expr": "${subtotal + tax + shipping}"
+        },
+        {
+            "mode": "EXPR",
+            "key": "${item_count}",
+            "op": ">",
+            "expr": 0
+        },
+        {
+            "field": "data.items",
+            "mode": "SIZE",
+            "value": "${item_count}"
+        }
+    ]
+}
+```
+
+For complete documentation on expressions and number operations, see [Appendix C - Number Operations](C-number-operations.md).

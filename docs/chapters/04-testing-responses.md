@@ -212,6 +212,61 @@ To test for array sizes, use `SIZE-GT` (size greater than) and `SIZE-LTE` (size 
 }
 ```
 
+## Expression-Based Testing (v2.5.0+)
+
+### Using Expressions in Test Values
+
+Test values can now be expressions, allowing dynamic comparisons:
+
+```json
+{
+    "actions": [
+        {
+            "action": "set",
+            "key": "expected_count",
+            "value": 10
+        },
+        {
+            "method": "get",
+            "url": "/api/items",
+            "tests": [
+                {
+                    "field": "items",
+                    "mode": "SIZE",
+                    "value": "${expected_count}"
+                }
+            ]
+        }
+    ]
+}
+```
+
+### EXPR Test Mode
+
+The new `EXPR` mode enables complex expression-based comparisons:
+
+```json
+{
+    "method": "get",
+    "url": "/api/order/123",
+    "fields": [
+        ["data.subtotal", "subtotal"],
+        ["data.tax", "tax"],
+        ["data.shipping", "shipping"]
+    ],
+    "tests": [
+        {
+            "mode": "EXPR",
+            "key": "data.total",
+            "op": "==",
+            "expr": "${subtotal + tax + shipping}"
+        }
+    ]
+}
+```
+
+For complete documentation on expressions and number operations, see [Appendix C - Number Operations](C-number-operations.md).
+
 ## Path-Based Testing
 
 RESTest provides powerful path-based testing for complex JSON responses:
