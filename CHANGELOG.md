@@ -2,6 +2,10 @@
 
 ## v2.5.0 - in development
 
+    - ADD: number expressions `${var + 5}` and list length operator `#data`  (returns the length of data field)
+    - ADD: missing documentation for `dump` action.
+    - ENH: enhanced `dump` action so that `fields` and `print` parameters are now optional.
+
 ## v2.4.0
 
     - ADD: support for `--debug-file-name` to show the JSON file name that is executing
