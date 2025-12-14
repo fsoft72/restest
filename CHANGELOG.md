@@ -4,6 +4,7 @@
 
     - ADD: number expressions `${var + 5}` and list length operator `#data`  (returns the length of data field)
     - ADD: missing documentation for `dump` action.
+    - ADD: support for loading Cloudflare `.dev.vars` files as env variables
     - ENH: enhanced `dump` action so that `fields` and `print` parameters are now optional.
 
 ## v2.4.0

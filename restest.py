@@ -16,6 +16,60 @@ from lib.postman_exp import PostmanExporter
 VERSION = "2.5.0-dev"
 
 
+def _parse_cloudflare_env_file(filepath):
+    """
+    Parse a Cloudflare .dev.vars format file.
+
+    Format:
+        KEY=VALUE
+        # Comments start with #
+        # Empty lines are ignored
+
+    Args:
+        filepath: Path to .dev.vars file
+
+    Returns:
+        Dictionary of key-value pairs (keys are lowercased)
+    """
+    vars_dict = {}
+
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            for line_num, line in enumerate(f, 1):
+                # Strip whitespace
+                line = line.strip()
+
+                # Skip empty lines and comments
+                if not line or line.startswith('#'):
+                    continue
+
+                # Parse KEY=VALUE
+                if '=' in line:
+                    # Split on first = only (value might contain =)
+                    key, value = line.split('=', 1)
+                    key = key.strip()
+                    value = value.strip()
+
+                    # Remove surrounding quotes if present
+                    if value.startswith('"') and value.endswith('"'):
+                        value = value[1:-1]
+                    elif value.startswith("'") and value.endswith("'"):
+                        value = value[1:-1]
+
+                    # Store with lowercase key (consistent with --env behavior)
+                    vars_dict[key.lower()] = value
+                else:
+                    # Invalid line format - skip with warning
+                    print(f"Warning: Skipping invalid line {line_num} in {filepath}: {line}")
+
+    except FileNotFoundError:
+        print(f"Error: File not found: {filepath}")
+    except Exception as e:
+        print(f"Error parsing {filepath}: {e}")
+
+    return vars_dict
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="RESTest v%s the easy REST test manager - by Fabio Rotondo (fabio.rotondo@gmail.com)"
@@ -71,6 +125,11 @@ def main():
         "--env-save",
         type=str,
         help="If set, global vars will be saved to specified file",
+    )
+    parser.add_argument(
+        "--env-cf",
+        type=str,
+        help="Load variables from Cloudflare .dev.vars format file (KEY=VALUE, # for comments)",
     )
     parser.add_argument(
         "--key",
@@ -175,6 +234,11 @@ def main():
                 rt.rt.globals[k.lower()] = v
         except:  # noqa
             pass
+
+    if args.env_cf:
+        cf_vars = _parse_cloudflare_env_file(args.env_cf)
+        for k, v in cf_vars.items():
+            rt.rt.globals[k] = v  # Already lowercased in parser
 
     if args.env:
         for k, v in os.environ.items():
