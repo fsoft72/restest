@@ -1,6 +1,8 @@
 # restest changelog
 
-## v2.4.0 - in development
+## v2.5.0 - in development
+
+## v2.4.0
 
     - ADD: support for `--debug-file-name` to show the JSON file name that is executing
     - ADD: support for special key in body `__direct__` to send the value of the key directly as the body of the request

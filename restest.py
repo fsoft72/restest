@@ -5,15 +5,15 @@
 # written by Fabio Rotondo <fabio.rotondo@gmail.com>
 #
 
-VERSION = "2.4.0"
-
 import argparse
+import json
 import os
 import time
-import json
 
 from lib.parser import RESTestParser
 from lib.postman_exp import PostmanExporter
+
+VERSION = "2.5.0-dev"
 
 
 def main():
