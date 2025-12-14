@@ -15,6 +15,7 @@ import requests
 
 from .path_parser import expand_value
 from .cols import xcolored as _c
+from .expr_parser import evaluate_expr, is_expression
 
 
 class RESTest:
@@ -503,26 +504,97 @@ Raw Response: %s
         )
 
     def fields(self, resp, fields):
+        """
+        Extract fields from response and save to globals.
+
+        Supports multiple syntaxes:
+        - String: "field_name" (path and save key are the same)
+        - List/Tuple: ["json.path", "save_key"] or ["json.path"]
+        - Object: {"path": "json.path", "save": "save_key", "mode": "value|length|type|keys"}
+
+        The path can start with '#' for automatic length extraction.
+
+        Args:
+            resp: Response object
+            fields: List of field specifications
+        """
         j = resp.json()
 
         for k in fields:
-            if isinstance(k, (list, tuple)):
+            # Object syntax: {"path": "...", "mode": "...", "save": "..."}
+            if isinstance(k, dict):
+                json_key = k.get("path", "")
+                glob_key = k.get("save", json_key)
+                mode = k.get("mode", "value").lower()
+
+                # ADD: support for '*' field name (all JSON)
+                if json_key == "*":
+                    self.globals[glob_key] = j
+                    continue
+
+                value = self._expand_value(j, json_key)
+
+                # Apply mode transformation
+                if mode == "length":
+                    if value is None:
+                        value = 0
+                    elif hasattr(value, "__len__"):
+                        value = len(value)
+                    else:
+                        self._error(f"Cannot get length of {type(value).__name__} at path: {json_key}")
+                        continue
+                elif mode == "type":
+                    if value is None:
+                        value = "null"
+                    elif isinstance(value, list):
+                        value = "array"
+                    elif isinstance(value, dict):
+                        value = "object"
+                    elif isinstance(value, str):
+                        value = "string"
+                    elif isinstance(value, bool):
+                        value = "boolean"
+                    elif isinstance(value, (int, float)):
+                        value = "number"
+                    else:
+                        value = type(value).__name__
+                elif mode == "keys":
+                    if isinstance(value, dict):
+                        value = list(value.keys())
+                    else:
+                        self._error(f"Cannot get keys of {type(value).__name__} at path: {json_key}")
+                        continue
+                # mode == "value" is the default, no transformation needed
+
+                self.globals[glob_key] = value
+
+            # List/Tuple syntax: ["json.path", "save_key"] or ["json.path"]
+            elif isinstance(k, (list, tuple)):
                 if len(k) == 2:
                     json_key = k[0]
                     glob_key = k[1]
                 else:
                     json_key = k[0]
                     glob_key = k[0]
+
+                # ADD: support for '*' field name (all JSON)
+                if json_key == "*":
+                    self.globals[glob_key] = j
+                    continue
+
+                self.globals[glob_key] = self._expand_value(j, json_key)
+
+            # String syntax: "field_name"
             else:
                 glob_key = k
                 json_key = k
 
-            # ADD: support for '*' field name (all JSON)
-            if json_key == "*":
-                self.globals[glob_key] = j
-                continue
+                # ADD: support for '*' field name (all JSON)
+                if json_key == "*":
+                    self.globals[glob_key] = j
+                    continue
 
-            self.globals[glob_key] = self._expand_value(j, json_key)
+                self.globals[glob_key] = self._expand_value(j, json_key)
 
     def dumps(self, resp, fields):
         j = resp.json()
@@ -568,8 +640,22 @@ Raw Response: %s
         self.globals[_to] = self.globals[_from]
 
     def set_val(self, _key, _val):
+        """
+        Set a global variable value.
+
+        If _val is an expression (${...}), it will be evaluated and the
+        numeric result will be stored.
+
+        Args:
+            _key: Variable name
+            _val: Value to set (can be literal or expression)
+        """
         _key = self._expand_var(_key)
         _val = self._expand_var(_val)
+
+        # Check if value is an expression and evaluate it
+        if is_expression(_val):
+            _val = evaluate_expr(_val, self.globals)
 
         self.globals[_key] = _val
 
@@ -580,6 +666,10 @@ Raw Response: %s
     def _check(self, chk, field, v):
         current_val = self._expand_var(v)
         expected_val = self._expand_var(chk.get("value"))
+
+        # Evaluate expression in expected_val if present
+        if is_expression(expected_val):
+            expected_val = evaluate_expr(expected_val, self.globals)
 
         mode = chk.get("mode", "EQUALS")
 
@@ -671,6 +761,118 @@ Raw Response: %s
         if "save" in chk:
             self.globals[chk["save"]] = v
 
+    def _check_expr(self, chk, j):
+        """
+        Handle EXPR mode test.
+
+        EXPR mode compares a key value against an expression using an operator.
+
+        Args:
+            chk: Check definition with 'key', 'op', 'expr' fields
+            j: JSON response data
+
+        Returns:
+            Error message string if test fails, None if passes
+        """
+        key_path = chk.get("key", "")
+        op = chk.get("op", "==").upper()
+        expr_val = chk.get("expr", "")
+
+        # Expand variables in key_path
+        key_path = self._expand_var(key_path)
+
+        # Get left-hand value
+        # If key_path is an expression, evaluate it
+        if is_expression(key_path):
+            left_val = evaluate_expr(key_path, self.globals)
+        else:
+            # Extract from response (supports # prefix for length)
+            left_val, err = expand_value(key_path, j)
+            if err:
+                return f"EXPR test: error getting key '{key_path}': {err}"
+
+        # Get right-hand value
+        expr_val = self._expand_var(expr_val)
+
+        # If expr_val is an expression, evaluate it
+        if is_expression(expr_val):
+            right_val = evaluate_expr(expr_val, self.globals)
+        elif isinstance(expr_val, (int, float)):
+            right_val = expr_val
+        elif isinstance(expr_val, str):
+            # Try to parse as number, otherwise treat as path
+            try:
+                if "." in expr_val and not expr_val.startswith("#"):
+                    # Might be a float or a path
+                    try:
+                        right_val = float(expr_val)
+                    except ValueError:
+                        # Treat as path
+                        right_val, err = expand_value(expr_val, j)
+                        if err:
+                            return f"EXPR test: error getting expr '{expr_val}': {err}"
+                else:
+                    right_val = int(expr_val) if expr_val.isdigit() else expr_val
+                    # If it's a string that looks like a path, extract it
+                    if isinstance(right_val, str) and not right_val.isdigit():
+                        right_val, err = expand_value(right_val, j)
+                        if err:
+                            # Not a path, use as literal
+                            right_val = expr_val
+            except (ValueError, TypeError):
+                right_val = expr_val
+        else:
+            right_val = expr_val
+
+        # Convert to numbers for comparison if possible
+        try:
+            if isinstance(left_val, str):
+                left_val = float(left_val) if "." in left_val else int(left_val)
+        except (ValueError, TypeError):
+            pass
+
+        try:
+            if isinstance(right_val, str):
+                right_val = float(right_val) if "." in right_val else int(right_val)
+        except (ValueError, TypeError):
+            pass
+
+        # Normalize operator aliases
+        op_map = {
+            "==": "==", "=": "==", "EQUALS": "==", "EQUAL": "==",
+            "!=": "!=", "<>": "!=", "NOT_EQUALS": "!=", "NOT_EQUAL": "!=",
+            ">": ">", "GT": ">",
+            ">=": ">=", "GTE": ">=",
+            "<": "<", "LT": "<",
+            "<=": "<=", "LTE": "<=",
+        }
+        op = op_map.get(op, op)
+
+        # Perform comparison
+        result = False
+        if op == "==":
+            result = left_val == right_val or str(left_val) == str(right_val)
+        elif op == "!=":
+            result = left_val != right_val and str(left_val) != str(right_val)
+        elif op == ">":
+            result = left_val > right_val
+        elif op == ">=":
+            result = left_val >= right_val
+        elif op == "<":
+            result = left_val < right_val
+        elif op == "<=":
+            result = left_val <= right_val
+        else:
+            return f"EXPR test: unsupported operator '{op}'"
+
+        if not result:
+            return (
+                f"EXPR test failed: {_c(self, key_path, 'white')} ({_c(self, left_val, 'red')}) "
+                f"{op} {_c(self, chk.get('expr', ''), 'white')} ({_c(self, right_val, 'yellow')})"
+            )
+
+        return None
+
     def check(self, resp, checks):
         j = resp.json()
 
@@ -679,6 +881,14 @@ Raw Response: %s
                 print("%s%s" % (self._tabs(1), chk["title"]))
 
             self._tests += 1
+
+            # Check for EXPR mode (uses key/op/expr instead of field/mode/value)
+            mode = chk.get("mode", "").upper()
+            if mode in ("EXPR", "EXPRESSION"):
+                err = self._check_expr(chk, j)
+                if err:
+                    return self._error(err)
+                continue
 
             # 2.3.0 - checking for 'field' key
             if "field" not in chk:

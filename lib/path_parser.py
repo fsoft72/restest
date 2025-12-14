@@ -182,11 +182,50 @@ def _check_path_quotes(path):
 
 
 def expand_value(path, dct):
+    """
+    Expand a path expression against a dictionary/JSON structure.
+
+    If path starts with '#', returns the length of the value at that path.
+    For arrays and strings, returns len(). For None, returns 0.
+    For other types (numbers, objects), raises an error.
+
+    Args:
+        path: Path expression (e.g., "data.items" or "#data.items" for length)
+        dct: Dictionary to expand against
+
+    Returns:
+        Tuple of (value, error_message)
+    """
+    # Check for length extraction prefix
+    get_length = path.startswith("#")
+    if get_length:
+        path = path[1:]
+
     _check_path_quotes(path)
 
     parsed_path = path_parser(path)
 
     res, err = _expand(parsed_path, 0, dct)
+
+    # Handle length extraction
+    if get_length and not err:
+        if res is None:
+            res = 0
+        elif isinstance(res, (list, str)):
+            res = len(res)
+        elif isinstance(res, dict):
+            # For objects, return number of keys
+            res = len(res)
+        elif isinstance(res, (int, float, bool)):
+            err = f"Cannot get length of {type(res).__name__} (at path: {path})"
+            res = None
+        else:
+            # Fallback: try to get length if object has __len__
+            try:
+                res = len(res)
+            except TypeError:
+                err = f"Cannot get length of {type(res).__name__} (at path: {path})"
+                res = None
 
     return res, err
 
@@ -255,3 +294,30 @@ if __name__ == "__main__":
     print(
         expand_value("courses.[id='course.080ca4b4e3cb4e1e1b6b99776e8fb621.3tk0']", dct)
     )
+
+    # Test length extraction with # prefix
+    print("\n=== Testing length extraction with # prefix ===")
+
+    # Test array length
+    res, err = expand_value("#type1", x)
+    print(f"#type1 = {res} (expected 2) - {'PASS' if res == 2 else 'FAIL'}")
+
+    # Test string length
+    res, err = expand_value("#type1.[0].name", x)
+    print(f"#type1.[0].name = {res} (expected 5 for 'hello') - {'PASS' if res == 5 else 'FAIL'}")
+
+    # Test nested array length
+    res, err = expand_value("#users.[id=123].perms", x)
+    print(f"#users.[id=123].perms = {res} (expected 3) - {'PASS' if res == 3 else 'FAIL'}")
+
+    # Test empty array length
+    res, err = expand_value("#courses.[0].tags", dct)
+    print(f"#courses.[0].tags = {res} (expected 0) - {'PASS' if res == 0 else 'FAIL'}")
+
+    # Test dict keys count
+    res, err = expand_value("#nested", x)
+    print(f"#nested = {res} (expected 1 key) - {'PASS' if res == 1 else 'FAIL'}")
+
+    # Test error on number
+    res, err = expand_value("#courses.[0].tot_lessons", dct)
+    print(f"#courses.[0].tot_lessons - error: {err} - {'PASS' if err else 'FAIL'}")
