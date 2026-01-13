@@ -169,6 +169,9 @@ def main():
     parser.add_argument(
         "--quiet", action="store_true", help="If set, no output on console"
     )
+    parser.add_argument(
+        "--step", action="store_true", help="Execute one action at a time, waiting for ENTER before each action"
+    )
     parser.add_argument("--version", action="version", version=f"v{VERSION}")
 
     args = parser.parse_args()
@@ -197,6 +200,7 @@ def main():
         auth_mode=args.auth_mode,
         log_clean=args.log_clean,  # 2.2.0 - Added log_clean
         debug_file_name=args.debug_file_name,  # 2.4.0 - Added debug_file_name
+        step=args.step,  # 2.5.0 - Added step mode
     )
 
     args = parser.parse_args()

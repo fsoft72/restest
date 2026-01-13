@@ -45,3 +45,10 @@
 - `lib/engine.py` - Added expression support in `set_val()`, `fields()`, `_check()`, and new `_check_expr()` method
 - `lib/engine.py` - Enhanced `dump()` method: `fields` now optional (dumps all if omitted), `print` defaults to `true`, improved console output with colored formatting (green labels, white values, no "====" prefix)
 - `lib/parser.py` - Updated `_method_dump()` to support optional fields and default print behavior
+
+#### Step Mode
+- Added `--step` command line flag to execute one action at a time
+- When enabled, waits for user to press ENTER before executing the next action
+- Useful for debugging and interactive test execution
+- Supports Ctrl+C to interrupt execution gracefully
+- Files modified: `restest.py`, `lib/parser.py`

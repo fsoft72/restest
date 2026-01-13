@@ -33,6 +33,7 @@ class RESTestParser:
         auth_mode="auth",
         log_clean=False,  # 2.2.0 - support for log_clean
         debug_file_name=None,  # 2.4.0 - support for debug_file_name
+        step=False,  # 2.5.0 - support for step mode
     ):
         self.rt = RESTest(
             quiet=quiet,
@@ -58,6 +59,8 @@ class RESTestParser:
         # API prefix URL  (append to base_url)
         self.prefix = prefix
         self.auth_mode = auth_mode
+        # 2.5.0 - support for step mode
+        self.step = step
 
         self._paths = []
         self._included = {}
@@ -111,6 +114,14 @@ class RESTestParser:
 
             if "actions" in act:
                 self._actions(act["actions"])
+
+            # 2.5.0 - step mode: wait for user to press ENTER before next action
+            if self.step:
+                try:
+                    input(xcolored(self, "\nPress ENTER to continue...", "cyan"))
+                except KeyboardInterrupt:
+                    print("\n\n%s" % xcolored(self, "Interrupted by user", "red"))
+                    sys.exit(0)
 
     def _parse_files(self, dct):
         files = {}
