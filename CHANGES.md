@@ -55,6 +55,23 @@
 - Supports Ctrl+C to interrupt execution gracefully
 - Files modified: `restest.py`, `lib/parser.py`
 
+#### Break Attribute
+- Added optional `break` attribute for individual actions
+- When `break: true` is set on an action, execution pauses after that action
+- Dumps all variables in memory and waits for ENTER to continue
+- Works independently of `--step` flag (can be used without it)
+- Useful for setting breakpoints at specific actions during debugging
+- Example:
+  ```json
+  {
+    "title": "Check this action",
+    "method": "get",
+    "url": "/endpoint",
+    "break": true
+  }
+  ```
+- File modified: `lib/parser.py`
+
 #### Include Action Enhancement
 - `include` action now displays the included filename in console
 - Very visible output with colored borders:

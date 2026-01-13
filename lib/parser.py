@@ -115,8 +115,8 @@ class RESTestParser:
             if "actions" in act:
                 self._actions(act["actions"])
 
-            # 2.5.0 - step mode: wait for user to press ENTER before next action
-            if self.step:
+            # 2.5.0 - step mode or break attribute: wait for user to press ENTER before next action
+            if self.step or act.get("break", False):
                 # Dump all variables before prompting
                 print("\n%s" % xcolored(self, "=== Variables in Memory ===", "yellow"))
                 self.rt.dump()
