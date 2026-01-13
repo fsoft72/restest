@@ -146,6 +146,11 @@ def main():
         help="Clean the logfile before starting",
     )
     parser.add_argument(
+        "--no-break",
+        action="store_true",
+        help="If set, ignore all break attributes in actions",
+    )
+    parser.add_argument(
         "--no-colors",
         action="store_true",
         help="If set, colors in console output are disabled",
@@ -201,6 +206,7 @@ def main():
         log_clean=args.log_clean,  # 2.2.0 - Added log_clean
         debug_file_name=args.debug_file_name,  # 2.4.0 - Added debug_file_name
         step=args.step,  # 2.5.0 - Added step mode
+        no_break=args.no_break,  # 2.5.0 - Added no_break flag
     )
 
     args = parser.parse_args()

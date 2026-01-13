@@ -61,6 +61,9 @@
 - Dumps all variables in memory and waits for ENTER to continue
 - Works independently of `--step` flag (can be used without it)
 - Useful for setting breakpoints at specific actions during debugging
+- Added `--no-break` flag to ignore all `break` attributes in actions
+  - Useful when running tests in CI/CD or automated environments
+  - Does not affect `--step` mode (step mode always pauses)
 - Example:
   ```json
   {
@@ -70,7 +73,7 @@
     "break": true
   }
   ```
-- File modified: `lib/parser.py`
+- Files modified: `restest.py`, `lib/parser.py`
 
 #### Include Action Enhancement
 - `include` action now displays the included filename in console

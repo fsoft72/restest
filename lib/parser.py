@@ -34,6 +34,7 @@ class RESTestParser:
         log_clean=False,  # 2.2.0 - support for log_clean
         debug_file_name=None,  # 2.4.0 - support for debug_file_name
         step=False,  # 2.5.0 - support for step mode
+        no_break=False,  # 2.5.0 - support for no_break flag
     ):
         self.rt = RESTest(
             quiet=quiet,
@@ -61,6 +62,8 @@ class RESTestParser:
         self.auth_mode = auth_mode
         # 2.5.0 - support for step mode
         self.step = step
+        # 2.5.0 - support for no_break flag
+        self.no_break = no_break
 
         self._paths = []
         self._included = {}
@@ -116,7 +119,9 @@ class RESTestParser:
                 self._actions(act["actions"])
 
             # 2.5.0 - step mode or break attribute: wait for user to press ENTER before next action
-            if self.step or act.get("break", False):
+            # --no-break flag disables break attribute (but not --step mode)
+            should_break = self.step or (act.get("break", False) and not self.no_break)
+            if should_break:
                 # Dump all variables before prompting
                 print("\n%s" % xcolored(self, "=== Variables in Memory ===", "yellow"))
                 self.rt.dump()
