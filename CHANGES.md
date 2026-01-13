@@ -49,6 +49,8 @@
 #### Step Mode
 - Added `--step` command line flag to execute one action at a time
 - When enabled, waits for user to press ENTER before executing the next action
+- Automatically dumps all variables in memory before each prompt
+- Shows variable names in green and values in white for easy reading
 - Useful for debugging and interactive test execution
 - Supports Ctrl+C to interrupt execution gracefully
 - Files modified: `restest.py`, `lib/parser.py`

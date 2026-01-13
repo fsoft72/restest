@@ -117,6 +117,9 @@ class RESTestParser:
 
             # 2.5.0 - step mode: wait for user to press ENTER before next action
             if self.step:
+                # Dump all variables before prompting
+                print("\n%s" % xcolored(self, "=== Variables in Memory ===", "yellow"))
+                self.rt.dump()
                 try:
                     input(xcolored(self, "\nPress ENTER to continue...", "cyan"))
                 except KeyboardInterrupt:
