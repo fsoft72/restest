@@ -384,6 +384,22 @@ class RESTestParser:
 
         script = self._json_load(fname)
 
+        # 2.5.0 - Display included file content in console
+        print(
+            "\n%s\n%s %s\n%s"
+            % (
+                xcolored(self, "=" * 80, "cyan"),
+                xcolored(self, "INCLUDING FILE:", "white", "on_blue", ["bold"]),
+                xcolored(self, fname, "yellow", attrs=["bold"]),
+                xcolored(self, "-" * 80, "cyan"),
+            )
+        )
+        # Pretty print the JSON content
+        formatted_json = json.dumps(script, indent=2, default=str)
+        for line in formatted_json.split("\n"):
+            print(xcolored(self, line, "green"))
+        print(xcolored(self, "=" * 80, "cyan") + "\n")
+
         skip_include = False
         if script.get("run-once", False) and fname in self._included:
             skip_include = True

@@ -54,3 +54,14 @@
 - Useful for debugging and interactive test execution
 - Supports Ctrl+C to interrupt execution gracefully
 - Files modified: `restest.py`, `lib/parser.py`
+
+#### Include Action Enhancement
+- `include` action now displays the included file content in console
+- Very visible output with colored borders and formatting:
+  - Cyan borders (80 characters wide)
+  - "INCLUDING FILE:" header in white on blue background (bold)
+  - Filename in yellow (bold)
+  - JSON content in green with proper indentation
+- Helps understand what files are being loaded during test execution
+- Always active (not dependent on debug flags)
+- File modified: `lib/parser.py`
