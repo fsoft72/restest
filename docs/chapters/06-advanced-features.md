@@ -146,7 +146,20 @@ Include and reuse test scripts across multiple files.
 }
 ```
 
-When files are included, RESTest displays a visible notification in the console with colored borders showing the filename being loaded. This helps identify which files are being processed during test execution.
+### Displaying Included Filename
+
+Use the `show_filename` attribute to display the included filename in the console. This is useful for debugging and understanding which files are being loaded:
+
+```json
+{
+    "action": "include",
+    "filename": "./auth/login.json",
+    "exec": true,
+    "show_filename": true
+}
+```
+
+When `show_filename` is `true`, RESTest displays a visible notification in the console with colored borders showing the filename being loaded. By default, filenames are not displayed.
 
 ### Run-Once Scripts
 ```json

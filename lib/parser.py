@@ -389,16 +389,17 @@ class RESTestParser:
 
         script = self._json_load(fname)
 
-        # 2.5.0 - Display included filename in console
-        print(
-            "\n%s\n%s %s\n%s\n"
-            % (
-                xcolored(self, "=" * 80, "cyan"),
-                xcolored(self, "INCLUDING FILE:", "white", "on_blue", ["bold"]),
-                xcolored(self, fname, "yellow", attrs=["bold"]),
-                xcolored(self, "=" * 80, "cyan"),
+        # 2.5.0 - Display included filename in console (only if show_filename is true)
+        if act.get("show_filename", False):
+            print(
+                "\n%s\n%s %s\n%s\n"
+                % (
+                    xcolored(self, "=" * 80, "cyan"),
+                    xcolored(self, "INCLUDING FILE:", "white", "on_blue", ["bold"]),
+                    xcolored(self, fname, "yellow", attrs=["bold"]),
+                    xcolored(self, "=" * 80, "cyan"),
+                )
             )
-        )
 
         skip_include = False
         if script.get("run-once", False) and fname in self._included:

@@ -76,11 +76,21 @@
 - Files modified: `restest.py`, `lib/parser.py`
 
 #### Include Action Enhancement
-- `include` action now displays the included filename in console
-- Very visible output with colored borders:
+- `include` action can now display the included filename in console
+- New `show_filename` attribute: set to `true` to enable filename display
+- By default, filenames are not displayed (silent include)
+- Very visible output with colored borders when enabled:
   - Cyan borders (80 characters wide)
   - "INCLUDING FILE:" header in white on blue background (bold)
   - Filename in yellow (bold)
 - Helps identify which files are being loaded during test execution
-- Always active (not dependent on debug flags)
+- Example:
+  ```json
+  {
+    "action": "include",
+    "filename": "./auth/login.json",
+    "exec": true,
+    "show_filename": true
+  }
+  ```
 - File modified: `lib/parser.py`
