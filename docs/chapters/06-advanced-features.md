@@ -211,6 +211,83 @@ Execute Python code directly within your tests.
 }
 ```
 
+## Variable Operations
+
+### Copy Action
+
+The `copy` action copies a value from one variable to another:
+
+```json
+{
+    "action": "copy",
+    "from": "original_token",
+    "to": "backup_token"
+}
+```
+
+This is useful when you need to preserve a variable's value before it gets overwritten:
+
+```json
+{
+    "actions": [
+        {
+            "action": "set",
+            "key": "user_id",
+            "value": "123"
+        },
+        {
+            "action": "copy",
+            "from": "user_id",
+            "to": "first_user_id"
+        },
+        {
+            "method": "post",
+            "url": "/api/users",
+            "fields": [
+                ["id", "user_id"]
+            ]
+        },
+        {
+            "rem": "Now user_id has the new value, but first_user_id still has '123'"
+        }
+    ]
+}
+```
+
+### Remark Action
+
+The `rem` or `remark` action adds comments to your test files. It does nothing during execution but helps document your tests:
+
+```json
+{
+    "actions": [
+        {
+            "rem": "This section tests the authentication flow"
+        },
+        {
+            "method": "post",
+            "url": "/auth/login"
+        },
+        {
+            "remark": "Now verify the token works"
+        },
+        {
+            "method": "get",
+            "url": "/api/profile"
+        }
+    ]
+}
+```
+
+You can also add inline remarks to any action:
+```json
+{
+    "method": "get",
+    "url": "/api/users",
+    "rem": "Fetch all users to verify the list is not empty"
+}
+```
+
 ## Conditional Execution
 
 Control test flow based on conditions.
@@ -230,6 +307,71 @@ Control test flow based on conditions.
                 "level": "INFO",
                 "message": "Running in production"
             }
+        }
+    ]
+}
+```
+
+### Conditional Modes
+
+The `if` action supports all standard test modes:
+
+| Mode | Aliases | Description |
+|------|---------|-------------|
+| `EQUALS` | `==`, `=` | Variable equals value |
+| `NOT_EQUAL` | `!=`, `<>` | Variable does not equal value |
+| `EXISTS` | `!!`, `NOT_NULL` | Variable exists and is not null |
+| `EMPTY` | `IS_NULL`, `NULL` | Variable is null or doesn't exist |
+| `GT` | `>` | Greater than (numeric) |
+| `GTE` | `>=` | Greater than or equal |
+| `LT` | `<` | Less than (numeric) |
+| `LTE` | `<=` | Less than or equal |
+| `CONTAINS` | `->` | Variable contains value |
+
+### Conditional Examples
+
+#### Check if Variable Exists
+```json
+{
+    "action": "if",
+    "field": "auth_token",
+    "mode": "EXISTS",
+    "actions": [
+        {
+            "method": "get",
+            "url": "/api/protected"
+        }
+    ]
+}
+```
+
+#### Numeric Comparison
+```json
+{
+    "action": "if",
+    "field": "retry_count",
+    "mode": "LT",
+    "value": 3,
+    "actions": [
+        {
+            "method": "post",
+            "url": "/api/retry"
+        }
+    ]
+}
+```
+
+#### Check if Value Contains Substring
+```json
+{
+    "action": "if",
+    "field": "user_role",
+    "mode": "CONTAINS",
+    "value": "admin",
+    "actions": [
+        {
+            "method": "delete",
+            "url": "/api/users/%(target_user)s"
         }
     ]
 }

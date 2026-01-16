@@ -23,6 +23,72 @@ Every request can include tests to validate the response:
 }
 ```
 
+## Test Structure
+
+Each test can have the following fields:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `field` | Yes | Path to the field in the response |
+| `mode` | No | Test mode (defaults to `EQUALS`) |
+| `value` | Depends | Expected value (required for most modes) |
+| `title` | No | Description of the test for logging |
+| `save` | No | Save the matched value to a variable |
+
+### Test Titles
+
+Add a `title` to make test output more readable:
+
+```json
+{
+    "tests": [
+        {
+            "title": "User should be active",
+            "field": "status",
+            "value": "active"
+        },
+        {
+            "title": "Email must exist",
+            "field": "email",
+            "mode": "EXISTS"
+        }
+    ]
+}
+```
+
+### Saving Test Values
+
+Use `save` to capture a tested value into a variable for later use:
+
+```json
+{
+    "method": "get",
+    "url": "/api/orders",
+    "tests": [
+        {
+            "title": "Should have at least one order",
+            "field": "orders",
+            "mode": "SIZE-GT",
+            "value": 0
+        },
+        {
+            "title": "First order should be completed",
+            "field": "orders[0].status",
+            "value": "completed",
+            "save": "first_order_status"
+        },
+        {
+            "title": "Capture first order ID",
+            "field": "orders[0].id",
+            "mode": "EXISTS",
+            "save": "first_order_id"
+        }
+    ]
+}
+```
+
+This validates the field AND saves its value to the specified variable. You can then use `%(first_order_id)s` in subsequent requests.
+
 ## Status Code Validation
 
 ### Default Status Codes

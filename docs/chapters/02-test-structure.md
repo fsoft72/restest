@@ -20,6 +20,26 @@ Basic structure:
 }
 ```
 
+### Supported File Formats
+
+RESTest supports multiple file formats:
+
+| Extension | Description |
+|-----------|-------------|
+| `.json` | Standard JSON test files |
+| `.gz` | Gzip-compressed JSON files |
+| `.bz2` | Bzip2-compressed JSON files |
+
+Compressed files are automatically decompressed when loaded:
+```bash
+# All of these work
+restest tests.json
+restest tests.json.gz
+restest tests.json.bz2
+```
+
+This is useful for large test suites or when storing tests in version control with compression.
+
 ## System Configuration
 
 The `system` section defines global settings for your tests.
@@ -38,7 +58,12 @@ The `system` section defines global settings for your tests.
         },
         "headers": {
             "Authorization": "Bearer %(token)s"
-        }
+        },
+        "cookies": {
+            "session_type": "api_test"
+        },
+        "authorization_header": "X-Auth-Token",
+        "authorization_template": "Token %(api_key)s"
     }
 }
 ```
@@ -50,6 +75,41 @@ The `system` section defines global settings for your tests.
 | `stop_on_error` | Stop execution on test failure | `true` | `false` |
 | `global_headers` | Headers added to all requests | `{}` | `{"X-API-Version": "1.0"}` |
 | `headers` | Headers with variable support | `{}` | `{"Authorization": "Bearer %(token)s"}` |
+| `cookies` | Cookies added to all requests | `{}` | `{"tracking": "disabled"}` |
+| `authorization_header` | Custom authorization header name | `"Authorization"` | `"X-Auth-Token"` |
+| `authorization_template` | Template for auth header value | `"Bearer %(token)s"` | `"Token %(api_key)s"` |
+
+### Global Cookies
+
+Global cookies are sent with every request (unless `no_cookies: true` is set on the request):
+
+```json
+{
+    "system": {
+        "base_url": "https://api.example.com",
+        "cookies": {
+            "client_id": "test-client-001",
+            "environment": "staging"
+        }
+    }
+}
+```
+
+### Custom Authorization Header
+
+By default, RESTest uses the `Authorization` header with the `Bearer %(token)s` template. You can customize both:
+
+```json
+{
+    "system": {
+        "base_url": "https://api.example.com",
+        "authorization_header": "X-API-Key",
+        "authorization_template": "%(api_key)s"
+    }
+}
+```
+
+This sends `X-API-Key: <value of api_key variable>` instead of `Authorization: Bearer <token>`.
 
 ### Headers Priority
 

@@ -44,6 +44,34 @@ Variables in RESTest are:
 - Case-sensitive
 - String-based (numbers are converted to strings)
 
+### Special Variables
+
+#### Counter Variable
+
+When using the `repeat` attribute on a request, the `%(counter)s` variable provides the current iteration number (1-based):
+
+```json
+{
+    "method": "post",
+    "url": "/api/items",
+    "body": {
+        "name": "Item %(counter)s",
+        "sequence": "%(counter)s"
+    },
+    "repeat": 5
+}
+```
+
+This creates 5 items with names "Item 1" through "Item 5".
+
+You can use `%(counter)s` anywhere variables are expanded:
+- In URLs: `/api/items/%(counter)s`
+- In headers: `"X-Request-Number": "%(counter)s"`
+- In request bodies
+- In cookies
+
+**Note:** The counter resets for each request with `repeat`. It's stored internally as `__internal_counter` but accessed simply as `%(counter)s`.
+
 ## Data Extraction
 
 ### Basic Field Extraction

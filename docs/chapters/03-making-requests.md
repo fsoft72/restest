@@ -290,7 +290,7 @@ RESTest supports various file upload scenarios:
 {
     "method": "get",
     "url": "/api/slow-endpoint",
-    "max_exec_time": 1000  // Fail if request takes more than 1000ms
+    "max_time": 1000  // Fail if request takes more than 1000ms
 }
 ```
 
@@ -304,6 +304,16 @@ RESTest supports various file upload scenarios:
 }
 ```
 
+You can also use `status` as an alias for `status_code`:
+```json
+{
+    "method": "delete",
+    "url": "/api/users/999",
+    "status": 404,
+    "ignore_error": true
+}
+```
+
 ### Request Repetition
 ```json
 {
@@ -312,6 +322,90 @@ RESTest supports various file upload scenarios:
     "repeat": 3  // Execute this request 3 times
 }
 ```
+
+When using `repeat`, you can access the current iteration (1-based) using the `%(counter)s` variable:
+```json
+{
+    "method": "post",
+    "url": "/api/items",
+    "body": {
+        "name": "Item %(counter)s"
+    },
+    "repeat": 5
+}
+```
+This creates items named "Item 1", "Item 2", etc.
+
+### Skipping Requests
+
+Use the `skip` attribute to conditionally skip a request:
+```json
+{
+    "method": "delete",
+    "url": "/api/temp-data",
+    "skip": true  // This request will be skipped
+}
+```
+
+This is useful with variable-based conditions (when combined with expressions):
+```json
+{
+    "method": "post",
+    "url": "/api/items",
+    "body": {"name": "Auto-created"},
+    "repeat": "${items_needed}",
+    "skip": "${items_needed <= 0}"
+}
+```
+
+### Disabling Session Cookies
+
+By default, RESTest maintains cookies across requests using a session. To disable this for a specific request:
+```json
+{
+    "method": "get",
+    "url": "/api/fresh-session",
+    "no_cookies": true
+}
+```
+
+### Dumping Response Fields
+
+Use `dumps` to print specific response fields to the console for debugging:
+```json
+{
+    "method": "get",
+    "url": "/api/user/profile",
+    "dumps": ["id", "email", "settings.theme"]
+}
+```
+
+This prints the specified fields from the response without saving them to variables.
+
+### Request Body Aliases
+
+The `body` field can also be written as `params` or `data` - they are interchangeable:
+```json
+{
+    "method": "post",
+    "url": "/api/users",
+    "data": {
+        "name": "John"
+    }
+}
+```
+
+```json
+{
+    "method": "post",
+    "url": "/api/users",
+    "params": {
+        "name": "John"
+    }
+}
+```
+
+All three (`body`, `params`, `data`) work the same way for POST/PUT/PATCH requests.
 
 ## Working Examples
 
