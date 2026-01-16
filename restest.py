@@ -13,7 +13,7 @@ import time
 from lib.parser import RESTestParser
 from lib.postman_exp import PostmanExporter
 
-VERSION = "2.5.0-dev"
+VERSION = "2.5.0"
 
 
 def _parse_cloudflare_env_file(filepath):
@@ -34,19 +34,19 @@ def _parse_cloudflare_env_file(filepath):
     vars_dict = {}
 
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, 1):
                 # Strip whitespace
                 line = line.strip()
 
                 # Skip empty lines and comments
-                if not line or line.startswith('#'):
+                if not line or line.startswith("#"):
                     continue
 
                 # Parse KEY=VALUE
-                if '=' in line:
+                if "=" in line:
                     # Split on first = only (value might contain =)
-                    key, value = line.split('=', 1)
+                    key, value = line.split("=", 1)
                     key = key.strip()
                     value = value.strip()
 
@@ -60,7 +60,9 @@ def _parse_cloudflare_env_file(filepath):
                     vars_dict[key.lower()] = value
                 else:
                     # Invalid line format - skip with warning
-                    print(f"Warning: Skipping invalid line {line_num} in {filepath}: {line}")
+                    print(
+                        f"Warning: Skipping invalid line {line_num} in {filepath}: {line}"
+                    )
 
     except FileNotFoundError:
         print(f"Error: File not found: {filepath}")
@@ -175,7 +177,9 @@ def main():
         "--quiet", action="store_true", help="If set, no output on console"
     )
     parser.add_argument(
-        "--step", action="store_true", help="Execute one action at a time, waiting for ENTER before each action"
+        "--step",
+        action="store_true",
+        help="Execute one action at a time, waiting for ENTER before each action",
     )
     parser.add_argument("--version", action="version", version=f"v{VERSION}")
 

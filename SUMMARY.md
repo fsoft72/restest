@@ -20,3 +20,4 @@
 
 - [License](LICENSE)
 - [Changelog](CHANGELOG.md)
+- [What's New in v2.5.0](docs/whats-new/v2.5.0.md)

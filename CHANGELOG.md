@@ -1,6 +1,9 @@
 # restest changelog
 
-## v2.5.0 - in development
+## 2.5.1 - in development
+
+
+## v2.5.0
 
     - ADD: number expressions `${var + 5}` and list length operator `#data`  (returns the length of data field)
     - ADD: missing documentation for `dump` action.
