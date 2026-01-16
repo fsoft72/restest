@@ -101,6 +101,31 @@ You can send data in different formats:
 }
 ```
 
+#### Direct Body Content
+
+Use the special `__direct__` key when you need to send a value directly as the request body, bypassing the normal object wrapping. This is useful for APIs that expect a raw array, string, or other non-object value as the body:
+
+```json
+{
+    "method": "post",
+    "url": "/api/batch",
+    "body": {
+        "__direct__": ["item1", "item2", "item3"]
+    }
+}
+```
+This sends `["item1", "item2", "item3"]` directly as the request body instead of `{"__direct__": [...]}`.
+
+```json
+{
+    "method": "post",
+    "url": "/api/ids",
+    "body": {
+        "__direct__": [1, 2, 3, 4, 5]
+    }
+}
+```
+
 #### Form Data
 ```json
 {

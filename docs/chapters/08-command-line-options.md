@@ -15,7 +15,7 @@ restest [options] test_file [test_file...]
 # Show version
 restest --version
 ```
-Output: `v2.2.1`
+Output: `v2.5.0`
 
 ### Base URL Configuration
 ```bash
@@ -60,7 +60,25 @@ restest --curl test.json
 
 # Dry run (no actual requests)
 restest --dry test.json
+
+# Log the executing JSON file name
+restest --debug-file-name test.json
 ```
+
+### Interactive Execution
+```bash
+# Execute one action at a time, waiting for ENTER before each
+restest --step test.json
+
+# Ignore all break attributes in actions (useful in CI/CD)
+restest --no-break test.json
+```
+The `--step` flag enables interactive execution mode:
+- Pauses before each action, waiting for ENTER
+- Dumps all variables in memory before each prompt
+- Supports Ctrl+C to interrupt gracefully
+
+The `--no-break` flag disables all `break` attributes in actions (see Advanced Features for `break` attribute documentation). This is useful when running tests in CI/CD pipelines where you don't want the execution to pause.
 
 ## Data Management
 
@@ -69,12 +87,23 @@ restest --dry test.json
 # Load system environment variables
 restest --env test.json
 
-# Load variables from file
+# Load variables from JSON file
 restest --env-load vars.json test.json
+
+# Load variables from Cloudflare .dev.vars format file
+restest --env-cf .dev.vars test.json
 
 # Save variables to file
 restest --env-save output.json test.json
 ```
+
+The `--env-cf` flag loads variables from Cloudflare's `.dev.vars` format:
+```
+# Comments start with #
+API_KEY=your-api-key
+SECRET=your-secret-value
+```
+Variable names are automatically lowercased when loaded.
 
 ### Custom Variables
 ```bash
@@ -127,15 +156,18 @@ restest --delay 1000 test.json
 | `--base-url` | None | Override base URL from test files | `--base-url https://api.example.com` |
 | `--csv` | None | Export timing data to CSV file | `--csv metrics.csv` |
 | `--curl` | False | Show curl commands on console | `--curl` |
+| `--debug-file-name` | False | Log the executing JSON file name | `--debug-file-name` |
 | `--delay` | 0 | Add delay between requests (ms) | `--delay 1000` |
 | `--dont-stop-on-error` | False | Continue on test failures | `--dont-stop-on-error` |
 | `--dry` | False | Perform dry run without requests | `--dry` |
 | `--env` | False | Load system environment variables | `--env` |
-| `--env-load` | None | Load variables from file | `--env-load vars.json` |
+| `--env-cf` | None | Load variables from Cloudflare .dev.vars format file | `--env-cf .dev.vars` |
+| `--env-load` | None | Load variables from JSON file | `--env-load vars.json` |
 | `--env-save` | None | Save variables to file | `--env-save output.json` |
 | `--key` | None | Set custom variables | `--key user_id:123` |
 | `--log` | None | Specify custom log file | `--log custom.log` |
 | `--log-clean` | False | Clean log file before starting | `--log-clean` |
+| `--no-break` | False | Ignore all `break` attributes in actions | `--no-break` |
 | `--no-colors` | False | Disable colored output | `--no-colors` |
 | `--postman` | None | Export to Postman collection | `--postman export.json` |
 | `--postman-auth-name` | None | Postman auth header name | `--postman-auth-name "Authorization"` |
@@ -144,6 +176,7 @@ restest --delay 1000 test.json
 | `--postman-name` | None | Postman collection name | `--postman-name "API Tests"` |
 | `--prefix` | None | Add prefix to all API calls | `--prefix /api/v2` |
 | `--quiet` | False | Suppress console output | `--quiet` |
+| `--step` | False | Execute one action at a time interactively | `--step` |
 | `--version` | N/A | Show version number | `--version` |
 
 ## Usage Examples

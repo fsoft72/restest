@@ -146,6 +146,8 @@ Include and reuse test scripts across multiple files.
 }
 ```
 
+When files are included, RESTest displays a visible notification in the console with colored borders showing the filename being loaded. This helps identify which files are being processed during test execution.
+
 ### Run-Once Scripts
 ```json
 {
@@ -219,6 +221,54 @@ Control test flow based on conditions.
     ]
 }
 ```
+
+## Debugging and Breakpoints
+
+### Break Attribute
+
+The `break` attribute allows you to pause execution at specific actions for debugging purposes. When an action has `break: true`, execution pauses after that action completes, dumps all variables, and waits for ENTER to continue.
+
+```json
+{
+    "actions": [
+        {
+            "title": "Login",
+            "method": "post",
+            "url": "/auth/login",
+            "body": {
+                "username": "admin",
+                "password": "secret"
+            },
+            "fields": [
+                ["token", "auth_token"]
+            ],
+            "break": true
+        },
+        {
+            "title": "Get User Profile",
+            "method": "get",
+            "url": "/api/profile"
+        }
+    ]
+}
+```
+
+When this test runs, it will:
+1. Execute the login action
+2. Dump all variables (showing `auth_token` value)
+3. Wait for ENTER to continue
+4. Execute the next action
+
+Use the `--no-break` flag to ignore all `break` attributes (useful in CI/CD environments).
+
+### Interactive Step Mode
+
+Use the `--step` command line flag to pause before every action:
+```bash
+restest --step test.json
+```
+
+See [Command Line Options](08-command-line-options.md) for more details.
 
 ## Request Timing and Control
 
