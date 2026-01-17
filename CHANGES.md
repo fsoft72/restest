@@ -94,3 +94,8 @@
   }
   ```
 - File modified: `lib/parser.py`
+
+#### LLM Documentation
+- Added `docs/llm.md` - Comprehensive but concise reference for LLMs
+- Covers all RESTest features in a format optimized for AI assistants
+- Includes quick reference tables, syntax examples, and a complete test example
