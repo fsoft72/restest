@@ -13,7 +13,7 @@ import time
 from lib.parser import RESTestParser
 from lib.postman_exp import PostmanExporter
 
-VERSION = "2.5.0"
+VERSION = "2.5.1-dev"
 
 
 def _parse_cloudflare_env_file(filepath):

@@ -296,10 +296,10 @@ class RESTestParser:
             res = self._send_req(act, i)
 
             # if 'save_cookies' in act: self.rt.save_cookies ( res, act [ 'save_cookies' ] )
-            if "fields" in act:
-                self.rt.fields(res, act["fields"])
             if "tests" in act:
                 self.rt.check(res, act["tests"])
+            if "fields" in act:
+                self.rt.fields(res, act["fields"])
             if "dumps" in act:
                 self.rt.dumps(res, act["dumps"])
 

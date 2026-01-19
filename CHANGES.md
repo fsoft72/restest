@@ -1,5 +1,9 @@
 # RESTest Changes
 
+## v2.5.1-dev
+
+- Testing `tests` rules before reading `fields`
+
 ## v2.5.0 - Number Operations Feature
 
 ### New Features
