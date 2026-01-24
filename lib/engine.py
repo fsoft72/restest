@@ -228,13 +228,108 @@ Raw Response: %s
 
         return dct
 
+    def _expand_expressions(self, value):
+        """
+        Expand all ${...} expressions in a value.
+
+        Supports:
+        - Pure expressions: "${a + b}" returns numeric value
+        - String interpolation: "user_${counter}" returns "user_1"
+        - Multiple expressions: "id_${a}_${b}" returns "id_10_5"
+
+        Args:
+            value: Value to expand (any type)
+
+        Returns:
+            Expanded value (preserves type if no expressions found)
+        """
+        # Only process strings
+        if not isinstance(value, str):
+            return value
+
+        # Quick check: if no ${ pattern, return as-is
+        if "${" not in value:
+            return value
+
+        # Import re here to avoid top-level import
+        import re
+
+        # Pattern to match ${...}
+        pattern = r'\$\{([^}]+)\}'
+
+        # Check if value is EXACTLY a single expression (no prefix/suffix)
+        full_match = re.fullmatch(r'\$\{([^}]+)\}', value)
+        if full_match:
+            # Pure expression - return numeric result
+            expr = full_match.group(1).strip()
+
+            if not expr:
+                sys.stderr.write(
+                    _c(self, "\nERROR:", "red")
+                    + " Empty expression '{}' in value: %s\n" % _c(self, value, "white")
+                )
+                sys.exit(1)
+
+            try:
+                from .expr_parser import evaluate_expr, ExpressionError
+                result = evaluate_expr(expr, self.globals)
+                return result
+            except ExpressionError as e:
+                sys.stderr.write(
+                    _c(self, "\nERROR:", "red")
+                    + " Failed to evaluate expression\n"
+                )
+                sys.stderr.write("  Value:      %s\n" % _c(self, value, "white"))
+                sys.stderr.write("  Expression: %s\n" % _c(self, expr, "yellow"))
+                sys.stderr.write("  Error:      %s\n" % _c(self, str(e), "red"))
+                sys.exit(1)
+
+        # String with embedded expressions - replace all occurrences
+        def replace_expr(match):
+            expr = match.group(1).strip()
+
+            if not expr:
+                sys.stderr.write(
+                    _c(self, "\nERROR:", "red")
+                    + " Empty expression '{}' in value: %s\n" % _c(self, value, "white")
+                )
+                sys.exit(1)
+
+            try:
+                from .expr_parser import evaluate_expr, ExpressionError
+                result = evaluate_expr(expr, self.globals)
+                # Convert to string for interpolation
+                return str(result)
+            except ExpressionError as e:
+                sys.stderr.write(
+                    _c(self, "\nERROR:", "red")
+                    + " Failed to evaluate expression\n"
+                )
+                sys.stderr.write("  Value:      %s\n" % _c(self, value, "white"))
+                sys.stderr.write("  Expression: %s\n" % _c(self, expr, "yellow"))
+                sys.stderr.write("  Error:      %s\n" % _c(self, str(e), "red"))
+                sys.exit(1)
+
+        # Replace all ${...} with their evaluated results
+        result = re.sub(pattern, replace_expr, value)
+        return result
+
     def _get_v(self, x):
         if isinstance(x, dict):
             return self._expand_dict(x)
 
         n = str(x)
+
+        # New 2.6.0 - Expand ${expr} expressions first
+        n = self._expand_expressions(n)
+
+        # Handle the case where expression returned a number
+        if not isinstance(n, str):
+            return n
+
+        # If no %(var)s pattern, return the expression-expanded value
         if n.find("%(") == -1:
-            return x
+            return n
 
         if n.find("__internal_") != -1:
             n = n.replace("__internal_", "")

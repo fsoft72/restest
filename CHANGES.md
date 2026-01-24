@@ -1,6 +1,46 @@
 # RESTest Changes
 
-## v2.6.0 - Skip Attribute Enhancement
+## v2.6.0 - Skip Attribute Enhancement & Universal Expression Expansion
+
+### New Features
+
+#### Universal Expression Expansion
+- **All fields** now support `${...}` expression syntax, not just `set` and test actions
+- Expressions are automatically expanded everywhere: URLs, headers, cookies, POST data, field values, etc.
+- Works in string interpolation: `"user_${counter}"` → `"user_1"`
+- Works with multiple expressions: `"/users/${user_id}/posts/${post_id}"` → `"/users/123/posts/456"`
+- Works as pure expressions: `"${a + b}"` → `15` (returns numeric value)
+- Combines seamlessly with variable substitution: `"%(prefix)s_v${version}"` → `"api_v2"`
+- Supported operations: `+`, `-`, `*`, `/`, `%` (modulo), parentheses
+- Examples:
+  ```json
+  {
+    "action": "set",
+    "key": "offset",
+    "value": "${(page - 1) * per_page}"
+  }
+  ```
+  ```json
+  {
+    "method": "get",
+    "url": "/api/v${version}/users/${user_id}",
+    "headers": {
+      "X-Request-ID": "req_${counter}"
+    }
+  }
+  ```
+  ```json
+  {
+    "method": "post",
+    "url": "/users",
+    "data": {
+      "username": "user_${counter}",
+      "age": "${base_age + years}"
+    }
+  }
+  ```
+- Files modified: `lib/engine.py`
+- Test files added: `test_expr_expansion.py`, `test_expr_integration.json`
 
 ### Enhancements
 

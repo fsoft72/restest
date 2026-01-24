@@ -1,0 +1,122 @@
+{
+    "description": "Integration test for universal expression expansion",
+    "actions": [
+        {
+            "title": "Setup test variables",
+            "action": "set",
+            "key": "user_id",
+            "value": 123
+        },
+        {
+            "action": "set",
+            "key": "counter",
+            "value": 1
+        },
+        {
+            "action": "set",
+            "key": "api_version",
+            "value": 3
+        },
+        {
+            "action": "set",
+            "key": "page",
+            "value": 2
+        },
+        {
+            "action": "set",
+            "key": "per_page",
+            "value": 20
+        },
+        {
+            "title": "Test 1: Expression in set action value",
+            "action": "set",
+            "key": "offset",
+            "value": "${(page - 1) * per_page}"
+        },
+        {
+            "action": "dump",
+            "fields": ["offset"],
+            "print": true
+        },
+        {
+            "title": "Test 2: Expression in username (string interpolation)",
+            "action": "set",
+            "key": "username",
+            "value": "user_${counter}"
+        },
+        {
+            "action": "dump",
+            "fields": ["username"],
+            "print": true
+        },
+        {
+            "title": "Test 3: Expression in URL path",
+            "action": "set",
+            "key": "api_path",
+            "value": "/api/v${api_version}/users/${user_id}"
+        },
+        {
+            "action": "dump",
+            "fields": ["api_path"],
+            "print": true
+        },
+        {
+            "title": "Test 4: Multiple expressions in one value",
+            "action": "set",
+            "key": "request_id",
+            "value": "req_${user_id}_attempt_${counter}"
+        },
+        {
+            "action": "dump",
+            "fields": ["request_id"],
+            "print": true
+        },
+        {
+            "title": "Test 5: Complex expression",
+            "action": "set",
+            "key": "total",
+            "value": "${(user_id + counter) * api_version}"
+        },
+        {
+            "action": "dump",
+            "fields": ["total"],
+            "print": true
+        },
+        {
+            "title": "Test 6: Increment counter and use in next value",
+            "action": "set",
+            "key": "counter",
+            "value": "${counter + 1}"
+        },
+        {
+            "action": "set",
+            "key": "next_user",
+            "value": "user_${counter}"
+        },
+        {
+            "action": "dump",
+            "fields": ["counter", "next_user"],
+            "print": true
+        },
+        {
+            "title": "Test 7: Expression combined with variable substitution",
+            "action": "set",
+            "key": "prefix",
+            "value": "test"
+        },
+        {
+            "action": "set",
+            "key": "combined",
+            "value": "%(prefix)s_v${api_version}_id${user_id}"
+        },
+        {
+            "action": "dump",
+            "fields": ["combined"],
+            "print": true
+        },
+        {
+            "action": "rem",
+            "comment": "All expression expansion tests completed successfully!"
+        }
+    ]
+}

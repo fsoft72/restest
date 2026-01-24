@@ -1,0 +1,278 @@
+{
+    "description": "Comprehensive examples of expression expansion in all fields (v2.6.0)",
+    "actions": [
+        {
+            "title": "1. Setup: Initialize variables",
+            "action": "set",
+            "key": "api_version",
+            "value": 2
+        },
+        {
+            "action": "set",
+            "key": "user_id",
+            "value": 123
+        },
+        {
+            "action": "set",
+            "key": "counter",
+            "value": 1
+        },
+        {
+            "action": "set",
+            "key": "page",
+            "value": 3
+        },
+        {
+            "action": "set",
+            "key": "per_page",
+            "value": 25
+        },
+        {
+            "action": "set",
+            "key": "base_age",
+            "value": 18
+        },
+        {
+            "title": "2. Pure expressions (return numeric values)",
+            "action": "set",
+            "key": "offset",
+            "value": "${(page - 1) * per_page}",
+            "comment": "Calculates offset for pagination: (3-1)*25 = 50"
+        },
+        {
+            "action": "set",
+            "key": "total_pages",
+            "value": "${page + 10}",
+            "comment": "Simple addition: 3 + 10 = 13"
+        },
+        {
+            "action": "set",
+            "key": "age",
+            "value": "${base_age + 5}",
+            "comment": "Calculate age: 18 + 5 = 23"
+        },
+        {
+            "action": "dump",
+            "fields": ["offset", "total_pages", "age"],
+            "print": true
+        },
+        {
+            "title": "3. String interpolation (expressions in strings)",
+            "action": "set",
+            "key": "username",
+            "value": "user_${counter}",
+            "comment": "Creates 'user_1'"
+        },
+        {
+            "action": "set",
+            "key": "filename",
+            "value": "report_${page}.pdf",
+            "comment": "Creates 'report_3.pdf'"
+        },
+        {
+            "action": "set",
+            "key": "session_id",
+            "value": "session_${user_id}_${counter}",
+            "comment": "Multiple expressions: 'session_123_1'"
+        },
+        {
+            "action": "dump",
+            "fields": ["username", "filename", "session_id"],
+            "print": true
+        },
+        {
+            "title": "4. Expressions in URLs",
+            "action": "rem",
+            "comment": "These would be real HTTP requests if not in dry mode"
+        },
+        {
+            "comment": "URL: /api/v2/users/123",
+            "action": "set",
+            "key": "api_url",
+            "value": "/api/v${api_version}/users/${user_id}"
+        },
+        {
+            "comment": "URL with pagination: /posts?page=3&limit=25",
+            "action": "set",
+            "key": "paginated_url",
+            "value": "/posts?page=${page}&limit=${per_page}"
+        },
+        {
+            "comment": "URL with calculated offset: /items?offset=50&limit=25",
+            "action": "set",
+            "key": "offset_url",
+            "value": "/items?offset=${(page - 1) * per_page}&limit=${per_page}"
+        },
+        {
+            "action": "dump",
+            "fields": ["api_url", "paginated_url", "offset_url"],
+            "print": true
+        },
+        {
+            "title": "5. Expressions in headers (would work in real requests)",
+            "action": "set",
+            "key": "request_id_header",
+            "value": "req_${user_id}_${counter}",
+            "comment": "Would be sent as: X-Request-ID: req_123_1"
+        },
+        {
+            "action": "set",
+            "key": "version_header",
+            "value": "v${api_version}.0",
+            "comment": "Would be sent as: X-API-Version: v2.0"
+        },
+        {
+            "action": "dump",
+            "fields": ["request_id_header", "version_header"],
+            "print": true
+        },
+        {
+            "title": "6. Complex calculations",
+            "action": "set",
+            "key": "result1",
+            "value": "${(user_id + counter) * api_version}",
+            "comment": "(123 + 1) * 2 = 248"
+        },
+        {
+            "action": "set",
+            "key": "result2",
+            "value": "${page * per_page + offset}",
+            "comment": "3 * 25 + 50 = 125"
+        },
+        {
+            "action": "set",
+            "key": "result3",
+            "value": "${(base_age + 10) / 2}",
+            "comment": "(18 + 10) / 2 = 14"
+        },
+        {
+            "action": "dump",
+            "fields": ["result1", "result2", "result3"],
+            "print": true
+        },
+        {
+            "title": "7. Combining expressions with variable substitution",
+            "action": "set",
+            "key": "prefix",
+            "value": "api"
+        },
+        {
+            "action": "set",
+            "key": "environment",
+            "value": "prod"
+        },
+        {
+            "action": "set",
+            "key": "combined_url",
+            "value": "%(environment)s.%(prefix)s.com/v${api_version}/users/${user_id}",
+            "comment": "Combines %(var)s and ${expr}: 'prod.api.com/v2/users/123'"
+        },
+        {
+            "action": "set",
+            "key": "combined_header",
+            "value": "%(prefix)s_v${api_version}_req${counter}",
+            "comment": "Mixed syntax: 'api_v2_req1'"
+        },
+        {
+            "action": "dump",
+            "fields": ["combined_url", "combined_header"],
+            "print": true
+        },
+        {
+            "title": "8. Incrementing counters",
+            "action": "set",
+            "key": "counter",
+            "value": "${counter + 1}",
+            "comment": "Increment counter from 1 to 2"
+        },
+        {
+            "action": "set",
+            "key": "next_username",
+            "value": "user_${counter}",
+            "comment": "Now creates 'user_2'"
+        },
+        {
+            "action": "set",
+            "key": "counter",
+            "value": "${counter + 1}",
+            "comment": "Increment again to 3"
+        },
+        {
+            "action": "set",
+            "key": "third_username",
+            "value": "user_${counter}",
+            "comment": "Now creates 'user_3'"
+        },
+        {
+            "action": "dump",
+            "fields": ["counter", "next_username", "third_username"],
+            "print": true
+        },
+        {
+            "title": "9. Practical use case: Pagination loop simulation",
+            "action": "set",
+            "key": "items_per_page",
+            "value": 10
+        },
+        {
+            "action": "set",
+            "key": "current_page",
+            "value": 1
+        },
+        {
+            "action": "set",
+            "key": "page1_offset",
+            "value": "${(current_page - 1) * items_per_page}",
+            "comment": "Page 1: offset = 0"
+        },
+        {
+            "action": "set",
+            "key": "current_page",
+            "value": "${current_page + 1}"
+        },
+        {
+            "action": "set",
+            "key": "page2_offset",
+            "value": "${(current_page - 1) * items_per_page}",
+            "comment": "Page 2: offset = 10"
+        },
+        {
+            "action": "set",
+            "key": "current_page",
+            "value": "${current_page + 1}"
+        },
+        {
+            "action": "set",
+            "key": "page3_offset",
+            "value": "${(current_page - 1) * items_per_page}",
+            "comment": "Page 3: offset = 20"
+        },
+        {
+            "action": "dump",
+            "fields": ["page1_offset", "page2_offset", "page3_offset"],
+            "print": true
+        },
+        {
+            "title": "10. Modulo operator",
+            "action": "set",
+            "key": "remainder",
+            "value": "${user_id % 10}",
+            "comment": "123 % 10 = 3"
+        },
+        {
+            "action": "set",
+            "key": "is_even_page",
+            "value": "${page % 2}",
+            "comment": "3 % 2 = 1 (odd)"
+        },
+        {
+            "action": "dump",
+            "fields": ["remainder", "is_even_page"],
+            "print": true
+        },
+        {
+            "action": "rem",
+            "comment": "All expression expansion examples completed!"
+        }
+    ]
+}
