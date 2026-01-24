@@ -235,6 +235,47 @@ def test_edge_cases():
     print("✓ Float result = 11.0")
 
 
+def test_undefined_variables():
+    """Test auto-initialization of undefined variables to 0."""
+    print("\n=== Testing Undefined Variable Auto-Initialization ===")
+
+    rt = RESTest()
+    rt.globals = {}  # Empty globals
+
+    # Undefined variable in pure expression
+    result = rt._expand_expressions("${counter}")
+    assert result == 0, f"Expected 0, got {result}"
+    assert rt.globals["counter"] == 0, f"Expected counter=0 in globals"
+    print("✓ Undefined variable ${counter} auto-initialized to 0")
+
+    # Undefined variable in string interpolation
+    rt.globals = {}
+    result = rt._expand_expressions("user_${user_id}")
+    assert result == "user_0", f"Expected 'user_0', got '{result}'"
+    assert rt.globals["user_id"] == 0, f"Expected user_id=0 in globals"
+    print("✓ Undefined in string 'user_${user_id}' = 'user_0'")
+
+    # Undefined variable in calculation
+    rt.globals = {"page": 2}
+    result = rt._expand_expressions("${page + undefined_var}")
+    assert result == 2, f"Expected 2 (2+0), got {result}"
+    assert rt.globals["undefined_var"] == 0, f"Expected undefined_var=0 in globals"
+    print("✓ Calculation with undefined: ${page + undefined_var} = 2")
+
+    # Multiple undefined variables
+    rt.globals = {}
+    result = rt._expand_expressions("${a + b + c}")
+    assert result == 0, f"Expected 0, got {result}"
+    assert rt.globals["a"] == 0 and rt.globals["b"] == 0 and rt.globals["c"] == 0
+    print("✓ Multiple undefined: ${a + b + c} = 0")
+
+    # Incrementing undefined variable
+    rt.globals = {}
+    result = rt._expand_expressions("${counter + 1}")
+    assert result == 1, f"Expected 1, got {result}"
+    print("✓ Increment undefined: ${counter + 1} = 1")
+
+
 def test_realistic_scenarios():
     """Test realistic use cases."""
     print("\n=== Testing Realistic Scenarios ===")
@@ -282,6 +323,7 @@ def run_all_tests():
         test_whitespace_handling,
         test_string_variables,
         test_edge_cases,
+        test_undefined_variables,
         test_realistic_scenarios,
     ]
 

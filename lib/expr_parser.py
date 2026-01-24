@@ -253,6 +253,8 @@ class ExprParser:
         """
         Get variable value from variables dict.
 
+        NEW v2.6.0: Undefined variables are automatically initialized to 0.
+
         Args:
             var_name: Name of the variable
 
@@ -260,12 +262,12 @@ class ExprParser:
             Numeric value of the variable
 
         Raises:
-            ExpressionError: If variable is undefined or non-numeric
+            ExpressionError: If variable is defined but non-numeric
         """
         if var_name not in self.variables:
-            raise ExpressionError(
-                f"Undefined variable '{var_name}' in expression: {self.expr}"
-            )
+            # Auto-initialize undefined variables to 0
+            self.variables[var_name] = 0
+            return 0
 
         value = self.variables[var_name]
 

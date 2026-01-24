@@ -1,0 +1,42 @@
+{
+    "description": "Test undefined counter auto-initialization",
+    "actions": [
+        {
+            "title": "Use counter without initializing it first",
+            "action": "set",
+            "key": "username",
+            "value": "disableduser_${counter}"
+        },
+        {
+            "action": "set",
+            "key": "email",
+            "value": "disabled_${counter}@example.com"
+        },
+        {
+            "action": "dump",
+            "fields": ["counter", "username", "email"],
+            "print": true
+        },
+        {
+            "title": "Increment counter and use again",
+            "action": "set",
+            "key": "counter",
+            "value": "${counter + 1}"
+        },
+        {
+            "action": "set",
+            "key": "username2",
+            "value": "disableduser_${counter}"
+        },
+        {
+            "action": "set",
+            "key": "email2",
+            "value": "disabled_${counter}@example.com"
+        },
+        {
+            "action": "dump",
+            "fields": ["counter", "username2", "email2"],
+            "print": true
+        }
+    ]
+}

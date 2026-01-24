@@ -25,8 +25,9 @@ RESTest is a JSON-based REST API testing tool. Tests are JSON files with `system
 - **Reference syntax**: `%(variable_name)s` (string) or `%(variable_name)d` (integer)
 - **Expression syntax**: `${a + b}` (arithmetic with `+`, `-`, `*`, `/`, `%`)
   - **NEW v2.6.0**: Expressions work in **ALL fields** (URLs, headers, cookies, data, etc.)
+  - **Undefined variables auto-initialize to 0** - no need to pre-set counters
   - Pure expressions: `"${a + b}"` returns numeric value (e.g., `15`)
-  - String interpolation: `"user_${counter}"` returns string (e.g., `"user_1"`)
+  - String interpolation: `"user_${counter}"` returns string (e.g., `"user_0"` if undefined)
   - Multiple expressions: `"/users/${id}/posts/${page}"` → `"/users/123/posts/2"`
   - Combines with `%(var)s`: `"%(prefix)s_v${version}"` → `"api_v2"`
 - **Length extraction**: `#path.to.array` extracts length

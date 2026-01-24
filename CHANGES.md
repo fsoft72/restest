@@ -7,7 +7,8 @@
 #### Universal Expression Expansion
 - **All fields** now support `${...}` expression syntax, not just `set` and test actions
 - Expressions are automatically expanded everywhere: URLs, headers, cookies, POST data, field values, etc.
-- Works in string interpolation: `"user_${counter}"` → `"user_1"`
+- **Undefined variables auto-initialize to 0**: No need to pre-initialize counters or numeric variables
+- Works in string interpolation: `"user_${counter}"` → `"user_0"` (counter auto-initialized)
 - Works with multiple expressions: `"/users/${user_id}/posts/${post_id}"` → `"/users/123/posts/456"`
 - Works as pure expressions: `"${a + b}"` → `15` (returns numeric value)
 - Combines seamlessly with variable substitution: `"%(prefix)s_v${version}"` → `"api_v2"`
@@ -39,8 +40,8 @@
     }
   }
   ```
-- Files modified: `lib/engine.py`
-- Test files added: `test_expr_expansion.py`, `test_expr_integration.json`
+- Files modified: `lib/engine.py`, `lib/expr_parser.py`
+- Test files added: `test_expr_expansion.py`, `test_expr_integration.json`, `test_undefined_counter.json`
 
 ### Enhancements
 
