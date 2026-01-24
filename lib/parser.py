@@ -99,6 +99,13 @@ class RESTestParser:
 
     def _actions(self, actions):
         for act in actions:
+            # New 2.6.0 - support for skip flag on all actions (including include, section, etc.)
+            if act.get("skip", False):
+                if not self.quiet:
+                    sys.stdout.write(" - %s\n" % xcolored(self, "SKIP", "yellow"))
+                    sys.stdout.flush()
+                continue
+
             if "title" in act:
                 print("\n ==", act["title"])
 

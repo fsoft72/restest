@@ -1,5 +1,26 @@
 # RESTest Changes
 
+## v2.6.0 - Skip Attribute Enhancement
+
+### Enhancements
+
+#### Skip Attribute for All Actions
+- The `skip` attribute now works for ALL action types, not just HTTP requests
+- Previously only worked for GET, POST, PUT, PATCH, DELETE actions
+- Now also skips: `include`, `section`, `batch_exec`, `copy`, `dump`, `set`, `code`, `sleep`, `if`, `rem`, etc.
+- Skip check is performed at the top level before any action processing
+- Displays yellow "SKIP" message in console (unless `--quiet` flag is used)
+- Example:
+  ```json
+  {
+    "action": "include",
+    "filename": "./optional-tests.json",
+    "exec": true,
+    "skip": true
+  }
+  ```
+- File modified: `lib/parser.py`
+
 ## v2.5.0 - Number Operations Feature
 
 ### New Features
