@@ -318,10 +318,12 @@ Raw Response: %s
         if isinstance(x, dict):
             return self._expand_dict(x)
 
-        n = str(x)
+        # Preserve non-string types (bool, int, float, None) as-is
+        if not isinstance(x, str):
+            return x
 
         # New 2.6.0 - Expand ${expr} expressions first
-        n = self._expand_expressions(n)
+        n = self._expand_expressions(x)
 
         # Handle the case where expression returned a number
         if not isinstance(n, str):

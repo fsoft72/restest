@@ -2,6 +2,15 @@
 
 ## v2.6.0 - Skip Attribute Enhancement & Universal Expression Expansion
 
+### Bug Fixes
+
+#### Boolean and numeric type preservation in request data
+- Fixed a bug where boolean values (`true`/`false`) in JSON request data were being sent as Python-style strings (`"True"`/`"False"`) instead of proper JSON booleans
+- Root cause: `_get_v()` unconditionally called `str()` on all non-dict values, converting `False` → `"False"` and `True` → `"True"`
+- Fix: non-string primitive types (bool, int, float, None) are now returned as-is without string conversion
+- This also prevents unnecessary conversion of numeric values to strings when no variable expansion is needed
+- File modified: `lib/engine.py`
+
 ### New Features
 
 #### Universal Expression Expansion
