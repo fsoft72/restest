@@ -122,7 +122,10 @@ class RESTestParser:
 
                     sys.exit(1)
 
-            if "actions" in act:
+            # "section" and "if" already recurse into act["actions"] themselves
+            # (see _method_section / _method_if); running the generic fallback
+            # below for them too would execute the same nested actions twice.
+            if "actions" in act and action not in ("section", "if"):
                 self._actions(act["actions"])
 
             # 2.5.0 - step mode or break attribute: wait for user to press ENTER before next action
