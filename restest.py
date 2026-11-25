@@ -11,10 +11,15 @@ import os
 import sys
 import time
 
+from lib.cols import xcolored
+from lib.errors import RESTestError
 from lib.parser import RESTestParser
 from lib.postman_exp import PostmanExporter
 
 VERSION = "2.6.0-dev"
+
+# Standard shell exit code for a process stopped with Ctrl+C (128 + SIGINT)
+EXIT_INTERRUPTED = 130
 
 
 def _parse_cloudflare_env_file(filepath):
@@ -80,6 +85,11 @@ def main():
     )
 
     parser.add_argument("file", nargs="+", help="Files containing the tests")
+    parser.add_argument(
+        "--allow-code",
+        action="store_true",
+        help="Allow 'code' actions to execute Python code (disabled by default)",
+    )
     parser.add_argument(
         "--auth-mode",
         type=str,
@@ -212,6 +222,7 @@ def main():
         debug_file_name=args.debug_file_name,  # 2.4.0 - Added debug_file_name
         step=args.step,  # 2.5.0 - Added step mode
         no_break=args.no_break,  # 2.5.0 - Added no_break flag
+        allow_code=args.allow_code,  # 2.6.0 - Added allow_code flag
     )
 
     args = parser.parse_args()
@@ -265,8 +276,15 @@ def main():
             rt.rt.globals[k] = v
 
     start_time = time.time()
-    for f in args.file:
-        rt.open(f)
+    try:
+        for f in args.file:
+            rt.open(f)
+    except RESTestError as e:
+        sys.stderr.write("\n\n%s %s\n" % (xcolored(rt, "=== ERROR:", "red"), e))
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n\n%s" % xcolored(rt, "Interrupted by user", "red"))
+        sys.exit(EXIT_INTERRUPTED)
 
     end_time = time.time()
     total_time = int((end_time - start_time) * 1000) / 1000.0

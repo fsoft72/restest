@@ -226,6 +226,7 @@ Extract values from responses into variables:
     ]
 }
 ```
+Disabled by default: requires the `--allow-code` command line flag.
 
 ## Special Features
 
@@ -263,6 +264,7 @@ restest --curl test.json
 restest --dry test.json
 restest --step test.json
 restest --quiet test.json
+restest --allow-code test.json
 ```
 
 ## Complete Example

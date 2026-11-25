@@ -179,6 +179,8 @@ When `show_filename` is `true`, RESTest displays a visible notification in the c
 
 Execute Python code directly within your tests.
 
+> **Security:** since v2.6.0 `code` actions are disabled by default. Run restest with `--allow-code` to enable them, and only with scripts you trust: the code runs with full access to your machine and can include values received from the API.
+
 ### Basic Code Execution
 ```json
 {

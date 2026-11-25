@@ -9,6 +9,20 @@
 
 ### Bug Fixes
 
+#### High priority fixes from OPTIMIZE.md
+- **New `--allow-code` flag**: `code` actions (which `exec` arbitrary Python) are now disabled by default and stop the run with an explicit error unless `--allow-code` is given (BREAKING for scripts using `code`)
+- `--delay` now sleeps the right amount: `500` was rounded down to 0s, `1500` to 1s
+- A wrong status code is now an error also with `--dont-stop-on-error`: it is printed and counted in "Total Errors" (it was silently accepted); `max_time` violations go through the same path
+- `${...}` and `%(var)s` are now expanded at any depth inside `body` / `params` (nested dicts and lists of lists were skipped or only half expanded)
+- Library code no longer calls `sys.exit()`: errors raise `RESTestError` (new `lib/errors.py`) and `restest.py` prints them and exits with code 1; Ctrl+C exits with code 130 (it was 0 in `--step` mode)
+- Network failures (`requests.RequestException`) always stop the run, also in `--quiet` mode (they crashed later with `AttributeError`); other unexpected exceptions are no longer hidden behind a generic "status: ERROR"
+- Expression evaluation errors are built by a single `_eval_expression()` helper; the `${...}` regex is compiled once (`RX_EXPRESSION`)
+- `_json_load` now reports a missing script file as a clean error (it was a raw traceback) and always closes the file
+- `do_EXEC` no longer crashes when called without `files`
+- Postman export: form requests (dict data) and JSON list bodies no longer crash, the `HEADERS` debug print is gone, the output file is properly closed
+- Docs: `--allow-code` documented in chapters 06, 08 and `docs/llm.md`
+- Files modified: `lib/engine.py`, `lib/parser.py`, `lib/postman_exp.py`, `restest.py`, docs; files added: `lib/errors.py`, `test_high_fixes.py`
+
 #### Critical fixes from OPTIMIZE.md
 - `if` action: the condition is now evaluated against the variable named in `field` and nested actions run only when it passes; removed the `---- IF RES:` debug print; it no longer aborts the whole run ("stopping on unhandled error")
 - `--dry` mode no longer crashes with `'NoneType' object has no attribute 'status_code'`: requests print `DRY`, and `fields` / `tests` / `dumps` are skipped (variables from responses stay undefined in dry runs)

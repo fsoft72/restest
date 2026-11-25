@@ -80,6 +80,13 @@ The `--step` flag enables interactive execution mode:
 
 The `--no-break` flag disables all `break` attributes in actions (see Advanced Features for `break` attribute documentation). This is useful when running tests in CI/CD pipelines where you don't want the execution to pause.
 
+### Code Execution
+```bash
+# Allow "code" actions to execute Python code
+restest --allow-code test.json
+```
+Since v2.6.0, `code` actions are disabled by default because they execute arbitrary Python with full access to your machine, and the code can include values received from the API. A script containing a `code` action stops with an error unless `--allow-code` is given. Only use it with scripts you trust.
+
 ## Data Management
 
 ### Environment Variables

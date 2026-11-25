@@ -11,8 +11,11 @@ import os
 import gzip
 import bz2
 
+import requests
+
 from .engine import RESTest
 from .cols import xcolored
+from .errors import RESTestError
 from .timings import Timings
 from .utils import deepcopy, size2str
 
@@ -35,6 +38,7 @@ class RESTestParser:
         debug_file_name=None,  # 2.4.0 - support for debug_file_name
         step=False,  # 2.5.0 - support for step mode
         no_break=False,  # 2.5.0 - support for no_break flag
+        allow_code=False,  # 2.6.0 - "code" actions run only when explicitly allowed
     ):
         self.rt = RESTest(
             quiet=quiet,
@@ -64,6 +68,8 @@ class RESTestParser:
         self.step = step
         # 2.5.0 - support for no_break flag
         self.no_break = no_break
+        # 2.6.0 - "code" actions execute Python: disabled unless allowed
+        self.allow_code = allow_code
 
         self._paths = []
         self._included = {}
@@ -114,13 +120,9 @@ class RESTestParser:
                 meth = getattr(self, "_method_" + action)
                 res = meth(act)
                 if not res:
-                    print("=== RES: ", json.dumps(res, indent=4, default=str))
-                    sys.stderr.write(
-                        "%s: stopping on unhandled error\n\n"
-                        % (xcolored(self, "ERROR", "red", "on_white", ["reverse"]),)
+                    raise RESTestError(
+                        "action '%s' failed: stopping on unhandled error" % action
                     )
-
-                    sys.exit(1)
 
             # "section" and "if" already recurse into act["actions"] themselves
             # (see _method_section / _method_if); running the generic fallback
@@ -135,11 +137,8 @@ class RESTestParser:
                 # Dump all variables before prompting
                 print("\n%s" % xcolored(self, "=== Variables in Memory ===", "yellow"))
                 self.rt.dump()
-                try:
-                    input(xcolored(self, "\nPress ENTER to continue...", "cyan"))
-                except KeyboardInterrupt:
-                    print("\n\n%s" % xcolored(self, "Interrupted by user", "red"))
-                    sys.exit(0)
+                # Ctrl+C raises KeyboardInterrupt, handled by the CLI
+                input(xcolored(self, "\nPress ENTER to continue...", "cyan"))
 
     def _parse_files(self, dct):
         files = {}
@@ -195,11 +194,7 @@ class RESTestParser:
 
         # 2.2.0 - if params is present, but it is not a dict return an error
         if params and not isinstance(params, dict):
-            sys.stderr.write(
-                "\n%s: 'body' (or 'params') must be a dictionary\n"
-                % (xcolored(self, "ERROR", "red", "on_white", ["reverse"]),)
-            )
-            sys.exit(1)
+            raise RESTestError("'body' (or 'params') must be a dictionary")
 
         # New 2.1.0 - support for skip flag
         if act.get("skip", False):
@@ -289,21 +284,14 @@ class RESTestParser:
                 )
 
             return res
-        except Exception as e:
+        except requests.RequestException as e:
+            # Network level failure (connection refused, timeout, bad URL, ...)
             if not self.quiet:
                 sys.stdout.write(
-                    " - status: %s\n\n%s\n"
-                    % (
-                        xcolored(
-                            self, "ERROR", "red", "on_white", ["reverse", "blink"]
-                        ),
-                        e,
-                    )
+                    " - status: %s\n"
+                    % xcolored(self, "ERROR", "red", "on_white", ["reverse", "blink"])
                 )
-
-                sys.exit(1)
-
-            return None
+            raise RESTestError("request failed: %s" % e) from e
 
     def _method_exec(self, act):
         repeat = act.get("repeat", 1)
@@ -399,8 +387,7 @@ class RESTestParser:
             fname = os.path.abspath(os.path.join(path, fname))
 
         if not os.path.exists(fname):
-            sys.stderr.write("ERROR: could not open file: %s\n" % fname)
-            sys.exit(1)
+            raise RESTestError("could not open file: %s" % fname)
 
         return fname
 
@@ -471,6 +458,18 @@ class RESTestParser:
         return True
 
     def _method_code(self, act):
+        """
+        Execute the Python lines in act["code"] (globals interpolated with %(var)s).
+
+        Raises:
+            RESTestError: If code execution was not enabled with --allow-code
+        """
+        if not self.allow_code:
+            raise RESTestError(
+                "'code' action is disabled: it runs arbitrary Python. "
+                "Use --allow-code to enable it"
+            )
+
         code = ("\n".join(act["code"])) % self.rt.globals
         print("---- CODE: ", code)
         exec(code)
@@ -516,36 +515,37 @@ class RESTestParser:
         for k, v in system.items():
             setattr(self.rt, k, v)
 
-    def _json_load(self, fname):
-        # load gzip file
+    def _open_script(self, fname):
+        """Open a script file, transparently handling .gz and .bz2 compression."""
         if fname.endswith(".gz"):
-            f = gzip.open(fname, "r")
-        elif fname.endswith(".bz2"):
-            f = bz2.BZ2File(fname, "r")
-        else:
-            f = open(fname, "r", encoding="utf-8")
+            return gzip.open(fname, "r")
+        if fname.endswith(".bz2"):
+            return bz2.BZ2File(fname, "r")
 
+        return open(fname, "r", encoding="utf-8")
+
+    def _json_load(self, fname):
+        """
+        Load and parse a JSON script file.
+
+        Raises:
+            RESTestError: If the file cannot be read or is not valid JSON
+        """
         try:
-            data = json.load(f)
+            with self._open_script(fname) as f:
+                data = json.load(f)
+        except (OSError, ValueError, EOFError) as e:
+            raise RESTestError("error loading JSON file: %s\n%s" % (fname, e)) from e
 
-            if self.debug_file_name:
-                print(
-                    "\n%s\n%s: executing file %s\n%s\n"
-                    % (
-                        "=" * 70,
-                        xcolored(self, "DEBUG", "blue"),
-                        xcolored(self, fname, "yellow"),
-                        "=" * 70,
-                    )
+        if self.debug_file_name:
+            print(
+                "\n%s\n%s: executing file %s\n%s\n"
+                % (
+                    "=" * 70,
+                    xcolored(self, "DEBUG", "blue"),
+                    xcolored(self, fname, "yellow"),
+                    "=" * 70,
                 )
-        except Exception as e:
-            sys.stderr.write(
-                "%s: error parsing JSON file: %s\n"
-                % (xcolored(self, "ERROR", "red", "on_white", ["reverse"]), fname)
             )
-            sys.stderr.write("%s\n" % e)
-            sys.exit(1)
-        finally:
-            f.close()
 
         return data

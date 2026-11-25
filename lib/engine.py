@@ -6,9 +6,9 @@
 #
 
 import ast
-import copy
 import json
 import os
+import re
 import sys
 import time
 import urllib
@@ -17,7 +17,11 @@ import requests
 
 from .path_parser import expand_value
 from .cols import xcolored as _c
-from .expr_parser import evaluate_expr, is_expression
+from .errors import RESTestError
+from .expr_parser import evaluate_expr, is_expression, ExpressionError
+
+# Matches a ${...} expression inside a string
+RX_EXPRESSION = re.compile(r"\$\{([^}]+)\}")
 
 
 class RESTest:
@@ -204,13 +208,11 @@ Raw Response: %s
             hv = ""
             try:
                 hv = self._expand_var(self.authorization_template)
-            except Exception:
-                sys.stderr.write(
-                    _c(self, "ERROR", "red")
-                    + " could not create Authorization template: %s"
-                    % self.authorization_template
-                )
-                raise
+            except RESTestError as e:
+                raise RESTestError(
+                    "could not create Authorization template: %s\n%s"
+                    % (self.authorization_template, e)
+                ) from e
 
             if hv:
                 headers[self.authorization_header] = hv
@@ -244,28 +246,23 @@ Raw Response: %s
 
         return base_url + "/" + endpoint
 
-    def _expand_list(self, lst):
-        res = []
-        for x in lst:
-            if isinstance(x, str):
-                res.append(self._get_v(x))
-            elif isinstance(x, dict):
-                res.append(self._expand_dict(x))
-            else:
-                res.append(x)
+    def _expand_any(self, value):
+        """Expand ${...} and %(var)s in a value, recursing into dicts and lists."""
+        if isinstance(value, dict):
+            return self._expand_dict(value)
+        if isinstance(value, list):
+            return self._expand_list(value)
 
-        return res
+        return self._get_v(value)
+
+    def _expand_list(self, lst):
+        """Return a new list with every item expanded (nested lists included)."""
+        return [self._expand_any(x) for x in lst]
 
     def _expand_dict(self, dct):
+        """Expand every value of dct in place (nested dicts and lists included)."""
         for k, v in dct.items():
-            if isinstance(v, str) and v.find("%(") != -1:
-                v = self._get_v(v)
-            elif isinstance(v, dict):
-                v = self._expand_dict(v)
-            elif isinstance(v, list):
-                v = self._expand_list(v)
-
-            dct[k] = v
+            dct[k] = self._expand_any(v)
 
         return dct
 
@@ -292,68 +289,50 @@ Raw Response: %s
         if "${" not in value:
             return value
 
-        # Import re here to avoid top-level import
-        import re
-
-        # Pattern to match ${...}
-        pattern = r'\$\{([^}]+)\}'
-
-        # Check if value is EXACTLY a single expression (no prefix/suffix)
-        full_match = re.fullmatch(r'\$\{([^}]+)\}', value)
+        # Value is EXACTLY a single expression (no prefix/suffix): keep numeric result
+        full_match = RX_EXPRESSION.fullmatch(value)
         if full_match:
-            # Pure expression - return numeric result
-            expr = full_match.group(1).strip()
+            return self._eval_expression(full_match.group(1), value)
 
-            if not expr:
-                sys.stderr.write(
-                    _c(self, "\nERROR:", "red")
-                    + " Empty expression '{}' in value: %s\n" % _c(self, value, "white")
+        # String with embedded expressions: replace all occurrences as strings
+        return RX_EXPRESSION.sub(
+            lambda match: str(self._eval_expression(match.group(1), value)), value
+        )
+
+    def _eval_expression(self, expr, value):
+        """
+        Evaluate the content of one ${...} expression against the globals.
+
+        Args:
+            expr: Expression content (without the ${ } wrapper)
+            value: Full original value, used in error messages
+
+        Returns:
+            Numeric result of the expression
+
+        Raises:
+            RESTestError: If the expression is empty or cannot be evaluated
+        """
+        expr = expr.strip()
+        if not expr:
+            raise RESTestError(
+                "Empty expression '{}' in value: %s" % _c(self, value, "white")
+            )
+
+        try:
+            return evaluate_expr(expr, self.globals)
+        except ExpressionError as e:
+            raise RESTestError(
+                "Failed to evaluate expression\n"
+                "  Value:      %s\n"
+                "  Expression: %s\n"
+                "  Error:      %s"
+                % (
+                    _c(self, value, "white"),
+                    _c(self, expr, "yellow"),
+                    _c(self, str(e), "red"),
                 )
-                sys.exit(1)
-
-            try:
-                from .expr_parser import evaluate_expr, ExpressionError
-                result = evaluate_expr(expr, self.globals)
-                return result
-            except ExpressionError as e:
-                sys.stderr.write(
-                    _c(self, "\nERROR:", "red")
-                    + " Failed to evaluate expression\n"
-                )
-                sys.stderr.write("  Value:      %s\n" % _c(self, value, "white"))
-                sys.stderr.write("  Expression: %s\n" % _c(self, expr, "yellow"))
-                sys.stderr.write("  Error:      %s\n" % _c(self, str(e), "red"))
-                sys.exit(1)
-
-        # String with embedded expressions - replace all occurrences
-        def replace_expr(match):
-            expr = match.group(1).strip()
-
-            if not expr:
-                sys.stderr.write(
-                    _c(self, "\nERROR:", "red")
-                    + " Empty expression '{}' in value: %s\n" % _c(self, value, "white")
-                )
-                sys.exit(1)
-
-            try:
-                from .expr_parser import evaluate_expr, ExpressionError
-                result = evaluate_expr(expr, self.globals)
-                # Convert to string for interpolation
-                return str(result)
-            except ExpressionError as e:
-                sys.stderr.write(
-                    _c(self, "\nERROR:", "red")
-                    + " Failed to evaluate expression\n"
-                )
-                sys.stderr.write("  Value:      %s\n" % _c(self, value, "white"))
-                sys.stderr.write("  Expression: %s\n" % _c(self, expr, "yellow"))
-                sys.stderr.write("  Error:      %s\n" % _c(self, str(e), "red"))
-                sys.exit(1)
-
-        # Replace all ${...} with their evaluated results
-        result = re.sub(pattern, replace_expr, value)
-        return result
+            ) from e
 
     def _get_v(self, x):
         if isinstance(x, dict):
@@ -381,39 +360,39 @@ Raw Response: %s
         return n % self.globals
 
     def _expand_var(self, v):
-        globs = copy.copy(self.globals)
-        globs["inner_count"] = self._inner_count
+        """
+        Expand ${...} expressions and %(var)s placeholders in a value.
 
+        Raises:
+            RESTestError: If the value cannot be expanded (the message lists the globals)
+        """
         try:
             if isinstance(v, list):
                 v = self._expand_list(v)
             else:
                 v = self._get_v(v)
-        except Exception:
-            sys.stderr.write(
-                _c(self, "\nERROR:", "red")
-                + " could not expand: %s\n" % _c(self, v, "white")
-            )
-            self._dump_globals()
-
-            sys.exit(1)
+        except RESTestError:
+            raise
+        except Exception as e:
+            raise RESTestError(
+                "could not expand: %s (%s: %s)\n%s"
+                % (_c(self, v, "white"), type(e).__name__, e, self._format_globals())
+            ) from e
 
         return v
 
-    def _dump_globals(self):
-        keys = list(self.globals.keys())
+    def _format_globals(self):
+        """Return the global variables as aligned "name : value" lines."""
+        keys = sorted(self.globals.keys())
         if not keys:
-            return
+            return ""
 
-        keys.sort()
+        max_len = max(len(x) for x in keys)
 
-        max_len = max([len(x) for x in keys])
-
-        for k in keys:
-            # pad k to max_len
-            sk = k.ljust(max_len)
-
-            sys.stderr.write("    %s : %s\n" % (_c(self, sk, "white"), self.globals[k]))
+        return "".join(
+            "    %s : %s\n" % (_c(self, k.ljust(max_len), "white"), self.globals[k])
+            for k in keys
+        )
 
     def _expand_data(self, data):
         if "__direct__" in data:
@@ -481,6 +460,10 @@ Raw Response: %s
         return "&".join(elems)
 
     def _reorder_files(self, files):
+        """Flatten multi-file fields into (name, file) tuples for requests."""
+        if not files:
+            return files
+
         has_multi = False
         for k, v in files.items():
             if isinstance(v, list):
@@ -589,26 +572,22 @@ Raw Response: %s
         if skip_error:
             return r
 
-        if r.status_code != status_code and self.stop_on_error:
-            sys.stderr.write(
-                """\n\n%s\n%s %s %s\n%s\n\n"""
+        if r.status_code != status_code:
+            self._error(
+                "%s %s - Status: %s (expected: %s)"
                 % (
-                    "=" * 78,
-                    _c(self, "REQUEST ERROR: ", "red"),
+                    _c(self, "REQUEST ERROR:", "red"),
                     _c(self, r.text, "white"),
-                    " - Status: %s " % r.status_code,
-                    "=" * 78,
+                    r.status_code,
+                    status_code,
                 )
             )
-            sys.exit(1)
 
         ms = self._elapsed_ms(r)
         if max_exec_time and ms > max_exec_time:
-            sys.stderr.write(
-                """%s\nTOO MUCH TIME ERROR (res: %s - expected: %s)\n%s\n"""
-                % ("*" * 70, ms, max_exec_time, "*" * 70)
+            self._error(
+                "TOO MUCH TIME ERROR (res: %s ms - expected: %s ms)" % (ms, max_exec_time)
             )
-            sys.exit(1)
 
         return r
 
@@ -633,7 +612,7 @@ Raw Response: %s
         self._internal_info = internal_info
 
         if self.delay:
-            time.sleep(self.delay // 1000)
+            time.sleep(self.delay / 1000)
 
         return self._req(
             meth,
@@ -763,11 +742,18 @@ Raw Response: %s
             print("==== %s: %s\n" % (glob_key, json.dumps(v, indent=4, default=str)))
 
     def _error(self, txt):
-        sys.stderr.write(_c(self, "\n\n=== ERROR: ", "red") + "%s\n" % txt)
+        """
+        Record a test error: log it, then stop or count it.
+
+        Raises:
+            RESTestError: If stop_on_error is set
+        """
         self._log_write("\n\n*** ERROR: %s\n" % txt)
-        if self.stop_on_error:
-            sys.exit(1)
         self._errors += 1
+        if self.stop_on_error:
+            raise RESTestError(txt)
+
+        sys.stderr.write(_c(self, "\n\n=== ERROR: ", "red") + "%s\n" % txt)
         return None
 
     def _expand_value(self, dct, key):

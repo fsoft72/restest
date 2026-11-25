@@ -12,7 +12,8 @@ class PostmanExporterItem:
         self.mode = mode
         self.name = None
         self.url = {}
-        self.data = json.loads(data)
+        # JSON requests arrive already encoded, form requests as a dict
+        self.data = json.loads(data) if isinstance(data, (str, bytes)) else data
         self.title = title
         self.body = None
         self.base_url = base_url
@@ -38,7 +39,8 @@ class PostmanExporterItem:
         self._parse_headers()
 
     def _parse_body(self):
-        if not len(self.data.keys()):
+        """Build the raw JSON body (skipped when there is no data)."""
+        if not self.data:
             return
 
         body = {
@@ -50,12 +52,10 @@ class PostmanExporterItem:
         self.body = body
 
     def _parse_headers(self):
+        """Convert headers to Postman format, replacing the auth header value."""
         if not len(self.headers):
             return
-        print(
-            "\n\n\n***************** HEADERS **************************\n\n",
-            self.headers,
-        )
+
         res = []
         for k, v in self.headers.items():
             if k == self.auth_name:
@@ -113,8 +113,10 @@ class PostmanExporter:
         self.items.append(it)
 
     def save(self):
+        """Write the collection to the output JSON file."""
         res = {"info": {"name": self.name, "schema": self.schema}, "item": []}
         for i in self.items:
             res["item"].append(i.obj())
 
-        open(self.output_name, "w").write(json.dumps(res, indent=4))
+        with open(self.output_name, "w", encoding="utf-8") as f:
+            f.write(json.dumps(res, indent=4))

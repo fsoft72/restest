@@ -18,22 +18,22 @@
 
 ## High
 
-- [ ] **`delay` option sleeps 0 seconds for values < 1000ms** - `time.sleep(self.delay // 1000)` uses integer division, so `--delay 500` does nothing and `--delay 1500` sleeps 1s. Use `self.delay / 1000`.
+- [x] **`delay` option sleeps 0 seconds for values < 1000ms** - `time.sleep(self.delay // 1000)` uses integer division, so `--delay 500` does nothing and `--delay 1500` sleeps 1s. Use `self.delay / 1000`.
   - File(s): `lib/engine.py` (`do_EXEC`)
 
-- [ ] **Status-code mismatch not counted as error when not stopping** - With `--dont-stop-on-error`, a wrong status code in `_req` is silently accepted (no message, no `_errors += 1`), so the final "Total Errors" line under-reports. Route the mismatch through `self._error(...)`.
+- [x] **Status-code mismatch not counted as error when not stopping** - With `--dont-stop-on-error`, a wrong status code in `_req` is silently accepted (no message, no `_errors += 1`), so the final "Total Errors" line under-reports. Route the mismatch through `self._error(...)`.
   - File(s): `lib/engine.py` (`_req`)
 
-- [ ] **Library code calls `sys.exit` everywhere** - The engine and parser exit the process from ~20 places (`_expand_expressions`, `_expand_var`, `_req`, `_error`, `_resolve_fname`, `_json_load`, ...). This makes the engine impossible to embed or unit-test without catching `SystemExit`, and loses tracebacks. Introduce a `RESTestError` exception hierarchy, raise it in `lib/`, and convert to exit code only in `restest.py:main`.
+- [x] **Library code calls `sys.exit` everywhere** - The engine and parser exit the process from ~20 places (`_expand_expressions`, `_expand_var`, `_req`, `_error`, `_resolve_fname`, `_json_load`, ...). This makes the engine impossible to embed or unit-test without catching `SystemExit`, and loses tracebacks. Introduce a `RESTestError` exception hierarchy, raise it in `lib/`, and convert to exit code only in `restest.py:main`.
   - File(s): `lib/engine.py`, `lib/parser.py`, `restest.py`
 
-- [ ] **Nested dict values skip `${...}` expansion** - `_expand_dict` only expands strings containing `%(`, so `{"body": {"user": {"id": "${n + 1}"}}}` is sent literally, while the same expression at top level is evaluated. `_expand_list` also ignores nested lists. Make both delegate every string to `_get_v` and recurse on lists.
+- [x] **Nested dict values skip `${...}` expansion** - `_expand_dict` only expands strings containing `%(`, so `{"body": {"user": {"id": "${n + 1}"}}}` is sent literally, while the same expression at top level is evaluated. `_expand_list` also ignores nested lists. Make both delegate every string to `_get_v` and recurse on lists.
   - File(s): `lib/engine.py` (`_expand_dict`, `_expand_list`)
 
-- [ ] **`code` action runs arbitrary Python via `exec`** - `_method_code` interpolates globals (which may come from HTTP responses) into a string and `exec`s it with full access. A malicious API response saved via `fields` can inject code. Either remove the action, gate it behind an explicit `--allow-code` flag, or at minimum pass the values as locals instead of string-formatting them into source.
+- [x] **`code` action runs arbitrary Python via `exec`** - `_method_code` interpolates globals (which may come from HTTP responses) into a string and `exec`s it with full access. A malicious API response saved via `fields` can inject code. Either remove the action, gate it behind an explicit `--allow-code` flag, or at minimum pass the values as locals instead of string-formatting them into source.
   - File(s): `lib/parser.py` (`_method_code`)
 
-- [ ] **Postman export breaks on form content and leaks debug output** - `PostmanExporterItem` calls `json.loads(data)` but `data` is a `dict` for `content: "form"` requests (TypeError). `_parse_headers` prints a `***** HEADERS *****` debug block on every request, and `save()` never closes the file. Accept dicts, drop the print, use `with open(...)`.
+- [x] **Postman export breaks on form content and leaks debug output** - `PostmanExporterItem` calls `json.loads(data)` but `data` is a `dict` for `content: "form"` requests (TypeError). `_parse_headers` prints a `***** HEADERS *****` debug block on every request, and `save()` never closes the file. Accept dicts, drop the print, use `with open(...)`.
   - File(s): `lib/postman_exp.py`
 
 ## Medium
@@ -50,7 +50,7 @@
 - [ ] **Uploaded files are never closed** - `_parse_files` opens every file with `open(..., "rb")` and nothing closes them; with `repeat` this leaks a descriptor per iteration. It also runs before the per-request skip check. Close them in a `finally` in `_method_exec` (or use `contextlib.ExitStack`).
   - File(s): `lib/parser.py` (`_parse_files`, `_send_req`)
 
-- [ ] **Failed requests in quiet mode crash later** - In `_send_req` the `except Exception` block exits only when `not self.quiet`; in quiet mode it returns `None`, and `_method_exec` then calls `self.rt.fields(None, ...)` -> `AttributeError`. The broad `except` also hides real bugs as "status: ERROR". Catch `requests.RequestException` only and always fail the same way regardless of `quiet`.
+- [x] **Failed requests in quiet mode crash later** - In `_send_req` the `except Exception` block exits only when `not self.quiet`; in quiet mode it returns `None`, and `_method_exec` then calls `self.rt.fields(None, ...)` -> `AttributeError`. The broad `except` also hides real bugs as "status: ERROR". Catch `requests.RequestException` only and always fail the same way regardless of `quiet`.
   - File(s): `lib/parser.py` (`_send_req`, `_method_exec`)
 
 - [ ] **Absolute URL detection matches anywhere in the string** - `_resolve_url` uses `endpoint.lower().find("http:") != -1`, so `/redirect?to=http://x` is treated as absolute and the base URL is dropped. Use `startswith(("http://", "https://"))`.
@@ -65,7 +65,7 @@
 - [ ] **Log file reopened and chmod'ed on every write** - `_log_write` opens, chmods and closes the log for each fragment; a single request triggers 4+ open/close cycles. Open the handle once (lazily) and close it at the end of the run.
   - File(s): `lib/engine.py` (`_log_write`, `_open_log`)
 
-- [ ] **`_expand_expressions` duplicates its error handling and re-imports inline** - The pure-expression branch and `replace_expr` contain identical error blocks; `import re` and `from .expr_parser import ...` are done inside the function although `evaluate_expr` is already imported at the top. Compile the `${...}` regex once as a module constant and extract a single `_eval_or_die(expr, value)` helper.
+- [x] **`_expand_expressions` duplicates its error handling and re-imports inline** - The pure-expression branch and `replace_expr` contain identical error blocks; `import re` and `from .expr_parser import ...` are done inside the function although `evaluate_expr` is already imported at the top. Compile the `${...}` regex once as a module constant and extract a single `_eval_or_die(expr, value)` helper.
   - File(s): `lib/engine.py` (`_expand_expressions`)
 
 ## Low / Nice to have
