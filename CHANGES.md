@@ -4,6 +4,12 @@
 
 ### Bug Fixes
 
+#### Actions inside a section executed twice
+- Fixed a bug where actions nested in a `section` were run twice
+- Root cause: `_method_section` ran its own `actions`, then the generic loop in `_actions` ran them again
+- Fix (commit 3e20827): nested `actions` are no longer re-run for actions that handle them themselves (`section`, `if`)
+- Regression test added: `test_section_once.py`
+
 #### Boolean and numeric type preservation in request data
 - Fixed a bug where boolean values (`true`/`false`) in JSON request data were being sent as Python-style strings (`"True"`/`"False"`) instead of proper JSON booleans
 - Root cause: `_get_v()` unconditionally called `str()` on all non-dict values, converting `False` → `"False"` and `True` → `"True"`
