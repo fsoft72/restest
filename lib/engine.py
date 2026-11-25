@@ -149,6 +149,10 @@ Data:         %s
             % (method, endpoint, json.dumps(data, default=str))
         )
 
+    def _elapsed_ms(self, resp):
+        """Return the request duration in milliseconds, whole seconds included."""
+        return resp.elapsed.total_seconds() * 1000
+
     def _log_resp(self, headers, resp):
         if not self.log_file:
             return
@@ -162,7 +166,7 @@ Raw Response: %s
             % (
                 self._mask_headers(headers),
                 resp.status_code,
-                resp.elapsed.microseconds / 1000,
+                self._elapsed_ms(resp),
                 resp.text,
             )
         )
@@ -598,7 +602,7 @@ Raw Response: %s
             )
             sys.exit(1)
 
-        ms = r.elapsed.microseconds / 1000
+        ms = self._elapsed_ms(r)
         if max_exec_time and ms > max_exec_time:
             sys.stderr.write(
                 """%s\nTOO MUCH TIME ERROR (res: %s - expected: %s)\n%s\n"""
@@ -882,7 +886,7 @@ Raw Response: %s
         elif mode in ("LTE", "<="):
             if isinstance(current_val, str):
                 current_val = int(current_val)
-            if current_val <= expected_val:
+            if current_val > expected_val:
                 return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
         elif mode in ("SIZE-GT", "()>"):
             if len(current_val) <= int(expected_val):
@@ -894,7 +898,7 @@ Raw Response: %s
             if len(current_val) >= int(expected_val):
                 return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
         elif mode in ("SIZE-LTE", "()<="):
-            if len(current_val) <= int(expected_val):
+            if len(current_val) > int(expected_val):
                 return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
         elif mode in ("OBJ", "OBJECT"):
             if not self._object_compare(current_val, expected_val):

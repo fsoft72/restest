@@ -4,16 +4,16 @@
 
 ## Critical
 
-- [ ] **`if` action always aborts the run** - `_method_if` ignores the `_check` result (nested actions run whether the condition passes or not), prints a leftover debug line (`---- IF RES:`), and returns `None`, so `_actions` treats it as failed and calls `sys.exit(1)`. Verified: any script with an `if` action exits with "stopping on unhandled error". Run nested actions only when `err` is falsy, remove the print, return `True`.
+- [x] **`if` action always aborts the run** - `_method_if` ignores the `_check` result (nested actions run whether the condition passes or not), prints a leftover debug line (`---- IF RES:`), and returns `None`, so `_actions` treats it as failed and calls `sys.exit(1)`. Verified: any script with an `if` action exits with "stopping on unhandled error". Run nested actions only when `err` is falsy, remove the print, return `True`.
   - File(s): `lib/parser.py` (`_method_if`, `_actions`)
 
-- [ ] **`--dry` mode crashes on every request** - `_req` returns `None` in dry mode, then `_send_req` calls `res.status_code` / `len(res.content)`, raising `AttributeError`, which is caught and turned into "status: ERROR" + exit. Verified with `--dry --auth-mode no`. Short-circuit in `_send_req` when `res is None` (end timings with a placeholder status, skip `fields` / `tests` / `dumps` in `_method_exec`).
+- [x] **`--dry` mode crashes on every request** - `_req` returns `None` in dry mode, then `_send_req` calls `res.status_code` / `len(res.content)`, raising `AttributeError`, which is caught and turned into "status: ERROR" + exit. Verified with `--dry --auth-mode no`. Short-circuit in `_send_req` when `res is None` (end timings with a placeholder status, skip `fields` / `tests` / `dumps` in `_method_exec`).
   - File(s): `lib/parser.py` (`_send_req`, `_method_exec`), `lib/engine.py` (`_req`)
 
-- [ ] **`LTE` and `SIZE-LTE` checks have inverted logic** - `LTE` fails when `current_val <= expected_val` (the passing case) and `SIZE-LTE` fails when `len <= expected`. Both conditions should be `>`. Any test using `<=` / `()<=` currently reports the opposite result.
+- [x] **`LTE` and `SIZE-LTE` checks have inverted logic** - `LTE` fails when `current_val <= expected_val` (the passing case) and `SIZE-LTE` fails when `len <= expected`. Both conditions should be `>`. Any test using `<=` / `()<=` currently reports the opposite result.
   - File(s): `lib/engine.py` (`_check`, lines ~882-898)
 
-- [ ] **Response time ignores whole seconds** - `r.elapsed.microseconds / 1000` drops the seconds component, so a 2.3s request is logged as 300ms and `max_time` (`max_exec_time`) never triggers for slow calls. Use `r.elapsed.total_seconds() * 1000`.
+- [x] **Response time ignores whole seconds** - `r.elapsed.microseconds / 1000` drops the seconds component, so a 2.3s request is logged as 300ms and `max_time` (`max_exec_time`) never triggers for slow calls. Use `r.elapsed.total_seconds() * 1000`.
   - File(s): `lib/engine.py` (`_req`, `_log_resp`)
 
 ## High

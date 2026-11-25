@@ -9,6 +9,13 @@
 
 ### Bug Fixes
 
+#### Critical fixes from OPTIMIZE.md
+- `if` action: the condition is now evaluated against the variable named in `field` and nested actions run only when it passes; removed the `---- IF RES:` debug print; it no longer aborts the whole run ("stopping on unhandled error")
+- `--dry` mode no longer crashes with `'NoneType' object has no attribute 'status_code'`: requests print `DRY`, and `fields` / `tests` / `dumps` are skipped (variables from responses stay undefined in dry runs)
+- `LTE` (`<=`) and `SIZE-LTE` (`()<=`) checks had inverted logic and failed on passing values
+- Response time now uses `elapsed.total_seconds()`: before, whole seconds were dropped (2.3s logged as 300ms) and `max_time` never fired for slow requests
+- Files modified: `lib/engine.py`, `lib/parser.py`, `test_security_fixes.py` (fake response uses a real `timedelta`); test added: `test_critical_fixes.py`
+
 #### Log file permissions
 - The log file is now created and truncated with `0o600` permissions (owner read/write only), also when it already existed
 - The log file handle is now closed after every write (it was leaked before)

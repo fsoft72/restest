@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Regression tests for the low-risk security fixes."""
 
+import datetime
 import os
 import sys
 
@@ -47,8 +48,7 @@ def test_authorization_masked_in_log(tmp_path="/tmp/restest_log_mask.log"):
         status_code = 200
         text = ""
 
-        class elapsed:
-            microseconds = 0
+        elapsed = datetime.timedelta(0)
 
     rt._log_resp({"Authorization": secret, "X-Other": "keep"}, Resp)
     log = open(tmp_path).read()

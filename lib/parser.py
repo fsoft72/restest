@@ -246,6 +246,14 @@ class RESTestParser:
                 },
             )
 
+            # Dry mode: no request was sent, so there is no response to inspect
+            if res is None:
+                self.timings.end(None)
+                if not self.quiet:
+                    sys.stdout.write(" - %s\n" % xcolored(self, "DRY", "yellow"))
+                    sys.stdout.flush()
+                return None
+
             data = self.timings.end(res.status_code)
             start_time = data["start_time"]
             end_time = data["end_time"]
@@ -304,6 +312,10 @@ class RESTestParser:
         for i in range(repeat):
             act = deepcopy(orig_act)
             res = self._send_req(act, i)
+
+            # No response (dry mode or skipped request): nothing to extract or test
+            if res is None:
+                continue
 
             # if 'save_cookies' in act: self.rt.save_cookies ( res, act [ 'save_cookies' ] )
             if "fields" in act:
@@ -472,11 +484,26 @@ class RESTestParser:
         return True
 
     def _method_if(self, act):
-        err = self.rt._check(act, act["field"], act.get("value", 0))
+        """
+        Run the nested actions only when the condition passes.
 
-        print("---- IF RES: ", err, act)
+        The condition uses the same 'field' / 'mode' / 'value' keys of a test,
+        but 'field' is a variable name (not a response path).
 
-        self._actions(act["actions"])
+        Args:
+            act: Action dict with 'field', optional 'mode' / 'value' and 'actions'
+
+        Returns:
+            True (a false condition is not an error)
+        """
+        field = self.rt._expand_var(act["field"])
+        current = self.rt.globals.get(field)
+        err = self.rt._check(act, field, current)
+
+        if not err:
+            self._actions(act.get("actions", []))
+
+        return True
 
     def _parse_system(self):
         self.rt.sections = []
