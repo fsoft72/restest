@@ -5,6 +5,7 @@
 # written by Fabio Rotondo (fabio.rotondo@gmail.com)
 #
 
+import ast
 import copy
 import json
 import sys
@@ -139,7 +140,7 @@ Raw Response: %s
         # data = str ( req.body ) [ 2 : -1 ]   # quick and dirty way to remove b'...' from string
         try:
             data = req.body.decode("utf-8")
-        except:  # noqa
+        except (AttributeError, UnicodeDecodeError):
             data = ""
 
         headers = ['"{0}: {1}"'.format(k, v) for k, v in req.headers.items()]
@@ -163,7 +164,7 @@ Raw Response: %s
             hv = ""
             try:
                 hv = self._expand_var(self.authorization_template)
-            except:  # noqa
+            except Exception:
                 sys.stderr.write(
                     _c(self, "ERROR", "red")
                     + " could not create Authorization template: %s"
@@ -348,14 +349,14 @@ Raw Response: %s
                 v = self._expand_list(v)
             else:
                 v = self._get_v(v)
-        except:  # noqa
+        except Exception:
             sys.stderr.write(
                 _c(self, "\nERROR:", "red")
                 + " could not expand: %s\n" % _c(self, v, "white")
             )
             self._dump_globals()
 
-            sys.exit(0)
+            sys.exit(1)
 
         return v
 
@@ -399,9 +400,19 @@ Raw Response: %s
             res.append(temp)
         return res
 
+    def _parse_object(self, value):
+        """Parse a dict given as JSON or as a Python literal, without executing code."""
+        if isinstance(value, dict):
+            return value
+
+        try:
+            return json.loads(value)
+        except ValueError:
+            return ast.literal_eval(value)
+
     def _object_compare(self, v1, v2):
-        o1 = eval(v1)
-        o2 = eval(v2)
+        o1 = self._parse_object(v1)
+        o2 = self._parse_object(v2)
 
         k1 = list(o1.keys())
         k2 = list(o2.keys())

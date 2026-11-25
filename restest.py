@@ -8,6 +8,7 @@
 import argparse
 import json
 import os
+import sys
 import time
 
 from lib.parser import RESTestParser
@@ -246,8 +247,8 @@ def main():
             data = json.loads(open(args.env_load).read())
             for k, v in data.items():
                 rt.rt.globals[k.lower()] = v
-        except:  # noqa
-            pass
+        except (OSError, ValueError, AttributeError) as e:
+            sys.stderr.write("WARNING: could not load env file %s: %s\n" % (args.env_load, e))
 
     if args.env_cf:
         cf_vars = _parse_cloudflare_env_file(args.env_cf)
@@ -279,7 +280,11 @@ def main():
     )
 
     if args.env_save:
-        open(args.env_save, "w").write(json.dumps(rt.rt.globals, indent=4, default=str))
+        # The env file may hold tokens and credentials: owner read/write only
+        fd = os.open(args.env_save, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        os.chmod(args.env_save, 0o600)
+        with os.fdopen(fd, "w") as f:
+            f.write(json.dumps(rt.rt.globals, indent=4, default=str))
 
     if args.csv:
         rt.export_csv(args.csv)

@@ -4,6 +4,14 @@
 
 ### Bug Fixes
 
+#### Low-risk security fixes
+- `OBJECT` check mode no longer uses `eval()`: values are parsed with `json.loads()` or `ast.literal_eval()` (no code execution)
+- `--env-save` now writes the file with `0o600` permissions
+- Bare `except:` replaced with specific exceptions in `_log_curl`, `_is_int`, `--env-load` (which now prints a warning) and the Authorization template
+- `_expand_var` failures now exit with code 1 instead of 0
+- `.gitignore` now excludes `.env`, `*.env` and `.dev.vars`
+- Files modified: `lib/engine.py`, `lib/path_parser.py`, `restest.py`, `.gitignore`; test added: `test_security_fixes.py`
+
 #### Actions inside a section executed twice
 - Fixed a bug where actions nested in a `section` were run twice
 - Root cause: `_method_section` ran its own `actions`, then the generic loop in `_actions` ran them again

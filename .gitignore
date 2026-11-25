@@ -10,3 +10,6 @@ dist
 build
 *.egg-info
 __pycache__
+.env
+*.env
+.dev.vars

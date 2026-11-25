@@ -14,7 +14,7 @@ def _is_int(txt):
     try:
         int(str(txt), 10)
         return True
-    except:  # noqa
+    except (ValueError, TypeError):
         return False
 
 
