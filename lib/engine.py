@@ -98,6 +98,27 @@ class RESTest:
 
         r._headers = heads
 
+    def _mask_secret(self, value):
+        """Hide a secret value, keeping only the first and last 4 chars when long enough."""
+        value = str(value)
+        if len(value) <= 12:
+            return "****"
+
+        return value[:4] + "****" + value[-4:]
+
+    def _mask_headers(self, headers):
+        """Return a copy of headers with the Authorization values masked (for logs)."""
+        secret_names = {
+            "authorization",
+            "proxy-authorization",
+            str(self.authorization_header).lower(),
+        }
+
+        return {
+            k: (self._mask_secret(v) if str(k).lower() in secret_names else v)
+            for k, v in headers.items()
+        }
+
     def _log_write(self, txt):
         if not self.log_file:
             return
@@ -129,7 +150,12 @@ Status Code:  %s
 Request Time: %s
 Raw Response: %s
 """
-            % (headers, resp.status_code, resp.elapsed.microseconds / 1000, resp.text)
+            % (
+                self._mask_headers(headers),
+                resp.status_code,
+                resp.elapsed.microseconds / 1000,
+                resp.text,
+            )
         )
 
     def _log_curl(self, req):
@@ -143,14 +169,15 @@ Raw Response: %s
         except (AttributeError, UnicodeDecodeError):
             data = ""
 
-        headers = ['"{0}: {1}"'.format(k, v) for k, v in req.headers.items()]
-        headers = " \\\n -H ".join(headers)
+        def _build(hdrs):
+            hdrs = " \\\n -H ".join(['"{0}: {1}"'.format(k, v) for k, v in hdrs.items()])
+            return command.format(method=method, headers=hdrs, data=data, uri=uri)
 
-        curl = command.format(method=method, headers=headers, data=data, uri=uri)
-        self._log_write("\nCURL:         %s\n\n" % curl)
+        # Log file gets masked secrets; the console curl stays copy-pastable
+        self._log_write("\nCURL:         %s\n\n" % _build(self._mask_headers(req.headers)))
 
         if self.dump_curl_on_console:
-            sys.stderr.write("\n\n%s\n\n" % curl)
+            sys.stderr.write("\n\n%s\n\n" % _build(req.headers))
             sys.stderr.flush()
 
     def _mk_headers(self, authenticated, local_headers):

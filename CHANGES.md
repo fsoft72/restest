@@ -4,6 +4,11 @@
 
 ### Bug Fixes
 
+#### Authorization masked in log files
+- `Authorization`, `Proxy-Authorization` and the configured authorization header are masked in the log file (request headers and CURL line): first and last 4 chars kept, short values fully hidden
+- The curl dumped on the console (`dump_curl_on_console`) is left unmasked so it can be copy-pasted
+- File modified: `lib/engine.py`; tests added in `test_security_fixes.py`
+
 #### Low-risk security fixes
 - `OBJECT` check mode no longer uses `eval()`: values are parsed with `json.loads()` or `ast.literal_eval()` (no code execution)
 - `--env-save` now writes the file with `0o600` permissions
