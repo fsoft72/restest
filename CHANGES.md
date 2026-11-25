@@ -9,6 +9,19 @@
 
 ### Bug Fixes
 
+#### Low priority fixes from OPTIMIZE.md
+- `restest.py`: removed the duplicated `parse_args()` call and the dead commented-out setup block; `--key` splits on the first `:` only (`--key url:http://x:8080` works) and a value without `:` is a usage error instead of a traceback
+- `fields` and `dumps` share one code path (`_field_spec()` normalizes every entry to `(path, save key, mode)`, `_field_value()` extracts it):
+  - `dumps` now accepts the same forms as `fields`: one item lists (crashed), `"*"`, objects with `path` / `save` / `mode`
+  - `fields` objects also accept `field` as an alias of `path`; `"*"` honors `mode`
+  - An unknown `mode`, or `length` / `type` / `keys` on a missing path, is reported as an error (unknown modes were silently treated as `value`; `length` of a missing path returned 13)
+- `NOT_FOUND` is now a sentinel object compared with `is`: a response field holding the text `"__NOT_FOUND__"` is no longer treated as missing (it still prints as `__NOT_FOUND__`)
+- Dead code removed: `_inner_count`, `utils.deepcopy` (uses `copy.deepcopy`), the second `skip` check in `_send_req` (already handled in `_actions`); the five identical `_method_get/post/put/patch/delete` are replaced by one dispatch on `HTTP_METHODS` in `_actions`
+- Tests moved to `tests/` and run with pytest (`pytest.ini`, `requirements-dev.txt`); the `__main__` self-tests of `lib/expr_parser.py` and `lib/path_parser.py` became `tests/test_expr_parser.py` and `tests/test_path_parser.py`. Run: `python -m pytest`
+- Docstrings added to the public engine / parser methods, the `_method_*` handlers and the `path_parser.py` functions
+- Docs: `dumps` entry forms in chapter 03
+- Files modified: `restest.py`, `lib/engine.py`, `lib/parser.py`, `lib/path_parser.py`, `lib/expr_parser.py`, `lib/utils.py`, `docs/chapters/03-making-requests.md`; files added: `pytest.ini`, `requirements-dev.txt`, `tests/test_low_fixes.py`, `tests/test_expr_parser.py`, `tests/test_path_parser.py`; `test_*.py` / `test_*.json` moved to `tests/`
+
 #### Medium priority fixes from OPTIMIZE.md
 - Test comparisons share one implementation (`OPERATOR_ALIASES`, `SIZE_MODES`, `_compare()`, `_to_number()`) for normal tests and `EXPR` tests
   - `GT` / `GTE` / `LT` / `LTE` now accept float strings (`"3.5"`) and numeric strings on the expected side; comparing text with a number is a test failure instead of a crash

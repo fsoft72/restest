@@ -10,14 +10,15 @@ import json
 import os
 import gzip
 import bz2
+from copy import deepcopy
 
 import requests
 
-from .engine import RESTest
+from .engine import HTTP_METHODS, RESTest
 from .cols import xcolored
 from .errors import RESTestError
 from .timings import Timings
-from .utils import deepcopy, size2str
+from .utils import size2str
 
 
 # Options accepted in the script "system" section
@@ -34,6 +35,8 @@ SYSTEM_KEYS = (
 
 
 class RESTestParser:
+    """Load RESTest JSON scripts and run their actions on a RESTest engine."""
+
     def __init__(
         self,
         base_url=None,
@@ -53,6 +56,17 @@ class RESTestParser:
         no_break=False,  # 2.5.0 - support for no_break flag
         allow_code=False,  # 2.6.0 - "code" actions run only when explicitly allowed
     ):
+        """Create the parser and its engine.
+
+        Arguments set here override the script "system" options. See
+        RESTest.__init__ for the shared ones; the parser specific ones are:
+
+        Args:
+            debug_file_name: Print the name of every loaded script file
+            step: Wait for ENTER after every action
+            no_break: Ignore the "break" attribute of actions
+            allow_code: Enable the "code" action (runs arbitrary Python)
+        """
         self.rt = RESTest(
             quiet=quiet,
             log_file=log_file,
@@ -94,6 +108,11 @@ class RESTestParser:
         self.debug_file_name = debug_file_name
 
     def open(self, fname):
+        """Load a script file and run its actions.
+
+        Raises:
+            RESTestError: If the script cannot be loaded or a test fails with stop_on_error
+        """
         self.script = self._json_load(fname)
 
         self._abs_script_path = os.path.dirname(os.path.abspath(fname))
@@ -118,9 +137,15 @@ class RESTestParser:
         self.rt.close()
 
     def export_csv(self, fname):
+        """Export the request timings to a CSV file."""
         self.timings.export_csv(fname)
 
     def _actions(self, actions):
+        """Run a list of actions in order, recursing into nested "actions".
+
+        Raises:
+            RESTestError: On an unknown or failed action
+        """
         for act in actions:
             # New 2.6.0 - support for skip flag on all actions (including include, section, etc.)
             if act.get("skip", False):
@@ -133,6 +158,12 @@ class RESTestParser:
                 print("\n ==", act["title"])
 
             action = act.get("method", act.get("action", "")).lower()
+
+            # HTTP verb actions ("action": "get", ...) are requests with that default method
+            if action.upper() in HTTP_METHODS:
+                act.setdefault("method", action)
+                action = "exec"
+
             if action:
                 meth = getattr(self, "_method_" + action, None)
                 if meth is None:
@@ -184,6 +215,18 @@ class RESTestParser:
                 f.close()
 
     def _send_req(self, act, counter):
+        """Print, send and time one request of an HTTP action.
+
+        Args:
+            act: Action dict
+            counter: Zero based repeat iteration (exposed as %(__internal_counter)s, 1 based)
+
+        Returns:
+            The response, or None in dry mode
+
+        Raises:
+            RESTestError: On invalid body or network failure
+        """
         m = act["method"].upper()
 
         # 2.0.1 - support for auth_mode flag
@@ -219,13 +262,6 @@ class RESTestParser:
         # 2.2.0 - if params is present, but it is not a dict return an error
         if params and not isinstance(params, dict):
             raise RESTestError("'body' (or 'params') must be a dictionary")
-
-        # New 2.1.0 - support for skip flag
-        if act.get("skip", False):
-            if not self.quiet:
-                sys.stdout.write(" - %s\n" % xcolored(self, "SKIP", "yellow"))
-                sys.stdout.flush()
-            return None
 
         # New 1.91 - support for custom headers in single call
         headers = act.get("headers", {})
@@ -322,6 +358,11 @@ class RESTestParser:
             self._close_files(files)
 
     def _method_exec(self, act):
+        """Run an HTTP action ("repeat" times), then its fields, tests and dumps.
+
+        Returns:
+            True
+        """
         repeat = act.get("repeat", 1)
         orig_act = deepcopy(act)
 
@@ -329,7 +370,7 @@ class RESTestParser:
             act = deepcopy(orig_act)
             res = self._send_req(act, i)
 
-            # No response (dry mode or skipped request): nothing to extract or test
+            # No response (dry mode): nothing to extract or test
             if res is None:
                 continue
 
@@ -343,32 +384,8 @@ class RESTestParser:
 
         return True
 
-    def _method_get(self, act):
-        if "method" not in act:
-            act["method"] = "get"
-        return self._method_exec(act)
-
-    def _method_post(self, act):
-        if "method" not in act:
-            act["method"] = "post"
-        return self._method_exec(act)
-
-    def _method_delete(self, act):
-        if "method" not in act:
-            act["method"] = "delete"
-        return self._method_exec(act)
-
-    def _method_patch(self, act):
-        if "method" not in act:
-            act["method"] = "patch"
-        return self._method_exec(act)
-
-    def _method_put(self, act):
-        if "method" not in act:
-            act["method"] = "put"
-        return self._method_exec(act)
-
     def _method_section(self, act):
+        """Run the nested actions inside a named section."""
         title = act.get("title", act.get("name", "SECTION TITLE MISSING"))
         if not self.quiet:
             print("\n%s====== %s" % (self.rt._tabs(), xcolored(self, title, "green")))
@@ -385,6 +402,7 @@ class RESTestParser:
         return True
 
     def _method_copy(self, act):
+        """Copy the global "from" into the global "to"."""
         self.rt.copy_val(act["from"], act["to"])
 
         return True
@@ -405,11 +423,17 @@ class RESTestParser:
         return True
 
     def _method_set(self, act):
+        """Set the global "key" to "value" (expressions are evaluated)."""
         self.rt.set_val(act["key"], act["value"])
 
         return True
 
     def _resolve_fname(self, fname):
+        """Resolve fname relative to the script being run.
+
+        Raises:
+            RESTestError: If the file does not exist
+        """
         if not fname.startswith("/"):
             path = self._paths[-1]
             fname = os.path.abspath(os.path.join(path, fname))
@@ -420,6 +444,10 @@ class RESTestParser:
         return fname
 
     def _method_include(self, act):
+        """Load another script: store it as a batch ("name") and / or run it ("exec").
+
+        Scripts with "run-once" are included only once.
+        """
         fname = self._resolve_fname(act["filename"])
 
         self._paths.append(os.path.dirname(fname))
@@ -455,6 +483,7 @@ class RESTestParser:
         return True
 
     def _method_batch_set(self, act):
+        """Store "actions" as a batch named "name"."""
         name = act["name"].lower()
         actions = act["actions"]
         self._batches[name] = actions
@@ -462,6 +491,11 @@ class RESTestParser:
         return True
 
     def _method_batch_exec(self, act):
+        """Run the batch named "name".
+
+        Returns:
+            False if the batch does not exist (stops the run)
+        """
         name = act["name"].lower()
         actions = self._batches.get(name)
 
@@ -483,6 +517,7 @@ class RESTestParser:
         return True
 
     def _method_rem(self, act):
+        """Comment action: does nothing."""
         return True
 
     def _method_code(self, act):
@@ -506,6 +541,7 @@ class RESTestParser:
 
     # 2.0.2 - support for sleep action
     def _method_sleep(self, act):
+        """Pause the run for "ms" milliseconds."""
         self.rt.sleep(act["ms"])
 
         return True

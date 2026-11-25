@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 
-import copy
-
-
-def deepcopy(o):
-    return copy.deepcopy(o)
-
 
 def size2str(size):
+    """Return a human readable size (B, KB, MB, GB) for a number of bytes."""
     size = int(size)
     if size < 1024:
         return str(size) + "B"

@@ -70,20 +70,20 @@
 
 ## Low / Nice to have
 
-- [ ] **Dead and duplicated code in `restest.py`** - `parser.parse_args()` is called twice, a commented-out copy of the setup block lives in a stray string literal, and `--key` uses `c.split(":")`, which crashes on values containing `:` (URLs, tokens). Remove the dead code and use `split(":", 1)`.
+- [x] **Dead and duplicated code in `restest.py`** - `parser.parse_args()` is called twice, a commented-out copy of the setup block lives in a stray string literal, and `--key` uses `c.split(":")`, which crashes on values containing `:` (URLs, tokens). Remove the dead code and use `split(":", 1)`.
   - File(s): `restest.py` (`main`)
 
-- [ ] **Repeated `fields()` branches and inconsistent `dumps()` keys** - The `"*"` handling is copy-pasted three times; `fields()` uses `path`/`save` for the object form while `dumps()` uses `field`. Normalize each spec to `(json_key, glob_key, mode)` first, then run one code path; accept the same keys in both.
+- [x] **Repeated `fields()` branches and inconsistent `dumps()` keys** - The `"*"` handling is copy-pasted three times; `fields()` uses `path`/`save` for the object form while `dumps()` uses `field`. Normalize each spec to `(json_key, glob_key, mode)` first, then run one code path; accept the same keys in both.
   - File(s): `lib/engine.py` (`fields`, `dumps`)
 
-- [ ] **Magic sentinel string `"__NOT_FOUND__"`** - Used in four places across `fields`, `check`, `dump`, `_expand_value`. Replace with a module-level `NOT_FOUND = object()` sentinel (or a constant) to avoid collisions with real data.
+- [x] **Magic sentinel string `"__NOT_FOUND__"`** - Used in four places across `fields`, `check`, `dump`, `_expand_value`. Replace with a module-level `NOT_FOUND = object()` sentinel (or a constant) to avoid collisions with real data.
   - File(s): `lib/engine.py`
 
-- [ ] **Unused / trivial helpers and dead variables** - `_expand_var` builds a `globs` copy with `inner_count` that is never used; `utils.deepcopy` just wraps `copy.deepcopy`; `_send_req` re-checks `skip` already handled in `_actions`; five `_method_get/post/put/patch/delete` methods are identical apart from the default. Remove dead code and register the HTTP verbs from one loop or a dict.
+- [x] **Unused / trivial helpers and dead variables** - `_expand_var` builds a `globs` copy with `inner_count` that is never used; `utils.deepcopy` just wraps `copy.deepcopy`; `_send_req` re-checks `skip` already handled in `_actions`; five `_method_get/post/put/patch/delete` methods are identical apart from the default. Remove dead code and register the HTTP verbs from one loop or a dict.
   - File(s): `lib/engine.py`, `lib/parser.py`, `lib/utils.py`
 
-- [ ] **Tests scattered and partly inside `__main__` blocks** - `test_*.py` live at the repo root, and the expression / path-parser tests exist only as `print("PASS"/"FAIL")` scripts in `__main__`. Move everything to a `tests/` folder under pytest so regressions like the `LTE` and `if` bugs above get caught automatically.
+- [x] **Tests scattered and partly inside `__main__` blocks** - `test_*.py` live at the repo root, and the expression / path-parser tests exist only as `print("PASS"/"FAIL")` scripts in `__main__`. Move everything to a `tests/` folder under pytest so regressions like the `LTE` and `if` bugs above get caught automatically.
   - File(s): `lib/expr_parser.py`, `lib/path_parser.py`, `test_*.py`
 
-- [ ] **Missing docstrings on public engine/parser methods** - `RESTest.__init__`, `do_EXEC`, `check`, `dumps`, `copy_val`, `sleep`, `section_start`, `RESTestParser.open`, all `_method_*` handlers, and every function in `path_parser.py` lack docstrings, while newer code is documented.
+- [x] **Missing docstrings on public engine/parser methods** - `RESTest.__init__`, `do_EXEC`, `check`, `dumps`, `copy_val`, `sleep`, `section_start`, `RESTestParser.open`, all `_method_*` handlers, and every function in `path_parser.py` lack docstrings, while newer code is documented.
   - File(s): `lib/engine.py`, `lib/parser.py`, `lib/path_parser.py`

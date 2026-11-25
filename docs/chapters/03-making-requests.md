@@ -382,6 +382,8 @@ Use `dumps` to print specific response fields to the console for debugging:
 
 This prints the specified fields from the response without saving them to variables.
 
+`dumps` accepts the same entry forms as `fields`: `["path", "label"]`, `"*"` for the whole response, and objects like `{"path": "items", "save": "label", "mode": "length"}` (`field` is accepted as an alias of `path`).
+
 ### Request Body Aliases
 
 The `body` field can also be written as `params` or `data` - they are interchangeable:

@@ -11,6 +11,7 @@ rx_split = re.compile(r"""(\[|\]|=|!|\.|'.*?'|".*?")""")
 
 
 def _is_int(txt):
+    """Return True when txt is a base 10 integer."""
     try:
         int(str(txt), 10)
         return True
@@ -19,6 +20,7 @@ def _is_int(txt):
 
 
 def _parse_square(tokens, pos):
+    """Parse the content of [...]: an index or a nested pattern. Returns (node, next_pos)."""
     tok = tokens[pos]
 
     if _is_int(tok):
@@ -28,6 +30,7 @@ def _parse_square(tokens, pos):
 
 
 def _extract_value(tokens, pos, equal=False):
+    """Parse the value after '=' or '!=' into an equal / not_equal node. Returns (node, next_pos)."""
     mode = "equal"
     if not equal:
         mode = "not_equal"
@@ -45,6 +48,7 @@ def _extract_value(tokens, pos, equal=False):
 
 
 def _parser(tokens, pos, is_pattern=False):
+    """Turn tokens into a list of path nodes, starting at pos. Returns (nodes, next_pos)."""
     res = []
     while pos < len(tokens):
         tok = tokens[pos]
@@ -74,12 +78,18 @@ def _parser(tokens, pos, is_pattern=False):
 
 
 def path_parser(path):
+    """Parse a path like 'users.[id=3].name' into a list of nodes (see _parser)."""
     tokens = [t for t in rx_split.split(path) if t]
 
     return _parser(tokens, 0)[0]
 
 
 def _find_in_list(field_name, tok, elem: list):
+    """Find the first element of a list whose field_name matches the equal / not_equal node.
+
+    Returns:
+        Tuple (element or None, error or None)
+    """
     equal = tok["mode"] == "equal"
     val = str(tok["value"])
 
@@ -113,6 +123,11 @@ def _find_in_list(field_name, tok, elem: list):
 
 
 def _expand(parsed_path, pos, dct):
+    """Walk dct following the parsed path nodes from pos.
+
+    Returns:
+        Tuple (value or None, error message or "")
+    """
     elem = dct
     field_name = ""
     err = ""
@@ -228,96 +243,3 @@ def expand_value(path, dct):
                 res = None
 
     return res, err
-
-
-if __name__ == "__main__":
-    # print ( path_parser ( "first.second.[0].third" ) )
-    # print ( json.dumps ( path_parser ( "first.second.[user.key=5].third" ), indent = 4 ) )
-    # print ( path_parser ( "first.second.[user.email!=example@gmail.com].third" ) )
-    # print ( json.dumps ( path_parser ( "first.[3].[user.key=23].second.[1].name" ), indent = 4 ) )
-    # print ( json.dumps ( path_parser ( "first.[sub[user.key=3]].second" ), indent=4 ) )
-    x = {
-        "type1": [
-            {"name": "hello", "value": "world"},
-            {"name": "ciao", "value": "mondo"},
-        ],
-        "users": [
-            {
-                "email": "test01@example.com",
-                "id": 123,
-                "perms": ["admin", "work", "home"],
-            },
-            {"email": "test02@example.com", "id": 999, "perms": ["do", "this"]},
-        ],
-        "nested": {
-            "opts": [
-                {
-                    "name": "opt1",
-                    "children": [
-                        {"name": "child1", "value": 1},
-                        {"name": "child2", "value": 2},
-                    ],
-                }
-            ]
-        },
-    }
-    dct = {
-        "courses": [
-            {
-                "id": "course.080ca4b4e3cb4e1e1b6b99776e8fb621.3tk0",
-                "slug": "course-test",
-                "code": "course001",
-                "id_owner": "user.8edb2cf662f639dcd3ac9e0c0c5a1816.bq2n",
-                "visible": True,
-                "tot_sections": 1,
-                "tot_time": 600,
-                "tot_lessons": 3,
-                "type": "default",
-                "max_students": 0,
-                "num_students": 0,
-                "revenue_platform": 30,
-                "revenue_trainer": 70,
-                "title": "Course Test",
-                "id_product": "product.7aa9e1a1a3d39b7d09bd9d71f4e3d09d.ek75",
-                "id_trainers": ["user.8edb2cf662f639dcd3ac9e0c0c5a1816.bq2n"],
-                "description": "This is the updated description",
-                "tags": [],
-            }
-        ]
-    }
-    # dct = json.loads(x)
-    # print ( expand_value ( "type1.[0].name", dct ) )
-    # print ( expand_value ( "type1.[0].value", dct ) )
-    # print(expand_value("type1.[name=ciao].value", dct))
-    # print ( expand_value ( "users.[id=123].perms", dct ) )
-    # print(expand_value("nested.opts[name=opt1].children[name!=child2].value", dct))
-    print(
-        expand_value("courses.[id='course.080ca4b4e3cb4e1e1b6b99776e8fb621.3tk0']", dct)
-    )
-
-    # Test length extraction with # prefix
-    print("\n=== Testing length extraction with # prefix ===")
-
-    # Test array length
-    res, err = expand_value("#type1", x)
-    print(f"#type1 = {res} (expected 2) - {'PASS' if res == 2 else 'FAIL'}")
-
-    # Test string length
-    res, err = expand_value("#type1.[0].name", x)
-    print(f"#type1.[0].name = {res} (expected 5 for 'hello') - {'PASS' if res == 5 else 'FAIL'}")
-
-    # Test nested array length
-    res, err = expand_value("#users.[id=123].perms", x)
-    print(f"#users.[id=123].perms = {res} (expected 3) - {'PASS' if res == 3 else 'FAIL'}")
-
-    # Test empty array length
-    res, err = expand_value("#courses.[0].tags", dct)
-    print(f"#courses.[0].tags = {res} (expected 0) - {'PASS' if res == 0 else 'FAIL'}")
-
-    # Test dict keys count
-    res, err = expand_value("#nested", x)
-    print(f"#nested = {res} (expected 1 key) - {'PASS' if res == 1 else 'FAIL'}")
-
-    # Test error on number
-    res, err = expand_value("#courses.[0].tot_lessons", dct)
-    print(f"#courses.[0].tot_lessons - error: {err} - {'PASS' if err else 'FAIL'}")

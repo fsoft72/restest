@@ -27,8 +27,21 @@ RX_EXPRESSION = re.compile(r"\$\{([^}]+)\}")
 # HTTP methods accepted by _req
 HTTP_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE")
 
-# Sentinel returned by _expand_value when a path is not found in the response
-NOT_FOUND = "__NOT_FOUND__"
+class _NotFound:
+    """Type of the NOT_FOUND sentinel: prints as before, never equals real data."""
+
+    def __repr__(self):
+        return "__NOT_FOUND__"
+
+    __str__ = __repr__
+
+
+# Sentinel returned by _expand_value when a path is not found in the response.
+# Always compare it with "is": a response may legitimately contain "__NOT_FOUND__"
+NOT_FOUND = _NotFound()
+
+# Modes accepted by the object form of "fields" / "dumps"
+FIELD_MODES = ("value", "length", "type", "keys")
 
 # Test modes checking that a field has a value
 EXISTS_MODES = ("EXISTS", "EXIST", "!!", "NOT_NULL", "IS_NOT_NULL")
@@ -104,6 +117,8 @@ def _compare(op, left, right):
 
 
 class RESTest:
+    """HTTP test engine: sends requests, runs tests and keeps the global variables."""
+
     def __init__(
         self,
         base_url="",
@@ -120,6 +135,23 @@ class RESTest:
         auth_mode="auth",
         log_clean=False,  # 2.2.0 - Added log_clean
     ):
+        """Create the engine.
+
+        Args:
+            base_url: Base URL joined to relative endpoints
+            log_file: Path of the log file ("" disables logging)
+            stop_on_error: Raise RESTestError on the first test error
+            quiet: Disable console output
+            postman: Optional PostmanExporter recording every request
+            curl: Also print the curl command of each request on the console
+            dry: Do not send requests for real
+            delay: Milliseconds to wait before each request
+            headers: Global headers added to all requests
+            no_colors: Disable colors in console output
+            prefix: API prefix appended to base_url
+            auth_mode: Default authentication mode ("auth" or "no")
+            log_clean: Truncate the log file before starting
+        """
         if not headers:
             headers = {}
 
@@ -138,9 +170,6 @@ class RESTest:
 
         self.authorization_header = "Authorization"
         self.authorization_template = "Bearer %(token)s"
-
-        # This is a number used to generate counts
-        self._inner_count = 0
 
         # These are the global headers that will be added to all requests
         self.headers = headers
@@ -175,9 +204,11 @@ class RESTest:
             self._open_log("w").close()
 
     def _tabs(self, indent=0):
+        """Return the indentation for the current section depth (plus indent)."""
         return "\t" * (len(self.sections) + indent)
 
     def _parse_headers(self, r):
+        """Store the response headers with lower case names in r._headers."""
         heads = {}
 
         for k, v in r.headers.items():
@@ -239,6 +270,7 @@ class RESTest:
         self._log_handle_path = None
 
     def _log_start(self, method, endpoint, data):
+        """Count a new request and log its method, endpoint and data."""
         self._tests += 1
         if not self.log_file:
             return
@@ -257,6 +289,7 @@ Data:         %s
         return resp.elapsed.total_seconds() * 1000
 
     def _log_resp(self, headers, resp):
+        """Log the request headers (secrets masked) and the response."""
         if not self.log_file:
             return
 
@@ -275,6 +308,7 @@ Raw Response: %s
         )
 
     def _log_curl(self, req):
+        """Log the curl command of a request (and print it when curl dump is enabled)."""
         command = "curl -X {method} \\\n -H {headers} \\\n -d '{data}' \\\n '{uri}'"
 
         method = req.method
@@ -297,6 +331,7 @@ Raw Response: %s
             sys.stderr.flush()
 
     def _mk_headers(self, authenticated, local_headers):
+        """Build the request headers: global + local, Authorization when authenticated, all expanded."""
         if not local_headers:
             local_headers = {}
 
@@ -322,6 +357,7 @@ Raw Response: %s
         return headers
 
     def _mk_cookies(self, local_cookies):
+        """Build the request cookies: global + local, all expanded."""
         if not local_cookies:
             local_cookies = {}
 
@@ -433,6 +469,7 @@ Raw Response: %s
             ) from e
 
     def _get_v(self, x):
+        """Expand ${...} expressions and %(var)s placeholders in a single value."""
         if isinstance(x, dict):
             return self._expand_dict(x)
 
@@ -493,12 +530,11 @@ Raw Response: %s
         )
 
     def _expand_data(self, data):
+        """Expand keys and values of a request body ("__direct__" sends a value as is)."""
         if "__direct__" in data:
             return data["__direct__"]
 
         res = {}
-
-        self._inner_count += 1
 
         for k, v in data.items():
             k = self._expand_var(k)
@@ -508,14 +544,8 @@ Raw Response: %s
         return res
 
     def _expand_data_list(self, data):
-        res = []
-
-        self._inner_count += 1
-
-        for item in data:
-            temp = self._expand_data(item)
-            res.append(temp)
-        return res
+        """Expand every dict of a list body (see _expand_data)."""
+        return [self._expand_data(item) for item in data]
 
     def _parse_object(self, value):
         """Parse a dict given as JSON or as a Python literal, without executing code."""
@@ -528,6 +558,7 @@ Raw Response: %s
             return ast.literal_eval(value)
 
     def _object_compare(self, v1, v2):
+        """Return True when two dicts (or their JSON / literal form) have the same keys and values."""
         o1 = self._parse_object(v1)
         o2 = self._parse_object(v2)
 
@@ -545,6 +576,7 @@ Raw Response: %s
         return True
 
     def _data_to_url(self, dct):
+        """Encode a dict as an URL query string."""
         elems = []
         for k, v in dct.items():
             v = json.dumps(v)
@@ -597,6 +629,14 @@ Raw Response: %s
         headers=None,
         cookies=None,
     ):
+        """Send one HTTP request and validate status code and execution time.
+
+        Returns:
+            The response, or None in dry mode
+
+        Raises:
+            RESTestError: On unsupported method / content, or on a test error with stop_on_error
+        """
         if mode not in HTTP_METHODS:
             raise RESTestError(
                 "unsupported HTTP method: %s (supported: %s)"
@@ -704,6 +744,27 @@ Raw Response: %s
         cookies=None,
         internal_info=None,
     ):
+        """Wait the configured delay, then send a request (see _req).
+
+        Args:
+            meth: HTTP method (GET, POST, PUT, PATCH, DELETE)
+            endpoint: Endpoint, absolute or relative to base_url
+            data: Request body (dict or list) or GET parameters
+            authenticated: Add the Authorization header
+            status_code: Expected status code
+            skip_error: Do not check status code and execution time
+            no_cookies: Send the request outside the session (no cookies)
+            max_exec_time: Max execution time in ms (0 disables the check)
+            files: Files to upload (forces "form" content)
+            title: Request title (used by the Postman export)
+            content: "json" or "form"
+            headers: Request specific headers
+            cookies: Request specific cookies
+            internal_info: Values available as %(__internal_name)s
+
+        Returns:
+            The response, or None in dry mode
+        """
         # v2.0 - added internal_info dict to the Engine class
         self._internal_info = internal_info
 
@@ -726,16 +787,94 @@ Raw Response: %s
             cookies=cookies,
         )
 
-    def fields(self, resp, fields):
+    def _field_spec(self, spec):
         """
-        Extract fields from response and save to globals.
+        Normalize one "fields" / "dumps" entry to (json_key, glob_key, mode).
 
-        Supports multiple syntaxes:
-        - String: "field_name" (path and save key are the same)
+        Accepted forms (the same for "fields" and "dumps"):
+        - String: "json.path" (path and save key are the same)
         - List/Tuple: ["json.path", "save_key"] or ["json.path"]
         - Object: {"path": "json.path", "save": "save_key", "mode": "value|length|type|keys"}
+          ("field" is accepted as an alias of "path")
 
-        The path can start with '#' for automatic length extraction.
+        Raises:
+            RESTestError: If the entry is empty
+        """
+        if not spec:
+            raise RESTestError("empty entry in 'fields' / 'dumps'")
+
+        if isinstance(spec, dict):
+            json_key = spec.get("path", spec.get("field", ""))
+            return json_key, spec.get("save", json_key), spec.get("mode", "value").lower()
+
+        if isinstance(spec, (list, tuple)):
+            return spec[0], spec[-1], "value"
+
+        return spec, spec, "value"
+
+    def _json_type_name(self, value):
+        """Return the JSON type name of a value (null, array, object, string, boolean, number)."""
+        if value is None:
+            return "null"
+        if isinstance(value, list):
+            return "array"
+        if isinstance(value, dict):
+            return "object"
+        if isinstance(value, str):
+            return "string"
+        if isinstance(value, bool):
+            return "boolean"
+        if isinstance(value, (int, float)):
+            return "number"
+
+        return type(value).__name__
+
+    def _field_value(self, j, json_key, mode):
+        """
+        Extract json_key from the response JSON and apply a field mode.
+
+        Args:
+            j: Response JSON
+            json_key: Path to extract ("*" is the whole JSON, "#path" its length)
+            mode: One of FIELD_MODES
+
+        Returns:
+            Tuple (value, error): error is a message string when the value cannot be computed.
+            A missing path in "value" mode returns NOT_FOUND (no error, as before).
+        """
+        if mode not in FIELD_MODES:
+            return None, "unsupported field mode: %s (supported: %s)" % (
+                mode,
+                ", ".join(FIELD_MODES),
+            )
+
+        value = j if json_key == "*" else self._expand_value(j, json_key)
+
+        if mode == "value":
+            return value, None
+        if value is NOT_FOUND:
+            return None, "Cannot get %s: path not found: %s" % (mode, json_key)
+        if mode == "type":
+            return self._json_type_name(value), None
+
+        if mode == "length":
+            if value is None:
+                return 0, None
+            if hasattr(value, "__len__"):
+                return len(value), None
+            return None, "Cannot get length of %s at path: %s" % (type(value).__name__, json_key)
+
+        # mode == "keys"
+        if isinstance(value, dict):
+            return list(value.keys()), None
+        return None, "Cannot get keys of %s at path: %s" % (type(value).__name__, json_key)
+
+    def fields(self, resp, fields):
+        """
+        Extract fields from the response and save them to globals.
+
+        See _field_spec for the accepted entry forms. A path can start with '#'
+        for automatic length extraction, and "*" saves the whole JSON.
 
         Args:
             resp: Response object
@@ -743,99 +882,35 @@ Raw Response: %s
         """
         j = resp.json()
 
-        for k in fields:
-            # Object syntax: {"path": "...", "mode": "...", "save": "..."}
-            if isinstance(k, dict):
-                json_key = k.get("path", "")
-                glob_key = k.get("save", json_key)
-                mode = k.get("mode", "value").lower()
+        for spec in fields:
+            json_key, glob_key, mode = self._field_spec(spec)
+            value, err = self._field_value(j, json_key, mode)
+            if err:
+                self._error(err)
+                continue
 
-                # ADD: support for '*' field name (all JSON)
-                if json_key == "*":
-                    self.globals[glob_key] = j
-                    continue
-
-                value = self._expand_value(j, json_key)
-
-                # Apply mode transformation
-                if mode == "length":
-                    if value is None:
-                        value = 0
-                    elif hasattr(value, "__len__"):
-                        value = len(value)
-                    else:
-                        self._error(f"Cannot get length of {type(value).__name__} at path: {json_key}")
-                        continue
-                elif mode == "type":
-                    if value is None:
-                        value = "null"
-                    elif isinstance(value, list):
-                        value = "array"
-                    elif isinstance(value, dict):
-                        value = "object"
-                    elif isinstance(value, str):
-                        value = "string"
-                    elif isinstance(value, bool):
-                        value = "boolean"
-                    elif isinstance(value, (int, float)):
-                        value = "number"
-                    else:
-                        value = type(value).__name__
-                elif mode == "keys":
-                    if isinstance(value, dict):
-                        value = list(value.keys())
-                    else:
-                        self._error(f"Cannot get keys of {type(value).__name__} at path: {json_key}")
-                        continue
-                # mode == "value" is the default, no transformation needed
-
-                self.globals[glob_key] = value
-
-            # List/Tuple syntax: ["json.path", "save_key"] or ["json.path"]
-            elif isinstance(k, (list, tuple)):
-                if len(k) == 2:
-                    json_key = k[0]
-                    glob_key = k[1]
-                else:
-                    json_key = k[0]
-                    glob_key = k[0]
-
-                # ADD: support for '*' field name (all JSON)
-                if json_key == "*":
-                    self.globals[glob_key] = j
-                    continue
-
-                self.globals[glob_key] = self._expand_value(j, json_key)
-
-            # String syntax: "field_name"
-            else:
-                glob_key = k
-                json_key = k
-
-                # ADD: support for '*' field name (all JSON)
-                if json_key == "*":
-                    self.globals[glob_key] = j
-                    continue
-
-                self.globals[glob_key] = self._expand_value(j, json_key)
+            self.globals[glob_key] = value
 
     def dumps(self, resp, fields):
+        """
+        Print fields of the response on the console.
+
+        Accepts the same entry forms as fields(): the save key is used as label.
+
+        Args:
+            resp: Response object
+            fields: List of field specifications
+        """
         j = resp.json()
 
-        for k in fields:
-            if isinstance(k, (list, tuple)):
-                glob_key = k[1]
-                json_key = k[0]
-            elif isinstance(k, dict):
-                json_key = k["field"]
-                glob_key = json_key
-            else:
-                glob_key = k
-                json_key = k
+        for spec in fields:
+            json_key, label, mode = self._field_spec(spec)
+            value, err = self._field_value(j, json_key, mode)
+            if err:
+                self._error(err)
+                continue
 
-            v = self._expand_value(j, json_key)
-
-            print("==== %s: %s\n" % (glob_key, json.dumps(v, indent=4, default=str)))
+            print("==== %s: %s\n" % (label, json.dumps(value, indent=4, default=str)))
 
     def _error(self, txt):
         """
@@ -853,6 +928,7 @@ Raw Response: %s
         return None
 
     def _expand_value(self, dct, key):
+        """Return the value at path key in dct, or NOT_FOUND (with a console message)."""
         key = self._expand_var(key)
 
         res, err = expand_value(key, dct)
@@ -864,6 +940,7 @@ Raw Response: %s
         return res
 
     def copy_val(self, _from, _to):
+        """Copy the global variable _from into _to (both names are expanded)."""
         _from = self._expand_var(_from)
         _to = self._expand_var(_to)
 
@@ -890,6 +967,7 @@ Raw Response: %s
         self.globals[_key] = _val
 
     def sleep(self, _ms):
+        """Pause the run for _ms milliseconds (the value is expanded)."""
         _ms = self._expand_var(_ms)
         time.sleep(int(_ms) / 1000)
 
@@ -1134,7 +1212,7 @@ Raw Response: %s
         else:
             v = self._expand_value(j, field)
 
-        if v == NOT_FOUND:
+        if v is NOT_FOUND:
             # A missing field is what the null modes (e.g. NOT_EXISTS) expect
             if mode not in NULL_MODES:
                 return "FIELD: %s missing %s" % (
@@ -1162,7 +1240,7 @@ Raw Response: %s
             v = self.globals.get(f, NOT_FOUND)
 
             # Format for log file (with ====)
-            if v == NOT_FOUND:
+            if v is NOT_FOUND:
                 log_s = "==== %s: <undefined>\n" % f
             else:
                 log_s = "==== %s: %s\n" % (f, json.dumps(v, indent=4, default=str))
@@ -1171,7 +1249,7 @@ Raw Response: %s
 
             # Format for console (colored, without ====)
             if do_print:
-                if v == NOT_FOUND:
+                if v is NOT_FOUND:
                     console_s = "%s: %s" % (
                         _c(self, f, "green"),
                         _c(self, "<undefined>", "white")
@@ -1185,6 +1263,7 @@ Raw Response: %s
                 print(console_s)
 
     def section_start(self, name):
+        """Open a named section: indent the console output and log its start."""
         self.sections.append(name)
 
         self._log_write(
@@ -1197,6 +1276,7 @@ START  ---->  %s
         )
 
     def section_end(self):
+        """Close the current section and log its end."""
         name = self.sections.pop()
         self._log_write(("=" * 70) + "\n\n")
         self._log_write(

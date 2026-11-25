@@ -79,7 +79,8 @@ def _parse_cloudflare_env_file(filepath):
 
 
 def main():
-    parser = argparse.ArgumentParser(
+    """Parse the command line, run the given script files and print the summary."""
+    parser =argparse.ArgumentParser(
         description="RESTest v%s the easy REST test manager - by Fabio Rotondo (fabio.rotondo@gmail.com)"
         % VERSION
     )
@@ -225,34 +226,6 @@ def main():
         allow_code=args.allow_code,  # 2.6.0 - Added allow_code flag
     )
 
-    args = parser.parse_args()
-
-    """
-    postman = None
-    if args.postman:
-        postman = PostmanExporter(
-            args.postman,
-            args.postman_name,
-            args.postman_base_url,
-            args.postman_auth_name,
-            args.postman_auth_value,
-        )
-
-    rt = RESTestParser(
-        quiet=args.quiet,
-        base_url=args.base_url,
-        stop_on_error=not args.dont_stop_on_error,
-        log_file=args.log,
-        postman=postman,
-        curl=args.curl,
-        dry=args.dry,
-        delay=args.delay,
-        no_colors=args.no_colors,
-        prefix=args.prefix,
-        auth_mode=args.auth_mode,
-    )
-    """
-
     if args.env_load:
         try:
             data = json.loads(open(args.env_load).read())
@@ -272,7 +245,10 @@ def main():
 
     if args.key:
         for c in args.key:
-            k, v = c.split(":")
+            # Split on the first ":" only: values may contain ":" (URLs, tokens)
+            k, sep, v = c.partition(":")
+            if not sep:
+                parser.error("--key expects key:value, got: %s" % c)
             rt.rt.globals[k] = v
 
     start_time = time.time()
