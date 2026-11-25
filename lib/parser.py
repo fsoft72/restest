@@ -20,6 +20,19 @@ from .timings import Timings
 from .utils import deepcopy, size2str
 
 
+# Options accepted in the script "system" section
+SYSTEM_KEYS = (
+    "base_url",
+    "log_file",
+    "stop_on_error",
+    "headers",
+    "global_headers",
+    "cookies",
+    "authorization_header",
+    "authorization_template",
+)
+
+
 class RESTestParser:
     def __init__(
         self,
@@ -100,6 +113,10 @@ class RESTestParser:
 
         self._actions(self.script["actions"])
 
+    def close(self):
+        """Release the engine resources (log file)."""
+        self.rt.close()
+
     def export_csv(self, fname):
         self.timings.export_csv(fname)
 
@@ -117,7 +134,9 @@ class RESTestParser:
 
             action = act.get("method", act.get("action", "")).lower()
             if action:
-                meth = getattr(self, "_method_" + action)
+                meth = getattr(self, "_method_" + action, None)
+                if meth is None:
+                    raise RESTestError("unknown action or method: '%s'" % action)
                 res = meth(act)
                 if not res:
                     raise RESTestError(
@@ -141,6 +160,7 @@ class RESTestParser:
                 input(xcolored(self, "\nPress ENTER to continue...", "cyan"))
 
     def _parse_files(self, dct):
+        """Open the files to upload: {field: path | [paths]} -> {field: file | [files]}."""
         files = {}
 
         for k, v in dct.items():
@@ -157,14 +177,18 @@ class RESTestParser:
 
         return files
 
+    def _close_files(self, files):
+        """Close the files opened by _parse_files."""
+        for v in files.values():
+            for f in v if isinstance(v, list) else [v]:
+                f.close()
+
     def _send_req(self, act, counter):
         m = act["method"].upper()
 
         # 2.0.1 - support for auth_mode flag
         auth = act.get("auth", True if self.rt.auth_mode == "auth" else False)
         content = act.get("content", "json")
-
-        files = self._parse_files(act.get("files", {}))
 
         if m == "POST":
             _col = "blue"
@@ -220,6 +244,8 @@ class RESTestParser:
             ignore = act["skip_error"]
 
         self.timings.start(m, act["url"], params)
+
+        files = self._parse_files(act.get("files", {}))
 
         try:
             res = self.rt.do_EXEC(
@@ -292,6 +318,8 @@ class RESTestParser:
                     % xcolored(self, "ERROR", "red", "on_white", ["reverse", "blink"])
                 )
             raise RESTestError("request failed: %s" % e) from e
+        finally:
+            self._close_files(files)
 
     def _method_exec(self, act):
         repeat = act.get("repeat", 1)
@@ -505,6 +533,12 @@ class RESTestParser:
         return True
 
     def _parse_system(self):
+        """
+        Apply the script "system" options to the engine.
+
+        Only the options in SYSTEM_KEYS are accepted: unknown ones are ignored
+        with a warning, so a script cannot overwrite the engine internals.
+        """
         self.rt.sections = []
 
         system = self.script.get("system")
@@ -512,8 +546,27 @@ class RESTestParser:
         if not system:
             return
 
+        global_headers = None
         for k, v in system.items():
+            if k not in SYSTEM_KEYS:
+                sys.stderr.write(
+                    "%s unknown 'system' option ignored: %s\n"
+                    % (xcolored(self, "WARNING", "yellow"), k)
+                )
+                continue
+
+            if k == "global_headers":
+                global_headers = v
+                continue
+
+            if k == "base_url" and isinstance(v, str):
+                v = v.rstrip("/")
+
             setattr(self.rt, k, v)
+
+        # Headers priority: global_headers < headers < request headers
+        if global_headers:
+            self.rt.headers = {**global_headers, **self.rt.headers}
 
     def _open_script(self, fname):
         """Open a script file, transparently handling .gz and .bz2 compression."""

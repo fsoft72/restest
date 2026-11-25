@@ -79,6 +79,8 @@ The `system` section defines global settings for your tests.
 | `authorization_header` | Custom authorization header name | `"Authorization"` | `"X-Auth-Token"` |
 | `authorization_template` | Template for auth header value | `"Bearer %(token)s"` | `"Token %(api_key)s"` |
 
+Any other option in `system` is ignored and a warning is printed (since v2.6.0).
+
 ### Global Cookies
 
 Global cookies are sent with every request (unless `no_cookies: true` is set on the request):

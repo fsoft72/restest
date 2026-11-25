@@ -46,7 +46,7 @@ class _FakeSession:
         self.status_code = status_code
         self.cookies = {}
 
-    def get(self, url, **kwargs):
+    def request(self, method, url, **kwargs):
         """Return a fake response with the configured status code."""
         return _FakeResponse(self.status_code)
 

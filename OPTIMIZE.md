@@ -38,31 +38,31 @@
 
 ## Medium
 
-- [ ] **Duplicated comparison logic in `_check` and `_check_expr`** - Two separate implementations of `==`, `!=`, `>`, `>=`, `<`, `<=` with different numeric coercion rules (`_check` uses `int()` and crashes on `"3.5"`, `_check_expr` handles floats). Extract a single `OPERATORS` table (alias -> callable) plus one `_to_number` helper used by both; this also eliminates the class of bug in the `LTE` item above.
+- [x] **Duplicated comparison logic in `_check` and `_check_expr`** - Two separate implementations of `==`, `!=`, `>`, `>=`, `<`, `<=` with different numeric coercion rules (`_check` uses `int()` and crashes on `"3.5"`, `_check_expr` handles floats). Extract a single `OPERATORS` table (alias -> callable) plus one `_to_number` helper used by both; this also eliminates the class of bug in the `LTE` item above.
   - File(s): `lib/engine.py` (`_check`, `_check_expr`)
 
-- [ ] **`_check` runs before the "not found" guard** - `check()` calls `_check(chk, field, v)` before testing `v == "__NOT_FOUND__"`, so numeric modes try `int("__NOT_FOUND__")` and raise `ValueError` instead of the clear "FIELD missing" message. Move the guard above the call.
+- [x] **`_check` runs before the "not found" guard** - `check()` calls `_check(chk, field, v)` before testing `v == "__NOT_FOUND__"`, so numeric modes try `int("__NOT_FOUND__")` and raise `ValueError` instead of the clear "FIELD missing" message. Move the guard above the call.
   - File(s): `lib/engine.py` (`check`)
 
-- [ ] **`check()` stops at the first failing test even when not stopping on error** - `return self._error(...)` exits the loop, so with `--dont-stop-on-error` the remaining tests of that action are never run or counted. Use `self._error(...); continue`.
+- [x] **`check()` stops at the first failing test even when not stopping on error** - `return self._error(...)` exits the loop, so with `--dont-stop-on-error` the remaining tests of that action are never run or counted. Use `self._error(...); continue`.
   - File(s): `lib/engine.py` (`check`)
 
-- [ ] **Uploaded files are never closed** - `_parse_files` opens every file with `open(..., "rb")` and nothing closes them; with `repeat` this leaks a descriptor per iteration. It also runs before the per-request skip check. Close them in a `finally` in `_method_exec` (or use `contextlib.ExitStack`).
+- [x] **Uploaded files are never closed** - `_parse_files` opens every file with `open(..., "rb")` and nothing closes them; with `repeat` this leaks a descriptor per iteration. It also runs before the per-request skip check. Close them in a `finally` in `_method_exec` (or use `contextlib.ExitStack`).
   - File(s): `lib/parser.py` (`_parse_files`, `_send_req`)
 
 - [x] **Failed requests in quiet mode crash later** - In `_send_req` the `except Exception` block exits only when `not self.quiet`; in quiet mode it returns `None`, and `_method_exec` then calls `self.rt.fields(None, ...)` -> `AttributeError`. The broad `except` also hides real bugs as "status: ERROR". Catch `requests.RequestException` only and always fail the same way regardless of `quiet`.
   - File(s): `lib/parser.py` (`_send_req`, `_method_exec`)
 
-- [ ] **Absolute URL detection matches anywhere in the string** - `_resolve_url` uses `endpoint.lower().find("http:") != -1`, so `/redirect?to=http://x` is treated as absolute and the base URL is dropped. Use `startswith(("http://", "https://"))`.
+- [x] **Absolute URL detection matches anywhere in the string** - `_resolve_url` uses `endpoint.lower().find("http:") != -1`, so `/redirect?to=http://x` is treated as absolute and the base URL is dropped. Use `startswith(("http://", "https://"))`.
   - File(s): `lib/engine.py` (`_resolve_url`)
 
-- [ ] **Unknown HTTP methods silently become POST** - The `if/elif` chain in `_req` falls back to `obj.post` for anything else (`HEAD`, `OPTIONS`, typos). Use `obj.request(mode, ...)` and validate the method name. Likewise `_actions` uses `getattr(self, "_method_" + action)`, which raises a raw `AttributeError` on an unknown action; report a clear "unknown action 'xxx'" error instead.
+- [x] **Unknown HTTP methods silently become POST** - The `if/elif` chain in `_req` falls back to `obj.post` for anything else (`HEAD`, `OPTIONS`, typos). Use `obj.request(mode, ...)` and validate the method name. Likewise `_actions` uses `getattr(self, "_method_" + action)`, which raises a raw `AttributeError` on an unknown action; report a clear "unknown action 'xxx'" error instead.
   - File(s): `lib/engine.py` (`_req`), `lib/parser.py` (`_actions`)
 
-- [ ] **`system` block can overwrite any engine attribute** - `_parse_system` does `setattr(self.rt, k, v)` for every key, so a script with `"system": {"session": 1}` or `"globals": ...` silently breaks the engine. Whitelist the supported keys (`base_url`, `log_file`, `stop_on_error`, `authorization_header`, `authorization_template`, `headers`, ...) and warn on the rest.
+- [x] **`system` block can overwrite any engine attribute** - `_parse_system` does `setattr(self.rt, k, v)` for every key, so a script with `"system": {"session": 1}` or `"globals": ...` silently breaks the engine. Whitelist the supported keys (`base_url`, `log_file`, `stop_on_error`, `authorization_header`, `authorization_template`, `headers`, ...) and warn on the rest.
   - File(s): `lib/parser.py` (`_parse_system`)
 
-- [ ] **Log file reopened and chmod'ed on every write** - `_log_write` opens, chmods and closes the log for each fragment; a single request triggers 4+ open/close cycles. Open the handle once (lazily) and close it at the end of the run.
+- [x] **Log file reopened and chmod'ed on every write** - `_log_write` opens, chmods and closes the log for each fragment; a single request triggers 4+ open/close cycles. Open the handle once (lazily) and close it at the end of the run.
   - File(s): `lib/engine.py` (`_log_write`, `_open_log`)
 
 - [x] **`_expand_expressions` duplicates its error handling and re-imports inline** - The pure-expression branch and `replace_expr` contain identical error blocks; `import re` and `from .expr_parser import ...` are done inside the function although `evaluate_expr` is already imported at the top. Compile the `${...}` regex once as a module constant and extract a single `_eval_or_die(expr, value)` helper.

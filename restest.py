@@ -285,6 +285,8 @@ def main():
     except KeyboardInterrupt:
         print("\n\n%s" % xcolored(rt, "Interrupted by user", "red"))
         sys.exit(EXIT_INTERRUPTED)
+    finally:
+        rt.close()
 
     end_time = time.time()
     total_time = int((end_time - start_time) * 1000) / 1000.0

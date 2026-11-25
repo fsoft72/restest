@@ -9,6 +9,19 @@
 
 ### Bug Fixes
 
+#### Medium priority fixes from OPTIMIZE.md
+- Test comparisons share one implementation (`OPERATOR_ALIASES`, `SIZE_MODES`, `_compare()`, `_to_number()`) for normal tests and `EXPR` tests
+  - `GT` / `GTE` / `LT` / `LTE` now accept float strings (`"3.5"`) and numeric strings on the expected side; comparing text with a number is a test failure instead of a crash
+  - `NOT_EQUAL` is now the exact negation of `EQUALS`: `"1"` vs `1` counts as equal (it passed `NOT_EQUAL` before)
+- A missing field is reported as "FIELD: x missing" before the test runs (numeric modes crashed with `ValueError`); `NOT_EXISTS` / `NULL` modes now pass when the field is absent, as documented
+- With `--dont-stop-on-error`, every test of an action runs and every failure is counted (it stopped at the first failure)
+- Files opened for upload (`files`) are closed after each request
+- Only endpoints starting with `http://` / `https://` are absolute: `/r?to=http://x` keeps the base URL
+- Requests use `requests.request()`; unsupported HTTP methods and `content` values raise a clear error (unknown methods were sent as POST); unknown actions report their name instead of an `AttributeError`
+- `system` accepts only documented options (unknown ones are ignored with a warning) so scripts cannot overwrite engine internals; `system.global_headers`, documented but silently ignored before, now works (`headers` override it); trailing `/` in `system.base_url` is removed
+- The log file is opened once and kept open (flushed after each write, UTF-8), instead of being opened and chmod'ed for every fragment; `RESTest.close()` / `RESTestParser.close()` release it
+- Files modified: `lib/engine.py`, `lib/parser.py`, `restest.py`, `test_high_fixes.py`, `docs/chapters/02-test-structure.md`; test added: `test_medium_fixes.py`
+
 #### High priority fixes from OPTIMIZE.md
 - **New `--allow-code` flag**: `code` actions (which `exec` arbitrary Python) are now disabled by default and stop the run with an explicit error unless `--allow-code` is given (BREAKING for scripts using `code`)
 - `--delay` now sleeps the right amount: `500` was rounded down to 0s, `1500` to 1s

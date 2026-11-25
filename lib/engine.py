@@ -7,6 +7,7 @@
 
 import ast
 import json
+import operator
 import os
 import re
 import sys
@@ -22,6 +23,84 @@ from .expr_parser import evaluate_expr, is_expression, ExpressionError
 
 # Matches a ${...} expression inside a string
 RX_EXPRESSION = re.compile(r"\$\{([^}]+)\}")
+
+# HTTP methods accepted by _req
+HTTP_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE")
+
+# Sentinel returned by _expand_value when a path is not found in the response
+NOT_FOUND = "__NOT_FOUND__"
+
+# Test modes checking that a field has a value
+EXISTS_MODES = ("EXISTS", "EXIST", "!!", "NOT_NULL", "IS_NOT_NULL")
+
+# Test modes checking that a field is null (a missing field counts as null)
+NULL_MODES = ("EMPTY", "IS_EMPTY", "IS_NULL", "NULL", "NOT_EXISTS", "NOT_EXIST", "@")
+
+# Test modes / EXPR operators (any case) -> canonical comparison operator
+OPERATOR_ALIASES = {
+    "==": "==", "=": "==", "EQUALS": "==", "EQUAL": "==",
+    "!=": "!=", "<>": "!=", "NOT_EQUALS": "!=", "NOT_EQUAL": "!=",
+    ">": ">", "GT": ">",
+    ">=": ">=", "GTE": ">=",
+    "<": "<", "LT": "<",
+    "<=": "<=", "LTE": "<=",
+}
+
+# Size test modes -> comparison operator applied to len(field)
+SIZE_MODES = {
+    "SIZE": "==", "LEN": "==", "LENGTH": "==",
+    "SIZE-GT": ">", "()>": ">",
+    "SIZE-GTE": ">=", "()>=": ">=",
+    "SIZE-LT": "<", "()<": "<",
+    "SIZE-LTE": "<=", "()<=": "<=",
+}
+
+# Ordering operators: both sides are converted to numbers when possible
+ORDERING_OPERATORS = {
+    ">": operator.gt,
+    ">=": operator.ge,
+    "<": operator.lt,
+    "<=": operator.le,
+}
+
+# Failure message for each canonical operator: (field, expected, got)
+CHECK_FAIL_MESSAGES = {
+    "==": "FIELD: %s VALUE mismatch. Expected: %s - got: %s",
+    "!=": "FIELD: %s VALUE mismatch. Expected difference: %s - got: %s",
+    ">": "FIELD: %s is SMALLER. Expected: > %s got: %s",
+    ">=": "FIELD: %s is SMALLER. Expected: >= %s got: %s",
+    "<": "FIELD: %s is BIGGER. Expected: < %s got: %s",
+    "<=": "FIELD: %s is BIGGER. Expected: <= %s got: %s",
+}
+
+
+def _to_number(value):
+    """Convert a numeric string to int / float; return any other value unchanged."""
+    if not isinstance(value, str):
+        return value
+
+    try:
+        return float(value) if "." in value else int(value)
+    except ValueError:
+        return value
+
+
+def _compare(op, left, right):
+    """
+    Compare two values with a canonical operator (see OPERATOR_ALIASES).
+
+    "==" and "!=" also match on the string form (1 == "1").
+    Ordering operators convert numeric strings to numbers first.
+
+    Raises:
+        TypeError: If the values cannot be ordered (e.g. "abc" > 3)
+    """
+    if op == "==":
+        return left == right or str(left) == str(right)
+    if op == "!=":
+        return left != right and str(left) != str(right)
+
+    return ORDERING_OPERATORS[op](_to_number(left), _to_number(right))
 
 
 class RESTest:
@@ -74,6 +153,10 @@ class RESTest:
 
         self._tests = 0
         self._errors = 0
+
+        # Log file handle, opened lazily by _log_write and closed by close()
+        self._log_handle = None
+        self._log_handle_path = None
 
         self.session = requests.Session()
 
@@ -130,14 +213,30 @@ class RESTest:
         fd = os.open(self.log_file, flags, 0o600)
         os.chmod(self.log_file, 0o600)
 
-        return os.fdopen(fd, mode)
+        return os.fdopen(fd, mode, encoding="utf-8")
 
     def _log_write(self, txt):
+        """Append txt to the log file, keeping the file open between writes."""
         if not self.log_file:
             return
 
-        with self._open_log("a") as fout:
-            fout.write(txt)
+        # (Re)open when first used or when log_file changed (e.g. from "system")
+        if self._log_handle is None or self._log_handle_path != self.log_file:
+            self.close()
+            self._log_handle = self._open_log("a")
+            self._log_handle_path = self.log_file
+
+        self._log_handle.write(txt)
+        self._log_handle.flush()
+
+    def close(self):
+        """Close the log file, if open. Safe to call more than once."""
+        if self._log_handle is None:
+            return
+
+        self._log_handle.close()
+        self._log_handle = None
+        self._log_handle_path = None
 
     def _log_start(self, method, endpoint, data):
         self._tests += 1
@@ -234,9 +333,8 @@ Raw Response: %s
         return cookies
 
     def _resolve_url(self, endpoint):
-        if endpoint.lower().find("http:") != -1:
-            return endpoint
-        if endpoint.lower().find("https:") != -1:
+        """Return endpoint as is when absolute, else join it to base_url / prefix."""
+        if endpoint.lower().startswith(("http://", "https://")):
             return endpoint
 
         base_url = self.base_url + "/" + self.prefix
@@ -499,6 +597,12 @@ Raw Response: %s
         headers=None,
         cookies=None,
     ):
+        if mode not in HTTP_METHODS:
+            raise RESTestError(
+                "unsupported HTTP method: %s (supported: %s)"
+                % (mode, ", ".join(HTTP_METHODS))
+            )
+
         endpoint = self._expand_data({"endpoint": endpoint})["endpoint"]
 
         url = self._resolve_url(endpoint)
@@ -519,17 +623,6 @@ Raw Response: %s
             for k, v in cookies.items():
                 self.session.cookies.set(k, v)
 
-        if mode == "DELETE":
-            m = obj.delete
-        elif mode == "GET":
-            m = obj.get
-        elif mode == "PATCH":
-            m = obj.patch
-        elif mode == "PUT":
-            m = obj.put
-        else:
-            m = obj.post
-
         if mode == "GET" and data:
             url_params = self._data_to_url(data)
             url += "?" + url_params if url.find("?") == -1 else "&" + url_params
@@ -537,6 +630,9 @@ Raw Response: %s
         files = self._reorder_files(files)
         if files:
             content = "form"
+
+        if content not in ("json", "form"):
+            raise RESTestError("unsupported content: %s (use 'json' or 'form')" % content)
 
         if self.dry:
             self._log_start(mode, url, data)
@@ -550,14 +646,14 @@ Raw Response: %s
             data = json.dumps(data, ensure_ascii=False, default=str)
             encoded = data.encode("utf-8")
             headers["Content-Type"] = "application/json; charset=utf-8"
-            r = m(url, data=encoded, headers=headers, files=files)
+            r = obj.request(mode, url, data=encoded, headers=headers, files=files)
 
         elif content == "form":
             for k, v in data.items():
                 if isinstance(v, (list, dict)):
                     data[k] = json.dumps(v)
 
-            r = m(url, data=data, headers=headers, files=files)
+            r = obj.request(mode, url, data=data, headers=headers, files=files)
 
         self._parse_headers(r)
 
@@ -763,7 +859,7 @@ Raw Response: %s
 
         if err:
             print("PATH: %s - Error: %s" % (key, err))
-            return "__NOT_FOUND__"
+            return NOT_FOUND
 
         return res
 
@@ -798,6 +894,17 @@ Raw Response: %s
         time.sleep(int(_ms) / 1000)
 
     def _check(self, chk, field, v):
+        """
+        Run one test on a value and save it when the test passes and 'save' is set.
+
+        Args:
+            chk: Test definition with optional 'mode' (default EQUALS), 'value', 'save'
+            field: Field name, used in error messages
+            v: Value to test
+
+        Returns:
+            Error message string if the test fails, None if it passes
+        """
         current_val = self._expand_var(v)
         expected_val = self._expand_var(chk.get("value"))
 
@@ -805,95 +912,94 @@ Raw Response: %s
         if is_expression(expected_val):
             expected_val = evaluate_expr(expected_val, self.globals)
 
-        mode = chk.get("mode", "EQUALS")
+        # mode is case insensitive
+        mode = chk.get("mode", "EQUALS").upper()
 
+        try:
+            err = self._check_mode(mode, field, v, current_val, expected_val)
+        except TypeError as e:
+            err = "FIELD: %s cannot be tested with %s %s (%s)" % (
+                _c(self, field, "white"),
+                mode,
+                _c(self, expected_val, "yellow"),
+                e,
+            )
+
+        if err:
+            return err
+
+        if "save" in chk:
+            self.globals[chk["save"]] = v
+
+        return None
+
+    def _check_mode(self, mode, field, v, current_val, expected_val):
+        """
+        Apply a test mode to an already expanded value.
+
+        Args:
+            mode: Upper case test mode (EQUALS, GT, SIZE-LT, EXISTS, ...)
+            field: Field name, used in error messages
+            v: Raw value (used by the null checks)
+            current_val: Expanded value to test
+            expected_val: Expanded expected value
+
+        Returns:
+            Error message string if the test fails, None if it passes
+
+        Raises:
+            TypeError: If the values cannot be compared with the given mode
+        """
         cols = (
             _c(self, field, "white"),
             _c(self, expected_val, "yellow"),
             _c(self, current_val, "red"),
         )
 
-        # mode is now case insensitive
-        mode = mode.upper()
-
-        if mode in ("EXISTS", "EXIST", "!!", "NOT_NULL", "IS_NOT_NULL"):
+        if mode in EXISTS_MODES:
             if (str(v) == "None") or (len(str(v)) == 0):
                 return "FIELD: %s is EMPTY" % (_c(self, field, "white"))
-        elif mode in (
-            "EMPTY",
-            "IS_EMPTY",
-            "IS_NULL",
-            "NULL",
-            "NOT_EXISTS",
-            "NOT_EXIST",
-            "@",
-        ):
+            return None
+
+        if mode in NULL_MODES:
             if str(v) != "None":
                 return "FIELD: %s VALUE mismatch. Expected: Null - got: %s" % (
                     _c(self, field, "white"),
                     _c(self, current_val, "red"),
                 )
-        elif mode in ("EQUALS", "==", "=", "EQUAL"):
-            if (current_val != expected_val) and (
-                str(current_val) != str(expected_val)
-            ):
-                return "FIELD: %s VALUE mismatch. Expected: %s - got: %s" % cols
-        elif mode in ("NOT_EQUAL", "!=", "<>"):
-            if current_val == expected_val:
-                return (
-                    "FIELD: %s VALUE mismatch. Expected difference: %s - got: %s" % cols
-                )
-        elif mode in ("CONTAINS", "->"):
+            return None
+
+        if mode in ("CONTAINS", "->"):
             if expected_val not in current_val:
                 return "FIELD: %s DOES NOT contains %s. List: %s" % cols
-        elif mode in ("SIZE", "LEN", "LENGTH"):
-            if len(current_val) != int(expected_val):
-                return "FIELD: %s SIZE mismatch. Expected: %s - got: %s (%s)" % (
-                    _c(self, field, "white"),
-                    _c(self, expected_val, "yellow"),
-                    _c(self, len(current_val), "red"),
-                    _c(self, current_val, "yellow"),
-                )
-        elif mode in ("GT", ">"):
-            if isinstance(current_val, str):
-                current_val = int(current_val)
-            if current_val <= expected_val:
-                return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
-        elif mode in ("GTE", ">="):
-            if isinstance(current_val, str):
-                current_val = int(current_val)
-            if current_val < expected_val:
-                return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
-        elif mode in ("LT", "<"):
-            if isinstance(current_val, str):
-                current_val = int(current_val)
-            if current_val >= expected_val:
-                return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
-        elif mode in ("LTE", "<="):
-            if isinstance(current_val, str):
-                current_val = int(current_val)
-            if current_val > expected_val:
-                return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
-        elif mode in ("SIZE-GT", "()>"):
-            if len(current_val) <= int(expected_val):
-                return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
-        elif mode in ("SIZE-GTE", "()>="):
-            if len(current_val) < int(expected_val):
-                return "FIELD: %s is SMALLER. Expected: %s got: %s" % cols
-        elif mode in ("SIZE-LT", "()<"):
-            if len(current_val) >= int(expected_val):
-                return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
-        elif mode in ("SIZE-LTE", "()<="):
-            if len(current_val) > int(expected_val):
-                return "FIELD: %s is BIGGER. Expected: %s got: %s" % cols
-        elif mode in ("OBJ", "OBJECT"):
+            return None
+
+        if mode in ("OBJ", "OBJECT"):
             if not self._object_compare(current_val, expected_val):
                 return "FIELD: %s object values mismatch" % (_c(self, field, "white"))
-        else:
+            return None
+
+        if mode in SIZE_MODES:
+            op = SIZE_MODES[mode]
+            size = len(current_val)
+            if not _compare(op, size, int(expected_val)):
+                return "FIELD: %s SIZE mismatch. Expected: %s %s - got: %s (%s)" % (
+                    _c(self, field, "white"),
+                    op,
+                    _c(self, expected_val, "yellow"),
+                    _c(self, size, "red"),
+                    _c(self, current_val, "yellow"),
+                )
+            return None
+
+        op = OPERATOR_ALIASES.get(mode)
+        if not op:
             return "ERROR: unsupported test mode: %s " % mode
 
-        if "save" in chk:
-            self.globals[chk["save"]] = v
+        if not _compare(op, current_val, expected_val):
+            return CHECK_FAIL_MESSAGES[op] % cols
+
+        return None
 
     def _check_expr(self, chk, j):
         """
@@ -958,46 +1064,19 @@ Raw Response: %s
         else:
             right_val = expr_val
 
-        # Convert to numbers for comparison if possible
-        try:
-            if isinstance(left_val, str):
-                left_val = float(left_val) if "." in left_val else int(left_val)
-        except (ValueError, TypeError):
-            pass
+        # EXPR compares numbers when possible, also for == and !=
+        left_val = _to_number(left_val)
+        right_val = _to_number(right_val)
 
-        try:
-            if isinstance(right_val, str):
-                right_val = float(right_val) if "." in right_val else int(right_val)
-        except (ValueError, TypeError):
-            pass
-
-        # Normalize operator aliases
-        op_map = {
-            "==": "==", "=": "==", "EQUALS": "==", "EQUAL": "==",
-            "!=": "!=", "<>": "!=", "NOT_EQUALS": "!=", "NOT_EQUAL": "!=",
-            ">": ">", "GT": ">",
-            ">=": ">=", "GTE": ">=",
-            "<": "<", "LT": "<",
-            "<=": "<=", "LTE": "<=",
-        }
-        op = op_map.get(op, op)
-
-        # Perform comparison
-        result = False
-        if op == "==":
-            result = left_val == right_val or str(left_val) == str(right_val)
-        elif op == "!=":
-            result = left_val != right_val and str(left_val) != str(right_val)
-        elif op == ">":
-            result = left_val > right_val
-        elif op == ">=":
-            result = left_val >= right_val
-        elif op == "<":
-            result = left_val < right_val
-        elif op == "<=":
-            result = left_val <= right_val
-        else:
+        canonical_op = OPERATOR_ALIASES.get(op)
+        if not canonical_op:
             return f"EXPR test: unsupported operator '{op}'"
+        op = canonical_op
+
+        try:
+            result = _compare(op, left_val, right_val)
+        except TypeError as e:
+            return f"EXPR test: cannot compare {left_val!r} {op} {right_val!r} ({e})"
 
         if not result:
             return (
@@ -1008,6 +1087,16 @@ Raw Response: %s
         return None
 
     def check(self, resp, checks):
+        """
+        Run all the tests of an action against the response.
+
+        Every failing test is reported through _error(): with stop_on_error
+        the first failure raises, otherwise all the tests run and are counted.
+
+        Args:
+            resp: Response object
+            checks: List of test definitions
+        """
         j = resp.json()
 
         for chk in checks:
@@ -1016,35 +1105,45 @@ Raw Response: %s
 
             self._tests += 1
 
-            # Check for EXPR mode (uses key/op/expr instead of field/mode/value)
-            mode = chk.get("mode", "").upper()
-            if mode in ("EXPR", "EXPRESSION"):
-                err = self._check_expr(chk, j)
-                if err:
-                    return self._error(err)
-                continue
-
-            # 2.3.0 - checking for 'field' key
-            if "field" not in chk:
-                return self._error("Tests: missing 'field' key in one of the tests")
-            field = self._expand_var(chk["field"])
-
-            # 2.1.0 - added support for rt: prefix and the rt:size field
-            if field == "rt:size":
-                v = str(resp.size)
-            else:
-                v = self._expand_value(j, field)
-
-            err = self._check(chk, field, v)
-
-            if v == "__NOT_FOUND__":
-                return self._error(
-                    "FIELD: %s missing %s"
-                    % (field, json.dumps(j, default=str, indent=2))
-                )
-
+            err = self._run_check(resp, j, chk)
             if err:
-                return self._error(err)
+                self._error(err)
+
+    def _run_check(self, resp, j, chk):
+        """
+        Run a single test definition.
+
+        Returns:
+            Error message string if the test fails, None if it passes
+        """
+        mode = chk.get("mode", "EQUALS").upper()
+
+        # EXPR mode uses key/op/expr instead of field/mode/value
+        if mode in ("EXPR", "EXPRESSION"):
+            return self._check_expr(chk, j)
+
+        # 2.3.0 - checking for 'field' key
+        if "field" not in chk:
+            return "Tests: missing 'field' key in one of the tests"
+
+        field = self._expand_var(chk["field"])
+
+        # 2.1.0 - added support for rt: prefix and the rt:size field
+        if field == "rt:size":
+            v = str(resp.size)
+        else:
+            v = self._expand_value(j, field)
+
+        if v == NOT_FOUND:
+            # A missing field is what the null modes (e.g. NOT_EXISTS) expect
+            if mode not in NULL_MODES:
+                return "FIELD: %s missing %s" % (
+                    field,
+                    json.dumps(j, default=str, indent=2),
+                )
+            v = None
+
+        return self._check(chk, field, v)
 
     def dump(self, fields=None, do_print=True):
         """
@@ -1060,10 +1159,10 @@ Raw Response: %s
 
         for f in fields:
             f = self._expand_var(f)
-            v = self.globals.get(f, "__NOT_FOUND__")
+            v = self.globals.get(f, NOT_FOUND)
 
             # Format for log file (with ====)
-            if v == "__NOT_FOUND__":
+            if v == NOT_FOUND:
                 log_s = "==== %s: <undefined>\n" % f
             else:
                 log_s = "==== %s: %s\n" % (f, json.dumps(v, indent=4, default=str))
@@ -1072,7 +1171,7 @@ Raw Response: %s
 
             # Format for console (colored, without ====)
             if do_print:
-                if v == "__NOT_FOUND__":
+                if v == NOT_FOUND:
                     console_s = "%s: %s" % (
                         _c(self, f, "green"),
                         _c(self, "<undefined>", "white")
