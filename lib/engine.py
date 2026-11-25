@@ -8,6 +8,7 @@
 import ast
 import copy
 import json
+import os
 import sys
 import time
 import urllib
@@ -84,7 +85,7 @@ class RESTest:
 
         # 2.2.0 - Added log_clean
         if self.log_file and log_clean:
-            open(self.log_file, "w").close()
+            self._open_log("w").close()
 
     def _tabs(self, indent=0):
         return "\t" * (len(self.sections) + indent)
@@ -119,12 +120,20 @@ class RESTest:
             for k, v in headers.items()
         }
 
+    def _open_log(self, mode):
+        """Open the log file for "w" or "a", creating it readable by the owner only (0o600)."""
+        flags = os.O_WRONLY | os.O_CREAT | (os.O_TRUNC if mode == "w" else os.O_APPEND)
+        fd = os.open(self.log_file, flags, 0o600)
+        os.chmod(self.log_file, 0o600)
+
+        return os.fdopen(fd, mode)
+
     def _log_write(self, txt):
         if not self.log_file:
             return
 
-        fout = open(self.log_file, "a")
-        fout.write(txt)
+        with self._open_log("a") as fout:
+            fout.write(txt)
 
     def _log_start(self, method, endpoint, data):
         self._tests += 1

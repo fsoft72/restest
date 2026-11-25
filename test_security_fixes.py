@@ -64,9 +64,26 @@ def test_short_secret_fully_masked():
     assert rt._mask_headers({"Authorization": "abc"})["Authorization"] == "****"
 
 
+def test_log_file_permissions():
+    """The log file is owner read/write only, even when it already existed."""
+    path = "/tmp/restest_log_perm.log"
+    if os.path.exists(path):
+        os.unlink(path)
+    open(path, "w").close()
+    os.chmod(path, 0o644)
+    rt = RESTest(log_file=path)
+    rt._log_write("hello\n")
+    mode = os.stat(path).st_mode & 0o777
+    content = open(path).read()
+    os.unlink(path)
+    assert mode == 0o600, oct(mode)
+    assert content == "hello\n", content
+
+
 if __name__ == "__main__":
     test_object_compare_json_and_literal()
     test_object_compare_rejects_code()
     test_authorization_masked_in_log()
     test_short_secret_fully_masked()
+    test_log_file_permissions()
     print("OK")

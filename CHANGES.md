@@ -4,6 +4,12 @@
 
 ### Bug Fixes
 
+#### Log file permissions
+- The log file is now created and truncated with `0o600` permissions (owner read/write only), also when it already existed
+- The log file handle is now closed after every write (it was leaked before)
+- Request and response bodies in the log are unchanged
+- File modified: `lib/engine.py`; test added in `test_security_fixes.py`
+
 #### Authorization masked in log files
 - `Authorization`, `Proxy-Authorization` and the configured authorization header are masked in the log file (request headers and CURL line): first and last 4 chars kept, short values fully hidden
 - The curl dumped on the console (`dump_curl_on_console`) is left unmasked so it can be copy-pasted
