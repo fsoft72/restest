@@ -2,6 +2,11 @@
 
 ## v2.6.0 - Skip Attribute Enhancement & Universal Expression Expansion
 
+### Documentation
+
+#### Code review TODO list
+- Added `OPTIMIZE.md`: prioritized list of 26 bugs, refactors and quality improvements found during a full code review (no code changed)
+
 ### Bug Fixes
 
 #### Log file permissions
